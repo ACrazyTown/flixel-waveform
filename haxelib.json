@@ -1,0 +1,9 @@
+{
+    "name": "flixel-waveform",
+    "url": "https://github.com/ACrazyTown/flixel-waveform",
+    "contributors": ["ACrazyTown"],
+    "classPath": "src",
+    "license": "MIT",
+    "version": "1.0.0",
+    "releasenote": "Initial release"
+}
