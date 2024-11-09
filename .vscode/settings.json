@@ -11,5 +11,5 @@
 		}
 	},
 	"haxe.enableExtendedIndentation": true,
-	"lime.projectFile": "sample/Project.xml"
+	"lime.projectFile": "samples/basic/Project.xml"
 }

@@ -19,6 +19,8 @@ using flixel.addons.display.waveform.BytesExt;
  */
 class FlxWaveform extends FlxSprite
 {
+    /* ----------- PUBLIC API ----------- */
+
     /**
      * Represents how many audio samples 1 pixel is equal to.
      */
@@ -31,29 +33,29 @@ class FlxWaveform extends FlxSprite
      * 
      * `SPLIT_CHANNELS` will split the sprite in half, one half will render the left channel while the other will render the right channel.
      */
-    public var waveformDrawMode(default, set):WaveformDrawMode;
+    public var waveformDrawMode(get, set):WaveformDrawMode;
 
     /**
      * The background color of the waveform graphic.
      */
-    public var waveformBg(default, set):FlxColor;
+    public var waveformBgColor(get, set):FlxColor;
 
     /**
      * The color used for rendering the actual waveform.
      */
-    public var waveformColor(default, set):FlxColor;
+    public var waveformColor(get, set):FlxColor;
 
     /**
      * The width of the waveform.
      */
-    public var waveformWidth(default, set):Int = FlxG.width;
+    public var waveformWidth(get, set):Int;
 
     /**
      * The height of the entire waveform sprite.
      * 
      * if waveformDrawMode is set to `SPLIT_CHANNELS` the height of one waveform will be half of `waveformHeight`
      */
-    public var waveformHeight(default, set):Int = FlxG.height;
+    public var waveformHeight(get, set):Int;
 
     /**
      * Whether the waveform graphic should be automatically regenerated when there's a change in data.
@@ -61,6 +63,8 @@ class FlxWaveform extends FlxSprite
      *  If set to `false`, you have to call `FlxWaveform.generateWaveformBitmap()` to update the graphic.
      */
     public var autoUpdateBitmap:Bool = true;
+
+    /* ----------- INTERNALS ----------- */
 
     /**
      * Internal variable holding a reference to a lime `AudioBuffer` used for analyzing the audio data.
@@ -105,6 +109,32 @@ class FlxWaveform extends FlxSprite
      */
     var _peaksRight:Array<Float> = null;
 
+    // TODO: Move to a class or typedef?
+    /**
+     * Internal helper
+     */
+    var _waveformWidth:Int;
+
+    /**
+     * Internal helper
+     */
+    var _waveformHeight:Int;
+
+    /**
+     * Internal helper
+     */
+    var _waveformColor:FlxColor;
+
+    /**
+     * Internal helper
+     */
+    var _waveformBgColor:FlxColor;
+
+    /**
+     * Internal helper
+     */
+    var _waveformDrawMode:WaveformDrawMode;
+
     /**
      * Creates a new `Waveform` instance. The waveform is NOT ready to display any data at this point.
      * 
@@ -122,12 +152,12 @@ class FlxWaveform extends FlxSprite
     {
         super(x, y);
 
-        waveformBg = backgroundColor;
+        waveformBgColor = backgroundColor;
         waveformColor = color;
         waveformWidth = width;
         waveformHeight = height;
         waveformDrawMode = drawMode;
-        makeGraphic(waveformWidth, waveformHeight, waveformBg);
+        makeGraphic(_waveformWidth, _waveformHeight, _waveformBgColor);
     }
 
     /**
@@ -220,7 +250,7 @@ class FlxWaveform extends FlxSprite
         clearArray(_peaksRight);
 
         // ? run gc to hopefully clear old data?
-        System.gc();
+        // System.gc();
 
         var slicePos:Int = Std.int((_curRangeStart / 1000) * _buffer.sampleRate);
         var sliceEnd:Int = Std.int((_curRangeEnd / 1000) * _buffer.sampleRate);
@@ -229,22 +259,26 @@ class FlxWaveform extends FlxSprite
         if (_stereo)
             sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
 
-        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight.length) / waveformWidth;
+        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight.length) / _waveformWidth;
         calculatePeaks(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
             calculatePeaks(sectionSamplesRight, _peaksRight);
     }
 
+    /**
+     * Draws the waveform onto this sprite's graphic.
+     */
     public function generateWaveformBitmap():Void
     {
         // clear previous draw
-        pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
+        // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
+        pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), _waveformBgColor);
 
         if (waveformDrawMode == COMBINED)
         {
-            var centerY:Float = waveformHeight / 2;
+            var centerY:Float = _waveformHeight / 2;
 
-            for (i in 0...waveformWidth)
+            for (i in 0..._waveformWidth)
             {
                 var peakLeft:Float = _peaksLeft[i];
                 var peakRight:Float = 0;
@@ -264,15 +298,15 @@ class FlxWaveform extends FlxSprite
                 var y1:Float = centerY - segmentHeight;
                 var y2:Float = centerY + segmentHeight;
 
-                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), waveformColor);
+                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), _waveformColor);
             }
         }
         else if (waveformDrawMode == SPLIT_CHANNELS)
         {
-            var half:Float = waveformHeight / 2;
-            var centerY:Float = waveformHeight / 4;
+            var half:Float = _waveformHeight / 2;
+            var centerY:Float = _waveformHeight / 4;
 
-            for (i in 0...waveformWidth)
+            for (i in 0..._waveformWidth)
             {
                 var peakLeft:Float = _peaksLeft[i];
                 var peakRight:Float = 0;
@@ -292,16 +326,37 @@ class FlxWaveform extends FlxSprite
                 var y1r:Float = half + (centerY - segmentHeightRight);
                 var y2r:Float = half + (centerY + segmentHeightRight);
 
-                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), waveformColor);
-                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), waveformColor);
+                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), _waveformColor);
+                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), _waveformColor);
             }
         }
+    }
+
+    /**
+     * Resizes the waveform's graphic.
+     * 
+     * It is recommended to use this function rather than modifying width and height seperately
+     * if you want to change both.
+     * 
+     * @param width New width of the graphic
+     * @param height New height of the graphic
+     */
+    public function resize(width:Int, height:Int):Void
+    {
+        // We don't need to do this?
+        // I think flixel will take care of it
+        // if (graphic != null)
+        //     graphic.destroy();
+
+        makeGraphic(width, height, _waveformBgColor);
+        if (autoUpdateBitmap)
+            generateWaveformBitmap();
     }
 
     private function calculatePeaks(samples:Array<Float>, out:Array<Float>):Void
     {
         clearArray(out);
-        for (i in 0...waveformWidth)
+        for (i in 0..._waveformWidth)
         {
             var startIndex:Int = Math.floor(i * samplesPerPixel);
             var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
@@ -406,73 +461,97 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
+    @:noCompletion private function get_waveformWidth():Int
+    {
+        return _waveformWidth;
+    }
+
     @:noCompletion private function set_waveformWidth(value:Int):Int
     {
-        // width changes samplesPerPixel, so we need to regenerate data
-        if (_buffer != null)
-            setDrawRange(_curRangeEnd, _curRangeStart);
-
-        // Avoid unneccesary regenerate
-        if (autoUpdateBitmap && _buffer != null)
+        if (_waveformWidth != value)
         {
-            var prev = waveformWidth;
-            if (prev != value)
-                generateWaveformBitmap();
+            _waveformWidth = value;
+
+            if (_buffer != null)
+            {
+                setDrawRange(_curRangeEnd, _curRangeStart);
+                resize(_waveformWidth, _waveformHeight);
+            }
         }
 
-        return waveformWidth = value;
+        return _waveformWidth;
+    }
+
+    @:noCompletion private function get_waveformHeight():Int
+    {
+        return _waveformHeight;
     }
 
     @:noCompletion private function set_waveformHeight(value:Int):Int 
     {
-        // Avoid unneccesary regenerate
-        if (autoUpdateBitmap && _buffer != null)
+        if (_waveformHeight != value)
         {
-            var prev = waveformHeight;
-            if (prev != value)
-                generateWaveformBitmap();
+            _waveformHeight = value;
+
+            if (_buffer != null)
+                resize(_waveformWidth, _waveformHeight);
         }
 
-        return waveformHeight = value;
+        return _waveformHeight;
     }
 
-    @:noCompletion function set_waveformBg(value:FlxColor):FlxColor
+    @:noCompletion function get_waveformBgColor():FlxColor
     {
-        // Avoid unneccesary regenerate
-        if (autoUpdateBitmap && _buffer != null)
+        return _waveformBgColor;
+    }
+
+    @:noCompletion function set_waveformBgColor(value:FlxColor):FlxColor
+    {
+        if (_waveformBgColor != value)
         {
-            var prev = waveformBg;
-            if (prev != value)
+            _waveformBgColor = value;
+
+            if (_buffer != null && autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
-        return waveformBg = value;
+        return _waveformBgColor;
+    }
+
+    @:noCompletion function get_waveformColor():FlxColor
+    {
+        return _waveformColor;
     }
 
     @:noCompletion function set_waveformColor(value:FlxColor):FlxColor
     {
-        // Avoid unneccesary regenerate
-        if (autoUpdateBitmap && _buffer != null)
+        if (_waveformColor != value)
         {
-            var prev = waveformColor;
-            if (prev != value)
+            _waveformColor = value;
+
+            if (_buffer != null && autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
-        return waveformColor = value;
+        return _waveformColor;
+    }
+
+    @:noCompletion function get_waveformDrawMode():WaveformDrawMode
+    {
+        return _waveformDrawMode;
     }
 
     @:noCompletion function set_waveformDrawMode(value:WaveformDrawMode):WaveformDrawMode 
     {
-        // Avoid unneccesary regenerate
-        if (autoUpdateBitmap && _buffer != null)
+        if (_waveformDrawMode != value)
         {
-            var prev = waveformDrawMode;
-            if (prev != value)
+            _waveformDrawMode = value;
+
+            if (_buffer != null && autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
-        return waveformDrawMode = value;
+        return _waveformDrawMode;
     }
 }
 

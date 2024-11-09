@@ -13,6 +13,10 @@ class PlayState extends FlxState
 	{
 		super.create();
 
+		#if debug
+		FlxG.console.registerEnum(WaveformDrawMode);
+		#end
+		FlxG.autoPause = false;
 		FlxG.camera.bgColor = 0xFF152E5A;
 
 		FlxG.sound.playMusic("assets/beeper.ogg");
