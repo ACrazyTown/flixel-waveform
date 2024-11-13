@@ -183,11 +183,11 @@ class FlxWaveform extends FlxSprite
     {
         super(x, y);
 
-        waveformBgColor = backgroundColor;
-        waveformColor = color;
-        waveformWidth = width;
-        waveformHeight = height;
-        waveformDrawMode = drawMode;
+        _waveformBgColor = backgroundColor;
+        _waveformColor = color;
+        _waveformWidth = width;
+        _waveformHeight = height;
+        _waveformDrawMode = drawMode;
         makeGraphic(_waveformWidth, _waveformHeight, _waveformBgColor);
     }
 
@@ -237,7 +237,8 @@ class FlxWaveform extends FlxSprite
 
         _buffer = buffer;
         _bufferDataBytes = _buffer.data.toBytes();
-        // trace('Processing sound data (channels: ${buffer.channels}, bps: ${buffer.bitsPerSample}, sample rate: ${buffer.sampleRate})');
+        trace('Processing sound data (channels: ${buffer.channels}, bps: ${buffer.bitsPerSample}, sample rate: ${buffer.sampleRate})');
+        trace(buffer.data);
 
         if (buffer.channels == 2)
             _stereo = true;
@@ -255,6 +256,9 @@ class FlxWaveform extends FlxSprite
             // assume unsigned?
             case 8: normalizeSamplesUI8(_bufferDataBytes, _stereo);
             case 16: normalizeSamplesI16(_bufferDataBytes, _stereo);
+            case 24: normalizeSamplesI24(_bufferDataBytes, _stereo);
+        
+            // TODO: Handle 32bit FLOAT audio
             case 32: normalizeSamplesI32(_bufferDataBytes, _stereo);
             case _: null;
         }
@@ -286,7 +290,8 @@ class FlxWaveform extends FlxSprite
 
         // clear previous peak data
         clearArray(_peaksLeft);
-        clearArray(_peaksRight);
+        if (_stereo)
+            clearArray(_peaksRight);
 
         // ? run gc to hopefully clear old data?
         // System.gc();
@@ -298,7 +303,7 @@ class FlxWaveform extends FlxSprite
         if (_stereo)
             sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
 
-        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight.length) / _waveformWidth;
+        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / _waveformWidth;
         calculatePeaks(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
             calculatePeaks(sectionSamplesRight, _peaksRight);
@@ -452,6 +457,34 @@ class FlxWaveform extends FlxSprite
             left.push(samples.normalizeInt32(i * step));
             if (stereo)
                 right.push(samples.normalizeInt32(i * step + 4));
+        }
+
+        return {left: left, right: right};
+    }
+
+    /**
+     * Processes a `Bytes` instance containing audio data in 
+     * a signed 32bit integer format and returns 2 arrays
+     * containing normalized samples in the range from 0 to 1
+     * for both audio channels.
+     * @param samples The audio buffer bytes data containing audio samples.
+     * @param stereo Whether the data should be treated as stereo (2 channels).
+     * @return A `NormalizedSampleData` containing normalized samples for both channels.
+     */
+    private function normalizeSamplesI24(samples:Bytes, stereo:Bool):NormalizedSampleData
+    {
+        var left:Array<Float> = [];
+        var right:Array<Float> = null;
+        if (stereo)
+            right = [];
+
+        // Int24 is 3 bytes, times 6 for both channels.
+        var step:Int = stereo ? 6 : 3;
+        for (i in 0...Std.int(samples.length / step))
+        {
+            left.push(samples.normalizeInt24(i * step));
+            if (stereo)
+                right.push(samples.normalizeInt24(i * step + 3));
         }
 
         return {left: left, right: right};

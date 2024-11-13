@@ -31,12 +31,17 @@ class BytesExt
     public static inline final UINT16_MAX:Int = 65535;
 
     /**
+     * The maximum value of a signed 24bit integer.
+     */
+    public static inline final INT24_MAX:Int = 8388607;
+
+    /**
      * The maximum value of a signed 32bit integer.
      */
     public static inline final INT32_MAX:Int = 2147483647;
 
     /**
-     * Reads an signed 16bit integer at the specified position.
+     * Reads a signed 16bit integer at the specified position.
      * @param bytes Bytes to read from
      * @param pos Position to read from 
      * @return Read value
@@ -44,6 +49,28 @@ class BytesExt
     public static inline function getInt16(bytes:Bytes, pos:Int):Int
     {
         return (bytes.getUInt16(pos) << 16) >> 16;
+    }
+
+    /**
+     * Reads an unsigned 24bit integer at the specified position.
+     * @param bytes Bytes to read from
+     * @param pos Position to read from 
+     * @return Read value
+     */
+    public static inline function getUInt24(bytes:Bytes, pos:Int):Int
+    {
+        return bytes.get(pos) | (bytes.get(pos + 1) << 8) | (bytes.get(pos + 2) << 16);
+    }
+
+    /**
+     * Reads a signed 24bit integer at the specified position.
+     * @param bytes Bytes to read from
+     * @param pos Position to read from 
+     * @return Read value
+     */
+    public static inline function getInt24(bytes:Bytes, pos:Int):Int
+    {
+        return (getUInt24(bytes, pos) << 8) >> 8;
     }
 
     /**
@@ -67,6 +94,17 @@ class BytesExt
     public static inline function normalizeInt16(bytes:Bytes, pos:Int):Float
     {
         return getInt16(bytes, pos) / INT16_MAX;
+    }
+
+    /**
+     * Reads & normalizes a signed 24bit integer in the range of 0 to 1.
+     * @param bytes Bytes to read from
+     * @param pos Position to read from
+     * @return Normalized value
+     */
+    public static inline function normalizeInt24(bytes:Bytes, pos:Int):Float
+    {
+        return getInt24(bytes, pos) / INT24_MAX;
     }
 
     /**
