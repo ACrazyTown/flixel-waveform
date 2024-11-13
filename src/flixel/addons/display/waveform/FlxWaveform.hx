@@ -237,8 +237,8 @@ class FlxWaveform extends FlxSprite
 
         _buffer = buffer;
         _bufferDataBytes = _buffer.data.toBytes();
-        trace('Processing sound data (channels: ${buffer.channels}, bps: ${buffer.bitsPerSample}, sample rate: ${buffer.sampleRate})');
-        trace(buffer.data);
+        // trace('Processing sound data (channels: ${buffer.channels}, bps: ${buffer.bitsPerSample}, sample rate: ${buffer.sampleRate})');
+        // trace(buffer.data);
 
         if (buffer.channels == 2)
             _stereo = true;
