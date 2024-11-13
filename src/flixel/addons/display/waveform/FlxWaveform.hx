@@ -531,6 +531,16 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
+    private inline function bufferValid(buffer:AudioBuffer):Bool
+    {
+        return buffer != null 
+            && buffer.data != null 
+            // on js ints can be null, but on static targets they can't.
+            && buffer.bitsPerSample != #if js null #else 0 #end
+            && buffer.channels != #if js null #else 0 #end
+            && buffer.sampleRate != #if js null #else 0 #end;
+    }
+
     @:noCompletion private function get_waveformWidth():Int
     {
         return _waveformWidth;
@@ -542,7 +552,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformWidth = value;
 
-            if (_buffer != null)
+            if (bufferValid(_buffer))
             {
                 setDrawRange(_curRangeEnd, _curRangeStart);
                 resize(_waveformWidth, _waveformHeight);
@@ -563,7 +573,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformHeight = value;
 
-            if (_buffer != null)
+            if (bufferValid(_buffer))
                 resize(_waveformWidth, _waveformHeight);
         }
 
@@ -581,7 +591,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformBgColor = value;
 
-            if (_buffer != null && autoUpdateBitmap)
+            if (bufferValid(_buffer) && autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
@@ -599,7 +609,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformColor = value;
 
-            if (_buffer != null && autoUpdateBitmap)
+            if (bufferValid(_buffer) && autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
@@ -617,7 +627,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformDrawMode = value;
 
-            if (_buffer != null && autoUpdateBitmap)
+            if (bufferValid(_buffer) && autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
