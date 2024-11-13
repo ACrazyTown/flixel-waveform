@@ -229,9 +229,9 @@ class FlxWaveform extends FlxSprite
      */
     public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
     {
-        if (buffer == null)
+        if (!bufferValid(buffer))
         {
-            FlxG.log.error("[FlxWaveform] Buffer is null!");
+            FlxG.log.error("[FlxWaveform] Tried to load invalid buffer! Make sure the audio buffer has valid sampleRate, bitsPerSample, channels and data.");
             return;
         }
 
@@ -270,6 +270,12 @@ class FlxWaveform extends FlxSprite
      */
     public function setDrawRange(?endTime:Float = -1, ?startTime:Float = -1):Void
     {
+        if (!bufferValid(_buffer))
+        {
+            FlxG.log.error("[FlxWaveform] Can't do any operations with invalid buffer.");
+            return;
+        }
+
         if (startTime < 0)
             startTime = 0.0;
         if (endTime < 0)
@@ -306,6 +312,12 @@ class FlxWaveform extends FlxSprite
      */
     public function generateWaveformBitmap():Void
     {
+        if (!bufferValid(_buffer))
+        {
+            FlxG.log.error("[FlxWaveform] Can't do any operations with invalid buffer.");
+            return;
+        }
+
         // clear previous draw
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), _waveformBgColor);
@@ -552,11 +564,8 @@ class FlxWaveform extends FlxSprite
         {
             _waveformWidth = value;
 
-            if (bufferValid(_buffer))
-            {
-                setDrawRange(_curRangeEnd, _curRangeStart);
-                resize(_waveformWidth, _waveformHeight);
-            }
+            setDrawRange(_curRangeEnd, _curRangeStart);
+            resize(_waveformWidth, _waveformHeight);
         }
 
         return _waveformWidth;
@@ -573,8 +582,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformHeight = value;
 
-            if (bufferValid(_buffer))
-                resize(_waveformWidth, _waveformHeight);
+            resize(_waveformWidth, _waveformHeight);
         }
 
         return _waveformHeight;
@@ -591,7 +599,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformBgColor = value;
 
-            if (bufferValid(_buffer) && autoUpdateBitmap)
+            if (autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
@@ -609,7 +617,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformColor = value;
 
-            if (bufferValid(_buffer) && autoUpdateBitmap)
+            if (autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
@@ -627,7 +635,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformDrawMode = value;
 
-            if (bufferValid(_buffer) && autoUpdateBitmap)
+            if (autoUpdateBitmap)
                 generateWaveformBitmap();
         }
 
