@@ -464,7 +464,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Processes a `Bytes` instance containing audio data in 
-     * a signed 32bit integer format and returns 2 arrays
+     * a signed 24bit integer format and returns 2 arrays
      * containing normalized samples in the range from 0 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
