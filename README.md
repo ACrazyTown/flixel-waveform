@@ -9,11 +9,11 @@ A simple (I hope) `FlxSprite` extension that allows for rendering waveforms from
 
 ## Installation
 
-1. Install via haxelib git: `haxelib git flixel-waveform https://github.com/ACrazyTown/flixel-waveform`
+1. Install via haxelib: `haxelib install flixel-waveform`
+    - If you want to use the latest (possibly unstable) development version, install via haxelib git: `haxelib git flixel-waveform https://github.com/ACrazyTown/flixel-waveform`
+3. And then include it in your Project.xml: `<haxelib name="flixel-waveform">`
 
-2. And then include it in your Project.xml: `<haxelib name="flixel-waveform">`
-
-3. Finally, import it in your code when needed: `import flixel.addons.display.waveform.FlxWaveform;`
+4. Finally, import it in your code when needed: `import flixel.addons.display.waveform.FlxWaveform;`
 
 ## Info
 ### Supported targets
