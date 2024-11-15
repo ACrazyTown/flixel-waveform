@@ -258,8 +258,17 @@ class FlxWaveform extends FlxSprite
             case 16: normalizeSamplesI16(_bufferDataBytes, _stereo);
             case 24: normalizeSamplesI24(_bufferDataBytes, _stereo);
         
-            // TODO: Handle 32bit FLOAT audio
-            case 32: normalizeSamplesI32(_bufferDataBytes, _stereo);
+            // Right now, we can't figure out if 32bit sounds are
+            // stored as a float or int.
+            // Temporarily, we'll handle it as a Float32 array 
+            // as it seems they're more common.
+            // If my Lime pull request gets merged it will be possible
+            // to properly differentiate between 32bit int and 32bit float sounds:
+            // https://github.com/openfl/lime/pull/1861
+            case 32: 
+                normalizeSamplesF32(_bufferDataBytes, _stereo);
+                //normalizeSamplesI32(_bufferDataBytes, _stereo);
+                
             case _: null;
         }
 
@@ -432,6 +441,34 @@ class FlxWaveform extends FlxSprite
 
             out.push(peak);
         }
+    }
+
+    /**
+     * Processes a `Bytes` instance containing audio data in 
+     * a 32bit float format and returns 2 arrays
+     * containing normalized samples in the range from 0 to 1
+     * for both audio channels.
+     * @param samples The audio buffer bytes data containing audio samples.
+     * @param stereo Whether the data should be treated as stereo (2 channels).
+     * @return A `NormalizedSampleData` containing normalized samples for both channels.
+     */
+     private function normalizeSamplesF32(samples:Bytes, stereo:Bool):NormalizedSampleData
+    {
+        var left:Array<Float> = [];
+        var right:Array<Float> = null;
+        if (stereo)
+            right = [];
+
+        // Int32 is 4 bytes, times 2 for both channels.
+        var step:Int = stereo ? 8 : 4;
+        for (i in 0...Std.int(samples.length / step))
+        {
+            left.push((samples.getFloat(i * step) + 1) / 2);
+            if (stereo)
+                right.push((samples.getFloat(i * step * 4) + 1) / 2);
+        }
+
+        return {left: left, right: right};
     }
 
     /**
