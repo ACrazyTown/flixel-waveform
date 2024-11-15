@@ -24,6 +24,7 @@ class PlayState extends FlxState
 		FlxG.sound.music.looped = true;
 
 		// Check if bitmap max texture size is available.
+		#if FLX_OPENGL_AVAILABLE
 		if (FlxG.bitmap.maxTextureSize != -1)
 		{
 			// Calculate how far can we stretch the waveform before hitting bitmap max limits?
@@ -35,6 +36,9 @@ class PlayState extends FlxState
 			// get a maximum texture size, so let's just arbitrarily set it to a random number.
 			pixelsPerMs = 16;
 		}
+		#else
+		pixelsPerMs = 16;
+		#end
 
 		// Create a new FlxWaveform instance.
 		waveform = new FlxWaveform(0, 0, Std.int(FlxG.sound.music.length / pixelsPerMs), FlxG.height, 0xFF1C98E0);
