@@ -2,6 +2,7 @@
 package flixel.addons.display.waveform;
 
 import lime.utils.Float32Array;
+import lime.utils.UInt8Array;
 import haxe.io.Bytes;
 import lime.media.AudioBuffer;
 import openfl.geom.Rectangle;
@@ -205,8 +206,29 @@ class FlxWaveform extends FlxSprite
             return;
         }
 
+        var buffer:AudioBuffer = null;
+
+        #if flash
+        buffer = new AudioBuffer();
+
+        // These values are always hardcoded.
+        // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Sound.html#extract()
+        buffer.sampleRate = 44100;
+        buffer.channels = 2;
+        buffer.bitsPerSample = 32;
+        
         @:privateAccess
-        var buffer:AudioBuffer = sound?._channel?.__audioSource?.buffer;
+        var flashSound = sound._sound;
+
+        var length:Int = Std.int(44100 * (flashSound.length / 1000) * 2 * 4);
+        var bytes:Bytes = Bytes.alloc(length);
+
+        flashSound.extract(bytes.getData(), bytes.length);
+
+        buffer.data = UInt8Array.fromBytes(bytes);
+        #else
+        @:privateAccess
+        buffer = sound?._channel?.__audioSource?.buffer;
 
         if (buffer == null)
         {
@@ -219,8 +241,10 @@ class FlxWaveform extends FlxSprite
                 return;
             }
         }
+        #end
 
         loadDataFromAudioBuffer(buffer);
+
     }
 
     /**
@@ -293,7 +317,7 @@ class FlxWaveform extends FlxSprite
             _stereo = false;
         else
             FlxG.log.error('Unsupported channels value: ${buffer.channels}');
-        
+
         _peaksLeft = recycleArray(_peaksLeft);
         if (_stereo)
             _peaksRight = recycleArray(_peaksRight);
@@ -759,10 +783,17 @@ class FlxWaveform extends FlxSprite
 }
 
 // TODO: Should this be a class with structInit? Do typedefs negatively impact performance?
-typedef NormalizedSampleData =
+// typedef NormalizedSampleData =
+// {
+//     left:Array<Float>,
+//     ?right:Array<Float>
+// }
+
+@:structInit
+class NormalizedSampleData
 {
-    left:Array<Float>,
-    ?right:Array<Float>
+    public var left:Array<Float>;
+    public var right:Array<Float>;
 }
 
 enum WaveformDrawMode
