@@ -738,19 +738,11 @@ class FlxWaveform extends FlxSprite
 }
 
 // TODO: Should this be a class with structInit? Do typedefs negatively impact performance?
-// typedef NormalizedSampleData =
-// {
-//     left:Array<Float>,
-//     ?right:Array<Float>
-// }
-
-@:structInit
-class NormalizedSampleData
+typedef NormalizedSampleData =
 {
-    public var left:Array<Float>;
-    public var right:Array<Float>;
+    left:Array<Float>,
+    ?right:Array<Float>
 }
-
 enum WaveformDrawMode
 {
     COMBINED;
