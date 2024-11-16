@@ -1,10 +1,7 @@
 
 package flixel.addons.display.waveform;
 
-import lime.utils.Int8Array;
-import lime.utils.ArrayBufferView;
-import lime.utils.ArrayBuffer;
-import lime.utils.UInt8Array;
+import lime.utils.Float32Array;
 import haxe.io.Bytes;
 import lime.media.AudioBuffer;
 import openfl.geom.Rectangle;
@@ -237,44 +234,51 @@ class FlxWaveform extends FlxSprite
         // On HTML5 Lime does not expose any kind of AudioBuffer
         // data which makes it difficult to do anything.
         // Our only hope is to try to get it from howler.js
-
-        // TODO: This approach seems very unstable, as good as it gets right now?
-        // bufferSource seems to not be reliable and whether it's null depends on timing and similar.
         
-        var n = buffer.src._sounds[0]._node;
-        trace(n);
-        js.html.Console.log(n);
-        var bufferSource:js.html.audio.AudioBufferSourceNode = buffer.src._sounds[0]._node.bufferSource;
-        trace(bufferSource);
-		if (bufferSource != null)
-		{
-            trace("We are so back");
-            var jsBuffer:js.html.audio.AudioBuffer = bufferSource.buffer;
-            // Data is always a Float32Array
-			buffer.bitsPerSample = 32;
-            buffer.channels = jsBuffer.numberOfChannels;
-            buffer.sampleRate = Std.int(jsBuffer.sampleRate);
-
-            var left = jsBuffer.getChannelData(0);
-            var right = null;
-            if (buffer.channels == 2)
-                right = jsBuffer.getChannelData(1);
-            var combined:js.lib.Float32Array;
-            
-            // convert into lime friendly format
-            // TODO: How does this affect memory?
-            combined = new js.lib.Float32Array(left.length * 2);
-            for (i in 0...left.length)
+        @:privateAccess
+        if (!bufferValid(buffer) && buffer.__srcHowl != null)
+        {
+            // TODO: This approach seems very unstable, as good as it gets right now?
+            // bufferSource seems to not be reliable and whether it's null depends on timing and similar.
+            var n = buffer.src._sounds[0]._node;
+            trace(n);
+            js.html.Console.log(n);
+            var bufferSource:js.html.audio.AudioBufferSourceNode = buffer?.src?._sounds[0]?._node?.bufferSource;
+            trace(bufferSource);
+            if (bufferSource != null)
             {
-                combined[i * 2] = left[i];
-                if (buffer.channels == 2)
-                    combined[i * 2 + 1] = right[i];
-            }
+                trace("We are so back");
+                var jsBuffer:js.html.audio.AudioBuffer = bufferSource.buffer;
+                // Data is always a Float32Array
+                buffer.bitsPerSample = 32;
+                buffer.channels = jsBuffer.numberOfChannels;
+                buffer.sampleRate = Std.int(jsBuffer.sampleRate);
 
-            left = null;
-            right = null;
-            buffer.data = cast combined;
-		}
+                var left = jsBuffer.getChannelData(0);
+                var right = null;
+                if (buffer.channels == 2)
+                    right = jsBuffer.getChannelData(1);
+                
+                js.html.Console.log(left);
+                js.html.Console.log(right);
+                
+                // convert into lime friendly format
+                // TODO: How does this affect memory?
+                var combined = new Float32Array(left.length * 2);
+                for (i in 0...left.length)
+                {
+                    combined[i * 2] = left[i];
+                    if (buffer.channels == 2)
+                        combined[i * 2 + 1] = right[i];
+                }
+
+                // left = null;
+                // right = null;
+                // TODO: IF ONLY ONE CHANNEL DON'T COMBINE BUT RATHER JUST PASS 1 CHANNEL HERE!!!
+                buffer.channels = 1;
+                buffer.data = cast left; // TODO: remove this temporary, and combine !!! 
+            }
+        }
         #end
 
         if (!bufferValid(buffer))
@@ -500,22 +504,24 @@ class FlxWaveform extends FlxSprite
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
      */
-     private function normalizeSamplesF32(samples:Bytes, stereo:Bool):NormalizedSampleData
+    private function normalizeSamplesF32(samples:Bytes, stereo:Bool):NormalizedSampleData
     {
         var left:Array<Float> = [];
         var right:Array<Float> = null;
         if (stereo)
             right = [];
 
-        trace(samples.length);
-
         // Int32 is 4 bytes, times 2 for both channels.
         var step:Int = stereo ? 8 : 4;
         for (i in 0...Std.int(samples.length / step))
         {
-            left.push((samples.getFloat(i * step) + 1) / 2);
+            // left.push((samples.getFloat(i * step) + 1) / 2);
+            // if (stereo)
+            //     right.push((samples.getFloat(i * step + 4) + 1) / 2);
+
+            left.push(samples.getFloat(i * step));
             if (stereo)
-                right.push((samples.getFloat(i * step * 4) + 1) / 2);
+                right.push(samples.getFloat(i * step + 4));
         }
 
         return {left: left, right: right};
@@ -541,6 +547,7 @@ class FlxWaveform extends FlxSprite
         var step:Int = stereo ? 8 : 4;
         for (i in 0...Std.int(samples.length / step))
         {
+            // trace(samples.getFloat(i * step));
             left.push(samples.normalizeInt32(i * step));
             if (stereo)
                 right.push(samples.normalizeInt32(i * step + 4));
