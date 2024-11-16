@@ -22,6 +22,7 @@ class PlayState extends FlxState
 		FlxG.sound.playMusic("assets/beeper.ogg");
 		FlxG.sound.music.stop();
 		FlxG.sound.music.looped = true;
+		FlxG.sound.music.play(true);
 
 		// Check if bitmap max texture size is available.
 		if (FlxG.bitmap.maxTextureSize != -1)
@@ -49,8 +50,6 @@ class PlayState extends FlxState
 		// is true by default, and changing the waveform draw mode above will trigger a redraw.
 		// waveform.generateWaveformBitmap();
 		add(waveform);
-
-		FlxG.sound.music.play(true);
 	}
 
 	override public function update(elapsed:Float):Void
