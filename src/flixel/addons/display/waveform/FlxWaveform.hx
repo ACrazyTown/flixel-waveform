@@ -241,15 +241,11 @@ class FlxWaveform extends FlxSprite
             // TODO: This approach seems very unstable, as good as it gets right now?
             // bufferSource seems to be available DURING sound playback.
             // Attempting to access it before playing a sound will not work.
-            var n = buffer.src._sounds[0]._node;
-            trace(n);
-            js.html.Console.log(n);
             var bufferSource:js.html.audio.AudioBufferSourceNode = buffer?.src?._sounds[0]?._node?.bufferSource;
-            trace(bufferSource);
             if (bufferSource != null)
             {
-                trace("We are so back");
                 var jsBuffer:js.html.audio.AudioBuffer = bufferSource.buffer;
+
                 // Data is always a Float32Array
                 buffer.bitsPerSample = 32;
                 buffer.channels = jsBuffer.numberOfChannels;
@@ -260,24 +256,22 @@ class FlxWaveform extends FlxSprite
                 if (buffer.channels == 2)
                     right = jsBuffer.getChannelData(1);
                 
-                js.html.Console.log(left);
-                js.html.Console.log(right);
-                
                 // convert into lime friendly format
                 // TODO: How does this affect memory?
-                var combined = new Float32Array(left.length * 2);
-                for (i in 0...left.length)
+                var combined:js.lib.Float32Array = null;
+                if (buffer.channels == 2)
                 {
-                    combined[i * 2] = left[i];
-                    if (buffer.channels == 2)
-                        combined[i * 2 + 1] = right[i];
+                    combined = new Float32Array(left.length * 2);
+                    for (i in 0...left.length)
+                    {
+                        combined[i * 2] = left[i];
+                        if (buffer.channels == 2)
+                            combined[i * 2 + 1] = right[i];
+                    }
                 }
 
-                // left = null;
-                // right = null;
-                // TODO: IF ONLY ONE CHANNEL DON'T COMBINE BUT RATHER JUST PASS 1 CHANNEL HERE!!!
-                buffer.channels = 1;
-                buffer.data = cast left; // TODO: remove this temporary, and combine !!! 
+                // TODO: is it safe to cast this?
+                buffer.data = buffer.channels == 2 ? cast combined : cast left;
             }
         }
         #end
