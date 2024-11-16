@@ -234,7 +234,7 @@ class FlxWaveform extends FlxSprite
         // On HTML5 Lime does not expose any kind of AudioBuffer
         // data which makes it difficult to do anything.
         // Our only hope is to try to get it from howler.js
-        
+
         @:privateAccess
         if (!bufferValid(buffer) && buffer.__srcHowl != null)
         {
@@ -508,10 +508,6 @@ class FlxWaveform extends FlxSprite
         var step:Int = stereo ? 8 : 4;
         for (i in 0...Std.int(samples.length / step))
         {
-            // left.push((samples.getFloat(i * step) + 1) / 2);
-            // if (stereo)
-            //     right.push((samples.getFloat(i * step + 4) + 1) / 2);
-
             left.push(samples.getFloat(i * step));
             if (stereo)
                 right.push(samples.getFloat(i * step + 4));
@@ -540,7 +536,6 @@ class FlxWaveform extends FlxSprite
         var step:Int = stereo ? 8 : 4;
         for (i in 0...Std.int(samples.length / step))
         {
-            // trace(samples.getFloat(i * step));
             left.push(samples.normalizeInt32(i * step));
             if (stereo)
                 right.push(samples.normalizeInt32(i * step + 4));

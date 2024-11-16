@@ -44,7 +44,7 @@ class BytesExt
     /**
      * The minimum value of a signed 24bit integer.
      */
-     public static inline final INT24_MIN:Int = -8388608;
+    public static inline final INT24_MIN:Int = -8388608;
 
     /**
      * The maximum value of a signed 24bit integer.
@@ -103,7 +103,6 @@ class BytesExt
     public static inline function normalizeUInt8(bytes:Bytes, pos:Int):Float
     {
         // bytes.get() returns an unsigned int8?
-        // return bytes.get(pos) / UINT8_MAX;
         return FlxMath.remapToRange(bytes.get(pos), 0, UINT8_MAX, -1, 1);
     }
 
@@ -115,7 +114,6 @@ class BytesExt
      */
     public static inline function normalizeInt16(bytes:Bytes, pos:Int):Float
     {
-        // return getInt16(bytes, pos) / INT16_MAX;
         return FlxMath.remapToRange(getInt16(bytes, pos), INT16_MIN, INT16_MAX, -1, 1);
     }
 
@@ -127,7 +125,6 @@ class BytesExt
      */
     public static inline function normalizeInt24(bytes:Bytes, pos:Int):Float
     {
-        // return getInt24(bytes, pos) / INT24_MAX;
         return FlxMath.remapToRange(getInt24(bytes, pos), INT24_MIN, INT24_MAX, -1, 1);
     }
 
@@ -139,7 +136,6 @@ class BytesExt
      */
     public static inline function normalizeInt32(bytes:Bytes, pos:Int):Float
     {
-        // return bytes.getInt32(pos) / INT32_MAX;
         return FlxMath.remapToRange(bytes.getInt32(pos), INT32_MIN, INT32_MAX, -1, 1);
     }
 }
