@@ -1,6 +1,7 @@
 package flixel.addons.display.waveform;
 
 import haxe.io.Bytes;
+import flixel.math.FlxMath;
 
 /**
  * Helper class that adds additional functionality to
@@ -11,14 +12,24 @@ import haxe.io.Bytes;
 class BytesExt
 {
     /**
+     * The minimum value of a signed 8bit integer.
+     */
+    public static inline final INT8_MIN:Int = -127;
+
+    /**
      * The maximum value of a signed 8bit integer.
      */
-    public static inline final INT8_MAX:Int = 128;
+    public static inline final INT8_MAX:Int = 127;
 
     /**
      * The maximum value of an unsigned 8bit integer.
      */
     public static inline final UINT8_MAX:Int = 255;
+
+    /**
+     * The minimum value of a signed 16bit integer.
+     */
+    public static inline final INT16_MIN:Int = -32768;
 
     /**
      * The maximum value of a signed 16bit integer.
@@ -31,9 +42,19 @@ class BytesExt
     public static inline final UINT16_MAX:Int = 65535;
 
     /**
+     * The minimum value of a signed 24bit integer.
+     */
+     public static inline final INT24_MIN:Int = -8388608;
+
+    /**
      * The maximum value of a signed 24bit integer.
      */
     public static inline final INT24_MAX:Int = 8388607;
+
+    /**
+     * The minimum value of a signed 32bit integer.
+     */
+    public static inline final INT32_MIN:Int = -2147483648;
 
     /**
      * The maximum value of a signed 32bit integer.
@@ -74,7 +95,7 @@ class BytesExt
     }
 
     /**
-     * Reads & normalizes an unsigned 8bit integer in the range of 0 to 1.
+     * Reads & normalizes an unsigned 8bit integer in the range of -1 to 1.
      * @param bytes Bytes to read from
      * @param pos Position to read from
      * @return Normalized value
@@ -82,39 +103,43 @@ class BytesExt
     public static inline function normalizeUInt8(bytes:Bytes, pos:Int):Float
     {
         // bytes.get() returns an unsigned int8?
-        return bytes.get(pos) / UINT8_MAX;
+        // return bytes.get(pos) / UINT8_MAX;
+        return FlxMath.remapToRange(bytes.get(pos), 0, UINT8_MAX, -1, 1);
     }
 
     /**
-     * Reads & normalizes a signed 16bit integer in the range of 0 to 1.
+     * Reads & normalizes a signed 16bit integer in the range of -1 to 1.
      * @param bytes Bytes to read from
      * @param pos Position to read from
      * @return Normalized value
      */
     public static inline function normalizeInt16(bytes:Bytes, pos:Int):Float
     {
-        return getInt16(bytes, pos) / INT16_MAX;
+        // return getInt16(bytes, pos) / INT16_MAX;
+        return FlxMath.remapToRange(getInt16(bytes, pos), INT16_MIN, INT16_MAX, -1, 1);
     }
 
     /**
-     * Reads & normalizes a signed 24bit integer in the range of 0 to 1.
+     * Reads & normalizes a signed 24bit integer in the range of -1 to 1.
      * @param bytes Bytes to read from
      * @param pos Position to read from
      * @return Normalized value
      */
     public static inline function normalizeInt24(bytes:Bytes, pos:Int):Float
     {
-        return getInt24(bytes, pos) / INT24_MAX;
+        // return getInt24(bytes, pos) / INT24_MAX;
+        return FlxMath.remapToRange(getInt24(bytes, pos), INT24_MIN, INT24_MAX, -1, 1);
     }
 
     /**
-     * Reads & normalizes a signed 32bit integer in the range of 0 to 1.
+     * Reads & normalizes a signed 32bit integer in the range of -1 to 1.
      * @param bytes Bytes to read from
      * @param pos Position to read from
      * @return Normalized value
      */
     public static inline function normalizeInt32(bytes:Bytes, pos:Int):Float
     {
-        return bytes.getInt32(pos) / INT32_MAX;
+        // return bytes.getInt32(pos) / INT32_MAX;
+        return FlxMath.remapToRange(bytes.getInt32(pos), INT32_MIN, INT32_MAX, -1, 1);
     }
 }

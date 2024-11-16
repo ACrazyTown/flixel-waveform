@@ -239,7 +239,8 @@ class FlxWaveform extends FlxSprite
         if (!bufferValid(buffer) && buffer.__srcHowl != null)
         {
             // TODO: This approach seems very unstable, as good as it gets right now?
-            // bufferSource seems to not be reliable and whether it's null depends on timing and similar.
+            // bufferSource seems to be available DURING sound playback.
+            // Attempting to access it before playing a sound will not work.
             var n = buffer.src._sounds[0]._node;
             trace(n);
             js.html.Console.log(n);
@@ -496,10 +497,8 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a 32bit float format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
-     * for both audio channels.
+     * Does nothing really, as Float32 data is already normalized.
+     * Just seperates both channels into different arrays.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -530,7 +529,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * a signed 32bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
@@ -559,7 +558,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * a signed 24bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
@@ -587,7 +586,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * a signed 16bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
@@ -615,7 +614,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * an unsigned 8bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
