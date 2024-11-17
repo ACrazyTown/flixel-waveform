@@ -1,6 +1,7 @@
 
 package flixel.addons.display.waveform;
 
+import lime.utils.Float32Array;
 import haxe.io.Bytes;
 import lime.media.AudioBuffer;
 import openfl.geom.Rectangle;
@@ -229,6 +230,52 @@ class FlxWaveform extends FlxSprite
      */
     public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
     {
+        #if (js && html5 && lime_howlerjs)
+        // On HTML5 Lime does not expose any kind of AudioBuffer
+        // data which makes it difficult to do anything.
+        // Our only hope is to try to get it from howler.js
+
+        @:privateAccess
+        if (!bufferValid(buffer) && buffer.__srcHowl != null)
+        {
+            // TODO: This approach seems very unstable, as good as it gets right now?
+            // bufferSource seems to be available DURING sound playback.
+            // Attempting to access it before playing a sound will not work.
+            var bufferSource:js.html.audio.AudioBufferSourceNode = buffer?.src?._sounds[0]?._node?.bufferSource;
+            if (bufferSource != null)
+            {
+                var jsBuffer:js.html.audio.AudioBuffer = bufferSource.buffer;
+
+                // Data is always a Float32Array
+                buffer.bitsPerSample = 32;
+                buffer.channels = jsBuffer.numberOfChannels;
+                buffer.sampleRate = Std.int(jsBuffer.sampleRate);
+
+                var left = jsBuffer.getChannelData(0);
+                var right = null;
+                if (buffer.channels == 2)
+                    right = jsBuffer.getChannelData(1);
+                
+                // convert into lime friendly format
+                // TODO: How does this affect memory?
+                var combined:js.lib.Float32Array = null;
+                if (buffer.channels == 2)
+                {
+                    combined = new Float32Array(left.length * 2);
+                    for (i in 0...left.length)
+                    {
+                        combined[i * 2] = left[i];
+                        if (buffer.channels == 2)
+                            combined[i * 2 + 1] = right[i];
+                    }
+                }
+
+                // TODO: is it safe to cast this?
+                buffer.data = buffer.channels == 2 ? cast combined : cast left;
+            }
+        }
+        #end
+
         if (!bufferValid(buffer))
         {
             FlxG.log.error("[FlxWaveform] Tried to load invalid buffer! Make sure the audio buffer has valid sampleRate, bitsPerSample, channels and data.");
@@ -444,15 +491,13 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a 32bit float format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
-     * for both audio channels.
+     * Does nothing really, as Float32 data is already normalized.
+     * Just seperates both channels into different arrays.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
      */
-     private function normalizeSamplesF32(samples:Bytes, stereo:Bool):NormalizedSampleData
+    private function normalizeSamplesF32(samples:Bytes, stereo:Bool):NormalizedSampleData
     {
         var left:Array<Float> = [];
         var right:Array<Float> = null;
@@ -463,9 +508,9 @@ class FlxWaveform extends FlxSprite
         var step:Int = stereo ? 8 : 4;
         for (i in 0...Std.int(samples.length / step))
         {
-            left.push((samples.getFloat(i * step) + 1) / 2);
+            left.push(samples.getFloat(i * step));
             if (stereo)
-                right.push((samples.getFloat(i * step * 4) + 1) / 2);
+                right.push(samples.getFloat(i * step + 4));
         }
 
         return {left: left, right: right};
@@ -474,7 +519,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * a signed 32bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
@@ -502,7 +547,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * a signed 24bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
@@ -530,7 +575,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * a signed 16bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
@@ -558,7 +603,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Processes a `Bytes` instance containing audio data in 
      * an unsigned 8bit integer format and returns 2 arrays
-     * containing normalized samples in the range from 0 to 1
+     * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
