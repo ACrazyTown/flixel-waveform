@@ -12,6 +12,10 @@ import flixel.FlxSprite;
 import flixel.sound.FlxSound;
 import flixel.util.FlxColor;
 
+#if flash
+import flash.media.Sound;
+#end
+
 using flixel.addons.display.waveform.BytesExt;
 
 /**
@@ -207,29 +211,20 @@ class FlxWaveform extends FlxSprite
             return;
         }
 
-        var buffer:AudioBuffer = null;
-
         #if flash
-        buffer = new AudioBuffer();
-
-        // These values are always hardcoded.
-        // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Sound.html#extract()
-        buffer.sampleRate = 44100;
-        buffer.channels = 2;
-        buffer.bitsPerSample = 32;
-        
         @:privateAccess
-        var flashSound = sound._sound;
+        var flashSound:Sound = sound._sound;
 
-        var length:Int = Std.int(44100 * (flashSound.length / 1000) * 2 * 4);
-        var bytes:Bytes = Bytes.alloc(length);
+        if (flashSound == null)
+        {
+            FlxG.log.error("[FlxWaveform] Waveform buffer null!");
+            return;
+        }
 
-        flashSound.extract(bytes.getData(), bytes.length);
-
-        buffer.data = UInt8Array.fromBytes(bytes);
+        loadDataFromFlashSound(flashSound);
         #else
         @:privateAccess
-        buffer = sound?._channel?.__audioSource?.buffer;
+        var buffer:AudioBuffer = sound?._channel?.__audioSource?.buffer;
 
         if (buffer == null)
         {
@@ -242,11 +237,39 @@ class FlxWaveform extends FlxSprite
                 return;
             }
         }
+        
+        loadDataFromAudioBuffer(buffer);
         #end
+    }
+
+    #if flash
+    /**
+     * Loads the audio buffer data neccessary for processing the
+     * waveform from a `flash.media.Sound`.
+     * @param sound The `flash.media.Sound` to get data from.
+     * @param buffer The buffer to fill with data. If null will make a new one.
+     */
+    public function loadDataFromFlashSound(sound:Sound, ?buffer:AudioBuffer):Void
+    {
+        if (buffer == null)
+            buffer = new AudioBuffer();
+
+        // These values are always hardcoded.
+        // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Sound.html#extract()
+        buffer.sampleRate = 44100;
+        buffer.channels = 2;
+        buffer.bitsPerSample = 32;
+
+        var numSamples:Float = 44100 * (sound.length / 1000);
+        var length:Int = Std.int(numSamples * 2 * 4);
+        var bytes:Bytes = Bytes.alloc(length);
+
+        sound.extract(bytes.getData(), numSamples);
+        buffer.data = UInt8Array.fromBytes(bytes);
 
         loadDataFromAudioBuffer(buffer);
-
     }
+    #end
 
     /**
 	 * Loads the audio buffer data neccessary for processing the 
@@ -298,6 +321,14 @@ class FlxWaveform extends FlxSprite
                 // TODO: is it safe to cast this?
                 buffer.data = buffer.channels == 2 ? cast combined : cast left;
             }
+        }
+        #elseif flash
+        @:privateAccess
+        if (!bufferValid(buffer) && buffer.__srcSound != null)
+        {
+            @:privateAccess
+            loadDataFromFlashSound(buffer.__srcSound, buffer);
+            return;
         }
         #end
 
