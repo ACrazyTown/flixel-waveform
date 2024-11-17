@@ -37,13 +37,11 @@ class FlxWaveform extends FlxSprite
      * 
      * `COMBINED` will draw both audio channels (if in stereo) onto the 
      * full area of the graphic, causing an overlap between the two.
-
      * 
      * `SPLIT_CHANNELS` will horizontally split the waveform into 
      * top and bottom parts, for the two audio channels.
      * The top part represents the left audio channel, 
      * while the bottom part represents the right channel.
-
      */
     public var waveformDrawMode(get, set):WaveformDrawMode;
 
@@ -126,7 +124,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Internal variable holding the current end of the draw range (in miliseconds)
      */
-     var _curRangeEnd:Float = -1;
+    var _curRangeEnd:Float = -1;
 
     /**
      * Internal array of Floats that holds the values of audio peaks 
@@ -170,11 +168,9 @@ class FlxWaveform extends FlxSprite
      * Creates a new `FlxWaveform` instance with the specified draw data.
      * The waveform is not ready to display anything yet.
      *
-
      * In order to display anything you need to load audio buffer data
      * from one of the available `loadDataFrom` functions & specify
      * a draw range using `setDrawRange()`.
-
      * 
      * @param x The initial position of the sprite on the X axis.
      * @param y The initial position of the sprite on the Y axis.
@@ -183,7 +179,6 @@ class FlxWaveform extends FlxSprite
      * @param color The color used for drawing the actual waveform.
      * @param backgroundColor The background color of the waveform graphic.
      * @param drawMode The visual appearance of the waveform. See `FlxWaveform.drawMode` for more info.
-
      */
     public function new(x:Float, y:Float, ?width:Int, ?height:Int, ?color:FlxColor = 0xFFFFFFFF, ?backgroundColor:FlxColor = 0x00000000, ?drawMode:WaveformDrawMode = COMBINED)
     {
@@ -200,6 +195,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Loads the audio buffer data neccessary for processing the 
      * waveform from a HaxeFlixel `FlxSound`.
+     * 
      * @param sound The FlxSound to get data from.
      */
     public function loadDataFromFlxSound(sound:FlxSound):Void
@@ -273,6 +269,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Loads the audio buffer data neccessary for processing the 
      * waveform from a `lime.media.AudioBuffer`.
+     * 
      * @param buffer The `lime.media.AudioBuffer` to get data from.
      */
     public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
@@ -380,6 +377,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Sets the time range that the waveform represents.
+     * 
      * @param endTime The end of the range, in miliseconds. If not specified will be the length of the sound.
      * @param startTime The start of the range, in miliseconds. If not specified will be the start of the sound.
      */
@@ -521,6 +519,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Writes an array the size of `waveformWidth` containing audio peaks
      * for each pixel.
+     * 
      * @param samples Input samples
      * @param out Output array containing peaks.
      */
@@ -548,6 +547,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Does nothing really, as Float32 data is already normalized.
      * Just seperates both channels into different arrays.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -576,6 +576,7 @@ class FlxWaveform extends FlxSprite
      * a signed 32bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -604,6 +605,7 @@ class FlxWaveform extends FlxSprite
      * a signed 24bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -632,6 +634,7 @@ class FlxWaveform extends FlxSprite
      * a signed 16bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -660,6 +663,7 @@ class FlxWaveform extends FlxSprite
      * an unsigned 8bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -685,6 +689,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Clears an array in the fastest possible way.
+     * 
      * @param array The array to be cleared.
      */
     private function clearArray<T>(array:Array<T>):Void
@@ -700,7 +705,9 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * If `array` is `null` creates a new array instance, otherwise clears the old reference and returns it
+     * If `array` is `null` creates a new array instance, otherwise 
+     * clears the old reference and returns it
+     * 
      * @param array Input array
      * @return Array<T> Output array
      */
@@ -713,6 +720,12 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
+    /**
+     * Checks if a `lime.media.AudioBuffer` has all the
+     * properties required for rendering a waveform.
+     * @param buffer Audio buffer
+     * @return Whether the audio buffer is valid
+     */
     private inline function bufferValid(buffer:AudioBuffer):Bool
     {
         return buffer != null 
@@ -819,6 +832,7 @@ typedef NormalizedSampleData =
     left:Array<Float>,
     ?right:Array<Float>
 }
+
 enum WaveformDrawMode
 {
     COMBINED;
