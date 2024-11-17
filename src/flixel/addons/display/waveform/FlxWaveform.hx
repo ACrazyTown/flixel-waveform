@@ -723,6 +723,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Checks if a `lime.media.AudioBuffer` has all the
      * properties required for rendering a waveform.
+     * 
      * @param buffer Audio buffer
      * @return Whether the audio buffer is valid
      */
