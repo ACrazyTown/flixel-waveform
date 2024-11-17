@@ -22,6 +22,10 @@ class PlayState extends FlxState
 		FlxG.sound.playMusic("assets/beeper.ogg");
 		FlxG.sound.music.stop();
 		FlxG.sound.music.looped = true;
+
+		// NOTE: Due to a limitation, on HTML5
+		// you have to play the audio source
+		// before trying to make a waveform from it.
 		FlxG.sound.music.play(true);
 
 		// Check if bitmap max texture size is available.
