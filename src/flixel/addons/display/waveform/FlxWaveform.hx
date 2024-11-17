@@ -1,6 +1,7 @@
 
 package flixel.addons.display.waveform;
 
+import lime.utils.UInt8Array;
 import lime.utils.Float32Array;
 import lime.utils.UInt8Array;
 import haxe.io.Bytes;
