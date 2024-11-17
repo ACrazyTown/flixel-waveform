@@ -14,7 +14,3 @@ A simple (I hope) `FlxSprite` extension that allows for rendering waveforms from
 3. And then include it in your Project.xml: `<haxelib name="flixel-waveform">`
 
 4. Finally, import it in your code when needed: `import flixel.addons.display.waveform.FlxWaveform;`
-
-## Info
-### Supported targets
-Should work on any target that exposes raw audio buffer data (native targets). Due to the lime handles audio on HTML5/Flash, this addon does not work on those targets. I'm looking into possible solutions.
