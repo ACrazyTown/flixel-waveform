@@ -1,7 +1,6 @@
 
 package flixel.addons.display.waveform;
 
-import lime.utils.UInt8Array;
 import lime.utils.Float32Array;
 import lime.utils.UInt8Array;
 import haxe.io.Bytes;
@@ -29,22 +28,20 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Represents how many audio samples 1 pixel is equal to.
-	 * This value is dependant on the draw range & width of the waveform.
+     * This value is dependant on the draw range & width of the waveform.
      */
     public var samplesPerPixel(default, null):Float;
 
     /**
-	 * An enum representing how the waveform will look visually.
+     * An enum representing how the waveform will look visually.
      * 
-	 * `COMBINED` will draw both audio channels (if in stereo) onto the 
-	 * full area of the graphic, causing an overlap between the two.
-
+     * `COMBINED` will draw both audio channels (if in stereo) onto the 
+     * full area of the graphic, causing an overlap between the two.
      * 
-	 * `SPLIT_CHANNELS` will horizontally split the waveform into 
-	 * top and bottom parts, for the two audio channels.
-	 * The top part represents the left audio channel, 
-	 * while the bottom part represents the right channel.
-
+     * `SPLIT_CHANNELS` will horizontally split the waveform into 
+     * top and bottom parts, for the two audio channels.
+     * The top part represents the left audio channel, 
+     * while the bottom part represents the right channel.
      */
     public var waveformDrawMode(get, set):WaveformDrawMode;
 
@@ -59,61 +56,61 @@ class FlxWaveform extends FlxSprite
     public var waveformColor(get, set):FlxColor;
 
     /**
-	 * The width of the entire waveform graphic.
-	 *
-	 * If you want to change both the width and height of the graphic
-	 * it is recommended to use the `resize()` function to prevent
-	 * a double redraw.
+     * The width of the entire waveform graphic.
+     *
+     * If you want to change both the width and height of the graphic
+     * it is recommended to use the `resize()` function to prevent
+     * a double redraw.
      */
     public var waveformWidth(get, set):Int;
 
     /**
-	 * The height of the entire waveform graphic.
-	 *
-	 * When `waveformDrawMode` is set to `SPLIT_CHANNELS`, each channel
-	 * will be half of `waveformHeight`.
-	 * 
-	 * If you want to change both the width and height of the graphic
-	 * it is recommended to use the `resize()` function to prevent
-	 * a double redraw.
+     * The height of the entire waveform graphic.
+     *
+     * When `waveformDrawMode` is set to `SPLIT_CHANNELS`, each channel
+     * will be half of `waveformHeight`.
+     * 
+     * If you want to change both the width and height of the graphic
+     * it is recommended to use the `resize()` function to prevent
+     * a double redraw.
      */
     public var waveformHeight(get, set):Int;
 
     /**
-	 * Whether the waveform graphic should be automatically 
-	 * regenerated when there's a change in data that would
-	 * affect the waveform visually.
+     * Whether the waveform graphic should be automatically 
+     * regenerated when there's a change in data that would
+     * affect the waveform visually.
      *
-	 *  If set to `false`, you have to call 
-	 * `FlxWaveform.generateWaveformBitmap()` to update the graphic.
+     *  If set to `false`, you have to call 
+     * `FlxWaveform.generateWaveformBitmap()` to update the graphic.
      */
     public var autoUpdateBitmap:Bool = true;
 
     /* ----------- INTERNALS ----------- */
 
     /**
-	 * Internal variable holding a reference to a 
-	 * lime `AudioBuffer` used for analyzing the audio data.
+     * Internal variable holding a reference to a 
+     * lime `AudioBuffer` used for analyzing the audio data.
      */
     var _buffer:AudioBuffer = null;
 
     /**
-	 * Internal variable that holds a reference to the 
-	 * Bytes representation of the lime `AudioBuffer` data
+     * Internal variable that holds a reference to the 
+     * Bytes representation of the lime `AudioBuffer` data
      */
     var _bufferDataBytes:Bytes;
 
     /**
-	 * Internal helper variable indicating whether the 
-	 * audio source is stereo (has 2 audio channels).
+     * Internal helper variable indicating whether the 
+     * audio source is stereo (has 2 audio channels).
      */
     var _stereo:Bool = false;
 
     /**
-	 * Internal structure that holds a reference to 2 arrays 
-	 * holding normalized sample data for both channels.
-	 * The normalized sample data is an array of 
-	 * `Floats` that range from 0.0 to 1.0
+     * Internal structure that holds a reference to 2 arrays 
+     * holding normalized sample data for both channels.
+     * The normalized sample data is an array of 
+     * `Floats` that range from 0.0 to 1.0
      * 
      * If the sound is not in stereo, only the left channel array will be used.
      */
@@ -127,17 +124,17 @@ class FlxWaveform extends FlxSprite
     /**
      * Internal variable holding the current end of the draw range (in miliseconds)
      */
-     var _curRangeEnd:Float = -1;
+    var _curRangeEnd:Float = -1;
 
     /**
-	 * Internal array of Floats that holds the values of audio peaks 
-	 * for the left channel from 0.0 to 1.0 in a specified time frame.
+     * Internal array of Floats that holds the values of audio peaks 
+     * for the left channel from 0.0 to 1.0 in a specified time frame.
      */
     var _peaksLeft:Array<Float> = null;
 
     /**
-	 * Internal array of Floats that holds the values of audio peaks 
-	 * for the right channel from 0.0 to 1.0 in a specified time frame.
+     * Internal array of Floats that holds the values of audio peaks 
+     * for the right channel from 0.0 to 1.0 in a specified time frame.
      */
     var _peaksRight:Array<Float> = null;
 
@@ -168,23 +165,20 @@ class FlxWaveform extends FlxSprite
     var _waveformDrawMode:WaveformDrawMode;
 
     /**
-	 * Creates a new `FlxWaveform` instance with the specified draw data.
-	 * The waveform is not ready to display anything yet.
-	 *
-
-	 * In order to display anything you need to load audio buffer data
-	 * from one of the available `loadDataFrom` functions & specify
-	 * a draw range using `setDrawRange()`.
-
+     * Creates a new `FlxWaveform` instance with the specified draw data.
+     * The waveform is not ready to display anything yet.
+     *
+     * In order to display anything you need to load audio buffer data
+     * from one of the available `loadDataFrom` functions & specify
+     * a draw range using `setDrawRange()`.
      * 
-	 * @param x The initial position of the sprite on the X axis.
-	 * @param y The initial position of the sprite on the Y axis.
-	 * @param width The initial width of the waveform graphic.
-	 * @param height The initial height of the waveform graphic.
-	 * @param color The color used for drawing the actual waveform.
-	 * @param backgroundColor The background color of the waveform graphic.
-	 * @param drawMode The visual appearance of the waveform. See `FlxWaveform.drawMode` for more info.
-
+     * @param x The initial position of the sprite on the X axis.
+     * @param y The initial position of the sprite on the Y axis.
+     * @param width The initial width of the waveform graphic.
+     * @param height The initial height of the waveform graphic.
+     * @param color The color used for drawing the actual waveform.
+     * @param backgroundColor The background color of the waveform graphic.
+     * @param drawMode The visual appearance of the waveform. See `FlxWaveform.drawMode` for more info.
      */
     public function new(x:Float, y:Float, ?width:Int, ?height:Int, ?color:FlxColor = 0xFFFFFFFF, ?backgroundColor:FlxColor = 0x00000000, ?drawMode:WaveformDrawMode = COMBINED)
     {
@@ -199,9 +193,10 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-	 * Loads the audio buffer data neccessary for processing the 
-	 * waveform from a HaxeFlixel `FlxSound`.
-	 * @param sound The FlxSound to get data from.
+     * Loads the audio buffer data neccessary for processing the 
+     * waveform from a HaxeFlixel `FlxSound`.
+     * 
+     * @param sound The FlxSound to get data from.
      */
     public function loadDataFromFlxSound(sound:FlxSound):Void
     {
@@ -272,9 +267,10 @@ class FlxWaveform extends FlxSprite
     #end
 
     /**
-	 * Loads the audio buffer data neccessary for processing the 
-	 * waveform from a `lime.media.AudioBuffer`.
-	 * @param buffer The `lime.media.AudioBuffer` to get data from.
+     * Loads the audio buffer data neccessary for processing the 
+     * waveform from a `lime.media.AudioBuffer`.
+     * 
+     * @param buffer The `lime.media.AudioBuffer` to get data from.
      */
     public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
     {
@@ -380,9 +376,10 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-	 * Sets the time range that the waveform represents.
+     * Sets the time range that the waveform represents.
+     * 
      * @param endTime The end of the range, in miliseconds. If not specified will be the length of the sound.
-	 * @param startTime The start of the range, in miliseconds. If not specified will be the start of the sound.
+     * @param startTime The start of the range, in miliseconds. If not specified will be the start of the sound.
      */
     public function setDrawRange(?endTime:Float = -1, ?startTime:Float = -1):Void
     {
@@ -423,9 +420,9 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Draws the waveform onto this sprite's graphic.
-	 *
-	 * If you have `autoUpdateBitmap` enabled, you most likely
-	 * do not need to call this function manually.
+     *
+     * If you have `autoUpdateBitmap` enabled, you most likely
+     * do not need to call this function manually.
      */
     public function generateWaveformBitmap():Void
     {
@@ -500,8 +497,8 @@ class FlxWaveform extends FlxSprite
     /**
      * Resizes the waveform's graphic.
      * 
-	 * It is recommended to use this function rather than 
-	 * modifying `waveformWidth` and `waveformHeight` seperately 
+     * It is recommended to use this function rather than 
+     * modifying `waveformWidth` and `waveformHeight` seperately 
      * if you want to change both.
      * 
      * @param width New width of the graphic
@@ -522,6 +519,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Writes an array the size of `waveformWidth` containing audio peaks
      * for each pixel.
+     * 
      * @param samples Input samples
      * @param out Output array containing peaks.
      */
@@ -549,6 +547,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Does nothing really, as Float32 data is already normalized.
      * Just seperates both channels into different arrays.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -577,6 +576,7 @@ class FlxWaveform extends FlxSprite
      * a signed 32bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -605,6 +605,7 @@ class FlxWaveform extends FlxSprite
      * a signed 24bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -633,6 +634,7 @@ class FlxWaveform extends FlxSprite
      * a signed 16bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -661,6 +663,7 @@ class FlxWaveform extends FlxSprite
      * an unsigned 8bit integer format and returns 2 arrays
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
+     * 
      * @param samples The audio buffer bytes data containing audio samples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
@@ -686,6 +689,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Clears an array in the fastest possible way.
+     * 
      * @param array The array to be cleared.
      */
     private function clearArray<T>(array:Array<T>):Void
@@ -701,7 +705,9 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * If `array` is `null` creates a new array instance, otherwise clears the old reference and returns it
+     * If `array` is `null` creates a new array instance, otherwise 
+     * clears the old reference and returns it
+     * 
      * @param array Input array
      * @return Array<T> Output array
      */
@@ -714,6 +720,13 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
+    /**
+     * Checks if a `lime.media.AudioBuffer` has all the
+     * properties required for rendering a waveform.
+     * 
+     * @param buffer Audio buffer
+     * @return Whether the audio buffer is valid
+     */
     private inline function bufferValid(buffer:AudioBuffer):Bool
     {
         return buffer != null 
@@ -820,6 +833,7 @@ typedef NormalizedSampleData =
     left:Array<Float>,
     ?right:Array<Float>
 }
+
 enum WaveformDrawMode
 {
     COMBINED;
