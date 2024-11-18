@@ -177,7 +177,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Internal helper
      */
-    var _waveformDirty:Bool = false;
+    var _waveformDirty:Bool = true;
 
     /**
      * Creates a new `FlxWaveform` instance with the specified draw data.
