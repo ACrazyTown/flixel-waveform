@@ -617,7 +617,7 @@ class FlxWaveform extends FlxSprite
         if (stereo)
             right = [];
 
-        // Int24 is 3 bytes, times 6 for both channels.
+        // Int24 is 3 bytes, times 2 for both channels.
         var step:Int = stereo ? 6 : 3;
         for (i in 0...Std.int(samples.length / step))
         {
