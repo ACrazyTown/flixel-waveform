@@ -89,7 +89,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Whether the waveform baseline should be drawn.
      */
-    public var drawBaseline:Bool = true;
+    public var waveformDrawBaseline:Bool = true;
 
     /* ----------- INTERNALS ----------- */
 
@@ -168,6 +168,11 @@ class FlxWaveform extends FlxSprite
      * Internal helper
      */
     var _waveformDrawMode:WaveformDrawMode;
+
+    /**
+     * Internal helper
+     */
+    var _waveformDrawBaseline:Bool;
 
     /**
      * Internal helper
@@ -457,11 +462,11 @@ class FlxWaveform extends FlxSprite
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), _waveformBgColor);
 
-        if (waveformDrawMode == COMBINED)
+        if (_waveformDrawMode == COMBINED)
         {
             var centerY:Float = _waveformHeight / 2;
 
-            if (drawBaseline)
+            if (_waveformDrawBaseline)
             {
                 pixels.fillRect(new Rectangle(0, centerY, _waveformWidth, 1), _waveformColor);
             }
@@ -494,7 +499,7 @@ class FlxWaveform extends FlxSprite
             var half:Float = _waveformHeight / 2;
             var centerY:Float = _waveformHeight / 4;
 
-            if (drawBaseline)
+            if (_waveformDrawBaseline)
             {
                 pixels.fillRect(new Rectangle(0, centerY, _waveformWidth, 1), _waveformColor);
                 pixels.fillRect(new Rectangle(0, half + centerY, _waveformWidth, 1), _waveformColor);
@@ -856,6 +861,24 @@ class FlxWaveform extends FlxSprite
         }
 
         return _waveformDrawMode;
+    }
+
+    @:noCompletion function get_waveformDrawBaseline():Bool
+    {
+        return _waveformDrawBaseline;
+    }
+
+    @:noCompletion function set_waveformDrawBaseline(value:Bool):Bool 
+    {
+        if (_waveformDrawBaseline != value)
+        {
+            _waveformDrawBaseline = value;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return _waveformDrawBaseline;
     }
 }
 
