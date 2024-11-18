@@ -90,7 +90,7 @@ class FlxWaveform extends FlxSprite
      * Whether the waveform baseline should be drawn.
      */
     public var drawBaseline:Bool = true;
-    
+
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -170,6 +170,11 @@ class FlxWaveform extends FlxSprite
     var _waveformDrawMode:WaveformDrawMode;
 
     /**
+     * Internal helper
+     */
+    var _waveformDirty:Bool = false;
+
+    /**
      * Creates a new `FlxWaveform` instance with the specified draw data.
      * The waveform is not ready to display anything yet.
      *
@@ -195,6 +200,17 @@ class FlxWaveform extends FlxSprite
         _waveformHeight = height;
         _waveformDrawMode = drawMode;
         makeGraphic(_waveformWidth, _waveformHeight, _waveformBgColor);
+    }
+
+    override function draw():Void
+    {
+        if (_waveformDirty)
+        {
+            generateWaveformBitmap();
+            _waveformDirty = false;
+        }
+
+        super.draw();
     }
 
     /**
@@ -529,7 +545,7 @@ class FlxWaveform extends FlxSprite
 
         makeGraphic(width, height, _waveformBgColor);
         if (autoUpdateBitmap)
-            generateWaveformBitmap();
+            _waveformDirty = true;
     }
 
     /**
@@ -800,7 +816,7 @@ class FlxWaveform extends FlxSprite
             _waveformBgColor = value;
 
             if (autoUpdateBitmap)
-                generateWaveformBitmap();
+                _waveformDirty = true;
         }
 
         return _waveformBgColor;
@@ -818,7 +834,7 @@ class FlxWaveform extends FlxSprite
             _waveformColor = value;
 
             if (autoUpdateBitmap)
-                generateWaveformBitmap();
+                _waveformDirty = true;
         }
 
         return _waveformColor;
@@ -836,7 +852,7 @@ class FlxWaveform extends FlxSprite
             _waveformDrawMode = value;
 
             if (autoUpdateBitmap)
-                generateWaveformBitmap();
+                _waveformDirty = true;
         }
 
         return _waveformDrawMode;
