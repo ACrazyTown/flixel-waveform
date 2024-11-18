@@ -86,6 +86,11 @@ class FlxWaveform extends FlxSprite
      */
     public var autoUpdateBitmap:Bool = true;
 
+    /**
+     * Whether the waveform baseline should be drawn.
+     */
+    public var drawBaseline:Bool = true;
+    
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -440,6 +445,11 @@ class FlxWaveform extends FlxSprite
         {
             var centerY:Float = _waveformHeight / 2;
 
+            if (drawBaseline)
+            {
+                pixels.fillRect(new Rectangle(0, centerY, _waveformWidth, 1), _waveformColor);
+            }
+
             for (i in 0..._waveformWidth)
             {
                 var peakLeft:Float = _peaksLeft[i];
@@ -467,6 +477,12 @@ class FlxWaveform extends FlxSprite
         {
             var half:Float = _waveformHeight / 2;
             var centerY:Float = _waveformHeight / 4;
+
+            if (drawBaseline)
+            {
+                pixels.fillRect(new Rectangle(0, centerY, _waveformWidth, 1), _waveformColor);
+                pixels.fillRect(new Rectangle(0, half + centerY, _waveformWidth, 1), _waveformColor);
+            }
 
             for (i in 0..._waveformWidth)
             {
