@@ -89,7 +89,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Whether the waveform baseline should be drawn.
      */
-    public var waveformDrawBaseline:Bool = true;
+    public var waveformDrawBaseline(get, set):Bool;
 
     /* ----------- INTERNALS ----------- */
 
@@ -543,10 +543,11 @@ class FlxWaveform extends FlxSprite
      */
     public function resize(width:Int, height:Int):Void
     {
-        // We don't need to do this?
-        // I think flixel will take care of it
-        // if (graphic != null)
-        //     graphic.destroy();
+        if (_waveformWidth != width)
+            setDrawRange(_curRangeEnd, _curRangeStart);
+
+        _waveformWidth = width;
+        _waveformHeight = height;
 
         makeGraphic(width, height, _waveformBgColor);
         if (autoUpdateBitmap)
@@ -785,7 +786,7 @@ class FlxWaveform extends FlxSprite
         {
             _waveformWidth = value;
 
-            setDrawRange(_curRangeEnd, _curRangeStart);
+            // setDrawRange(_curRangeEnd, _curRangeStart);
             resize(_waveformWidth, _waveformHeight);
         }
 
