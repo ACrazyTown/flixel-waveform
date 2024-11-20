@@ -43,20 +43,22 @@ class FlxWaveform extends FlxSprite
      * The top part represents the left audio channel, 
      * while the bottom part represents the right channel.
      */
-    public var waveformDrawMode(get, set):WaveformDrawMode;
+    public var waveformDrawMode(default, set):WaveformDrawMode;
 
     /**
      * The background color of the waveform graphic.
      */
-    public var waveformBgColor(get, set):FlxColor;
+    public var waveformBgColor(default, set):FlxColor;
 
     /**
      * The color used for rendering the actual waveform.
      */
-    public var waveformColor(get, set):FlxColor;
+    public var waveformColor(default, set):FlxColor;
 
     /**
      * The width of the entire waveform graphic.
+     * This is essentially a shortcut to `FlxSprite.frameWidth`
+     * with a setter for resizing.
      *
      * If you want to change both the width and height of the graphic
      * it is recommended to use the `resize()` function to prevent
@@ -66,7 +68,9 @@ class FlxWaveform extends FlxSprite
 
     /**
      * The height of the entire waveform graphic.
-     *
+     * This is essentially a shortcut to `FlxSprite.frameHeight`
+     * with a setter for resizing.
+     * 
      * When `waveformDrawMode` is set to `SPLIT_CHANNELS`, each channel
      * will be half of `waveformHeight`.
      * 
@@ -84,12 +88,12 @@ class FlxWaveform extends FlxSprite
      *  If set to `false`, you have to call 
      * `FlxWaveform.generateWaveformBitmap()` to update the graphic.
      */
-    public var autoUpdateBitmap:Bool = true;
+    public var autoUpdateBitmap(default, set):Bool = true;
 
     /**
      * Whether the waveform baseline should be drawn.
      */
-    public var waveformDrawBaseline(get, set):Bool;
+    public var waveformDrawBaseline(default, set):Bool;
 
     /* ----------- INTERNALS ----------- */
 
@@ -143,37 +147,6 @@ class FlxWaveform extends FlxSprite
      */
     var _peaksRight:Array<Float> = null;
 
-    // TODO: Move to a class or typedef?
-    /**
-     * Internal helper
-     */
-    var _waveformWidth:Int;
-
-    /**
-     * Internal helper
-     */
-    var _waveformHeight:Int;
-
-    /**
-     * Internal helper
-     */
-    var _waveformColor:FlxColor;
-
-    /**
-     * Internal helper
-     */
-    var _waveformBgColor:FlxColor;
-
-    /**
-     * Internal helper
-     */
-    var _waveformDrawMode:WaveformDrawMode;
-
-    /**
-     * Internal helper
-     */
-    var _waveformDrawBaseline:Bool;
-
     /**
      * Internal helper
      */
@@ -199,12 +172,12 @@ class FlxWaveform extends FlxSprite
     {
         super(x, y);
 
-        _waveformBgColor = backgroundColor;
-        _waveformColor = color;
-        _waveformWidth = width;
-        _waveformHeight = height;
-        _waveformDrawMode = drawMode;
-        makeGraphic(_waveformWidth, _waveformHeight, _waveformBgColor);
+        waveformBgColor = backgroundColor;
+        waveformColor = color;
+        // _waveformWidth = width;
+        // _waveformHeight = height;
+        waveformDrawMode = drawMode;
+        makeGraphic(width, height, waveformBgColor);
     }
 
     override function draw():Void
@@ -438,10 +411,13 @@ class FlxWaveform extends FlxSprite
         if (_stereo)
             sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
 
-        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / _waveformWidth;
+        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / waveformWidth;
         calculatePeaks(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
             calculatePeaks(sectionSamplesRight, _peaksRight);
+
+        if (autoUpdateBitmap)
+            _waveformDirty = true;
     }
 
     /**
@@ -460,18 +436,18 @@ class FlxWaveform extends FlxSprite
 
         // clear previous draw
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
-        pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), _waveformBgColor);
+        pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
 
-        if (_waveformDrawMode == COMBINED)
+        if (waveformDrawMode == COMBINED)
         {
-            var centerY:Float = _waveformHeight / 2;
+            var centerY:Float = waveformHeight / 2;
 
-            if (_waveformDrawBaseline)
+            if (waveformDrawBaseline)
             {
-                pixels.fillRect(new Rectangle(0, centerY, _waveformWidth, 1), _waveformColor);
+                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
             }
 
-            for (i in 0..._waveformWidth)
+            for (i in 0...waveformWidth)
             {
                 var peakLeft:Float = _peaksLeft[i];
                 var peakRight:Float = 0;
@@ -491,21 +467,21 @@ class FlxWaveform extends FlxSprite
                 var y1:Float = centerY - segmentHeight;
                 var y2:Float = centerY + segmentHeight;
 
-                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), _waveformColor);
+                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), waveformColor);
             }
         }
         else if (waveformDrawMode == SPLIT_CHANNELS)
         {
-            var half:Float = _waveformHeight / 2;
-            var centerY:Float = _waveformHeight / 4;
+            var half:Float = waveformHeight / 2;
+            var centerY:Float = waveformHeight / 4;
 
-            if (_waveformDrawBaseline)
+            if (waveformDrawBaseline)
             {
-                pixels.fillRect(new Rectangle(0, centerY, _waveformWidth, 1), _waveformColor);
-                pixels.fillRect(new Rectangle(0, half + centerY, _waveformWidth, 1), _waveformColor);
+                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+                pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
             }
 
-            for (i in 0..._waveformWidth)
+            for (i in 0...waveformWidth)
             {
                 var peakLeft:Float = _peaksLeft[i];
                 var peakRight:Float = 0;
@@ -525,8 +501,8 @@ class FlxWaveform extends FlxSprite
                 var y1r:Float = half + (centerY - segmentHeightRight);
                 var y2r:Float = half + (centerY + segmentHeightRight);
 
-                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), _waveformColor);
-                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), _waveformColor);
+                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), waveformColor);
+                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), waveformColor);
             }
         }
     }
@@ -543,13 +519,13 @@ class FlxWaveform extends FlxSprite
      */
     public function resize(width:Int, height:Int):Void
     {
-        if (_waveformWidth != width)
+        if (waveformWidth != width)
             setDrawRange(_curRangeEnd, _curRangeStart);
 
-        _waveformWidth = width;
-        _waveformHeight = height;
+        // waveformWidth = width;
+        // waveformHeight = height;
 
-        makeGraphic(width, height, _waveformBgColor);
+        makeGraphic(width, height, waveformBgColor);
         if (autoUpdateBitmap)
             _waveformDirty = true;
     }
@@ -564,7 +540,7 @@ class FlxWaveform extends FlxSprite
     private function calculatePeaks(samples:Array<Float>, out:Array<Float>):Void
     {
         clearArray(out);
-        for (i in 0..._waveformWidth)
+        for (i in 0...waveformWidth)
         {
             var startIndex:Int = Math.floor(i * samplesPerPixel);
             var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
@@ -644,7 +620,7 @@ class FlxWaveform extends FlxSprite
      * containing normalized samples in the range from -1 to 1
      * for both audio channels.
      * 
-     * @param samples The audio buffer bytes data containing audio samples.
+     * @param samples The audio buffer bytes data containing audio Fsamples.
      * @param stereo Whether the data should be treated as stereo (2 channels).
      * @return A `NormalizedSampleData` containing normalized samples for both channels.
      */
@@ -777,109 +753,88 @@ class FlxWaveform extends FlxSprite
 
     @:noCompletion private function get_waveformWidth():Int
     {
-        return _waveformWidth;
+        return this.frameWidth;
     }
 
     @:noCompletion private function set_waveformWidth(value:Int):Int
     {
-        if (_waveformWidth != value)
-        {
-            _waveformWidth = value;
+        if (waveformWidth != value)
+            resize(waveformWidth, waveformHeight);
 
-            // setDrawRange(_curRangeEnd, _curRangeStart);
-            resize(_waveformWidth, _waveformHeight);
-        }
-
-        return _waveformWidth;
+        return waveformWidth;
     }
 
     @:noCompletion private function get_waveformHeight():Int
     {
-        return _waveformHeight;
+        return this.frameHeight;
     }
 
     @:noCompletion private function set_waveformHeight(value:Int):Int 
     {
-        if (_waveformHeight != value)
-        {
-            _waveformHeight = value;
+        if (waveformHeight != value)
+            resize(waveformWidth, waveformHeight);
 
-            resize(_waveformWidth, _waveformHeight);
-        }
-
-        return _waveformHeight;
-    }
-
-    @:noCompletion function get_waveformBgColor():FlxColor
-    {
-        return _waveformBgColor;
+        return waveformHeight;
     }
 
     @:noCompletion function set_waveformBgColor(value:FlxColor):FlxColor
     {
-        if (_waveformBgColor != value)
+        if (waveformBgColor != value)
         {
-            _waveformBgColor = value;
+            waveformBgColor = value;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
         }
 
-        return _waveformBgColor;
-    }
-
-    @:noCompletion function get_waveformColor():FlxColor
-    {
-        return _waveformColor;
+        return waveformBgColor;
     }
 
     @:noCompletion function set_waveformColor(value:FlxColor):FlxColor
     {
-        if (_waveformColor != value)
+        if (waveformColor != value)
         {
-            _waveformColor = value;
+            waveformColor = value;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
         }
 
-        return _waveformColor;
-    }
-
-    @:noCompletion function get_waveformDrawMode():WaveformDrawMode
-    {
-        return _waveformDrawMode;
+        return waveformColor;
     }
 
     @:noCompletion function set_waveformDrawMode(value:WaveformDrawMode):WaveformDrawMode 
     {
-        if (_waveformDrawMode != value)
+        if (waveformDrawMode != value)
         {
-            _waveformDrawMode = value;
+            waveformDrawMode = value;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
         }
 
-        return _waveformDrawMode;
-    }
-
-    @:noCompletion function get_waveformDrawBaseline():Bool
-    {
-        return _waveformDrawBaseline;
+        return waveformDrawMode;
     }
 
     @:noCompletion function set_waveformDrawBaseline(value:Bool):Bool 
     {
-        if (_waveformDrawBaseline != value)
+        if (waveformDrawBaseline != value)
         {
-            _waveformDrawBaseline = value;
+            waveformDrawBaseline = value;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
         }
 
-        return _waveformDrawBaseline;
+        return waveformDrawBaseline;
+    }
+
+    @:noCompletion function set_autoUpdateBitmap(value:Bool):Bool
+    {
+        if (value)
+            _waveformDirty = true;
+
+        return autoUpdateBitmap = value;
     }
 }
 
