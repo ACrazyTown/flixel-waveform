@@ -110,7 +110,7 @@ class FlxWaveform extends FlxSprite
      * Internal structure that holds a reference to 2 arrays 
      * holding normalized sample data for both channels.
      * The normalized sample data is an array of 
-     * `Floats` that range from 0.0 to 1.0
+     * `Floats` that range from -1.0 to 1.0
      * 
      * If the sound is not in stereo, only the left channel array will be used.
      */
@@ -128,13 +128,13 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Internal array of Floats that holds the values of audio peaks 
-     * for the left channel from 0.0 to 1.0 in a specified time frame.
+     * for the left channel from -1.0 to 1.0 in a specified time frame.
      */
     var _peaksLeft:Array<Float> = null;
 
     /**
      * Internal array of Floats that holds the values of audio peaks 
-     * for the right channel from 0.0 to 1.0 in a specified time frame.
+     * for the right channel from -1.0 to 1.0 in a specified time frame.
      */
     var _peaksRight:Array<Float> = null;
 
@@ -413,9 +413,9 @@ class FlxWaveform extends FlxSprite
             sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
 
         samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / _waveformWidth;
-        calculatePeaks(sectionSamplesLeft, _peaksLeft);
+        getWaveformPeaks(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
-            calculatePeaks(sectionSamplesRight, _peaksRight);
+            getWaveformPeaks(sectionSamplesRight, _peaksRight);
     }
 
     /**
@@ -523,7 +523,7 @@ class FlxWaveform extends FlxSprite
      * @param samples Input samples
      * @param out Output array containing peaks.
      */
-    private function calculatePeaks(samples:Array<Float>, out:Array<Float>):Void
+    private function getWaveformPeaks(samples:Array<Float>, out:Array<Float>):Void
     {
         clearArray(out);
         for (i in 0..._waveformWidth)
