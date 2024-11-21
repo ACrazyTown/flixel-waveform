@@ -413,9 +413,9 @@ class FlxWaveform extends FlxSprite
             sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
 
         samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / _waveformWidth;
-        getWaveformPeaks(sectionSamplesLeft, _peaksLeft);
+        calculatePeaks(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
-            getWaveformPeaks(sectionSamplesRight, _peaksRight);
+            calculatePeaks(sectionSamplesRight, _peaksRight);
     }
 
     /**
@@ -527,7 +527,7 @@ class FlxWaveform extends FlxSprite
      * @param samples Input samples
      * @param out Output array containing peaks.
      */
-    private function getWaveformPeaks(samples:Array<Float>, out:Array<Float>):Void
+    private function calculatePeaks(samples:Array<Float>, out:Array<Float>):Void
     {
         clearArray(out);
         for (i in 0..._waveformWidth)
