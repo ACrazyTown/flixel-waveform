@@ -1,3 +1,6 @@
+## 1.2.1
+- Fix waveform not properly scaling when resizing
+
 ## 1.2
 - Added experimental HTML5 support
 - 32bit audio now assumes it's stored as in Float32 format

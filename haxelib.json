@@ -4,6 +4,6 @@
     "contributors": ["ACrazyTown"],
     "classPath": "src",
     "license": "MIT",
-    "version": "1.1.0",
-    "releasenote": "Support for 24bit audio; bugfixes; See CHANGELOG.md"
+    "version": "1.2.1",
+    "releasenote": "Bugfixes; See CHANGELOG.md"
 }
