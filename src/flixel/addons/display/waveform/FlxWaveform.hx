@@ -512,6 +512,10 @@ class FlxWaveform extends FlxSprite
         //     graphic.destroy();
 
         makeGraphic(width, height, _waveformBgColor);
+
+        _waveformWidth = width;
+        _waveformHeight = height;
+
         if (autoUpdateBitmap)
             generateWaveformBitmap();
     }
