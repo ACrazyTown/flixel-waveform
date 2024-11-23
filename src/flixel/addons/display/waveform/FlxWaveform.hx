@@ -343,7 +343,7 @@ class FlxWaveform extends FlxSprite
         else if (buffer.channels == 1)
             _stereo = false;
         else
-            FlxG.log.error('Unsupported channels value: ${buffer.channels}');
+            FlxG.log.error('[FlxWaveform] Unsupported channels value: ${buffer.channels}');
 
         _peaksLeft = recycleArray(_peaksLeft);
         if (_stereo)
@@ -371,7 +371,7 @@ class FlxWaveform extends FlxSprite
         }
 
         if (_normalizedSamples == null)
-            FlxG.log.error('Unsupported bitsPerSample value: ${buffer.bitsPerSample}');
+            FlxG.log.error('[FlxWaveform] Unsupported bitsPerSample value: ${buffer.bitsPerSample}');
     }
 
     /**
@@ -412,7 +412,6 @@ class FlxWaveform extends FlxSprite
             sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
 
         samplesPerPixel = Std.int(Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / waveformWidth);
-        trace(samplesPerPixel);
         calculatePeaks(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
             calculatePeaks(sectionSamplesRight, _peaksRight);
@@ -547,7 +546,6 @@ class FlxWaveform extends FlxSprite
             var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
 
             var segment:Array<Float> = samples.slice(startIndex, endIndex);
-            trace(segment.length);
 
             var peak:Float = 0.0;
             for (sample in segment)
