@@ -30,7 +30,7 @@ class FlxWaveform extends FlxSprite
      * Represents how many audio samples 1 pixel is equal to.
      * This value is dependant on the draw range & width of the waveform.
      */
-    public var samplesPerPixel(default, null):Float;
+    public var samplesPerPixel(default, null):Int;
 
     /**
      * An enum representing how the waveform will look visually.
@@ -411,7 +411,8 @@ class FlxWaveform extends FlxSprite
         if (_stereo)
             sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
 
-        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / waveformWidth;
+        samplesPerPixel = Std.int(Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / waveformWidth);
+        trace(samplesPerPixel);
         calculatePeaks(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
             calculatePeaks(sectionSamplesRight, _peaksRight);
@@ -546,6 +547,7 @@ class FlxWaveform extends FlxSprite
             var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
 
             var segment:Array<Float> = samples.slice(startIndex, endIndex);
+            trace(segment.length);
 
             var peak:Float = 0.0;
             for (sample in segment)
