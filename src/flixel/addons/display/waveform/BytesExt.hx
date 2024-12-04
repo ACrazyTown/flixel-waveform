@@ -14,7 +14,7 @@ class BytesExt
     /**
      * The minimum value of a signed 8bit integer.
      */
-    public static inline final INT8_MIN:Int = -127;
+    public static inline final INT8_MIN:Int = -128;
 
     /**
      * The maximum value of a signed 8bit integer.
