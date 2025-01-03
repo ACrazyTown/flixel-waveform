@@ -1,6 +1,7 @@
 
 package flixel.addons.display.waveform;
 
+import openfl.display.Shape;
 import lime.utils.Float32Array;
 import lime.utils.UInt8Array;
 import haxe.io.Bytes;
@@ -99,31 +100,15 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Internal variable holding a reference to a 
-     * lime `AudioBuffer` used for analyzing the audio data.
+     * `FlxWaveformBuffer` used for analyzing the audio data.
      */
-    var _buffer:AudioBuffer = null;
-
-    /**
-     * Internal variable that holds a reference to the 
-     * Bytes representation of the lime `AudioBuffer` data
-     */
-    var _bufferDataBytes:Bytes;
+    var _buffer:Null<FlxWaveformBuffer> = null;
 
     /**
      * Internal helper variable indicating whether the 
      * audio source is stereo (has 2 audio channels).
      */
     var _stereo:Bool = false;
-
-    /**
-     * Internal structure that holds a reference to 2 arrays 
-     * holding normalized sample data for both channels.
-     * The normalized sample data is an array of 
-     * `Floats` that range from 0.0 to 1.0
-     * 
-     * If the sound is not in stereo, only the left channel array will be used.
-     */
-    var _normalizedSamples:NormalizedSampleData = null;
 
     /**
      * Internal variable holding the current start of the draw range (in miliseconds)
@@ -153,6 +138,11 @@ class FlxWaveform extends FlxSprite
     var _waveformDirty:Bool = true;
 
     /**
+     * Internal helper used for drawing lines.
+     */
+    var _shape:Shape;
+
+    /**
      * Creates a new `FlxWaveform` instance with the specified draw data.
      * The waveform is not ready to display anything yet.
      *
@@ -178,8 +168,24 @@ class FlxWaveform extends FlxSprite
         // _waveformHeight = height;
         waveformDrawMode = drawMode;
         makeGraphic(width, height, waveformBgColor);
+
+        _shape = new Shape();
     }
 
+    @:inheritDoc(FlxSprite.destroy)
+    override function destroy():Void
+    {
+        super.destroy();
+
+        _shape = null;
+        _peaksLeft = null;
+        _peaksRight = null;
+
+        // TODO: Should the buffer be disposed?
+        _buffer.dispose();
+    }
+
+    @:inheritDoc(FlxSprite.draw)
     override function draw():Void
     {
         if (_waveformDirty)
@@ -271,107 +277,25 @@ class FlxWaveform extends FlxSprite
      * 
      * @param buffer The `lime.media.AudioBuffer` to get data from.
      */
-    public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
+    inline public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
     {
-        #if (js && html5 && lime_howlerjs)
-        // On HTML5 Lime does not expose any kind of AudioBuffer
-        // data which makes it difficult to do anything.
-        // Our only hope is to try to get it from howler.js
+        loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromLimeAudioBuffer(buffer));
+    }
 
-        @:privateAccess
-        if (!bufferValid(buffer) && buffer.__srcHowl != null)
-        {
-            // TODO: This approach seems very unstable, as good as it gets right now?
-            // bufferSource seems to be available DURING sound playback.
-            // Attempting to access it before playing a sound will not work.
-            var bufferSource:js.html.audio.AudioBufferSourceNode = buffer?.src?._sounds[0]?._node?.bufferSource;
-            if (bufferSource != null)
-            {
-                var jsBuffer:js.html.audio.AudioBuffer = bufferSource.buffer;
-
-                // Data is always a Float32Array
-                buffer.bitsPerSample = 32;
-                buffer.channels = jsBuffer.numberOfChannels;
-                buffer.sampleRate = Std.int(jsBuffer.sampleRate);
-
-                var left = jsBuffer.getChannelData(0);
-                var right = null;
-                if (buffer.channels == 2)
-                    right = jsBuffer.getChannelData(1);
-                
-                // convert into lime friendly format
-                // TODO: How does this affect memory?
-                var combined:js.lib.Float32Array = null;
-                if (buffer.channels == 2)
-                {
-                    combined = new Float32Array(left.length * 2);
-                    for (i in 0...left.length)
-                    {
-                        combined[i * 2] = left[i];
-                        if (buffer.channels == 2)
-                            combined[i * 2 + 1] = right[i];
-                    }
-                }
-
-                // TODO: is it safe to cast this?
-                buffer.data = buffer.channels == 2 ? cast combined : cast left;
-            }
-        }
-        #elseif flash
-        @:privateAccess
-        if (!bufferValid(buffer) && buffer.__srcSound != null)
-        {
-            @:privateAccess
-            loadDataFromFlashSound(buffer.__srcSound, buffer);
-            return;
-        }
-        #end
-
-        if (!bufferValid(buffer))
-        {
-            FlxG.log.error("[FlxWaveform] Tried to load invalid buffer! Make sure the audio buffer has valid sampleRate, bitsPerSample, channels and data.");
-            return;
-        }
-
+    public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
+    {
         _buffer = buffer;
-        _bufferDataBytes = _buffer.data.toBytes();
-        // trace('Processing sound data (channels: ${buffer.channels}, bps: ${buffer.bitsPerSample}, sample rate: ${buffer.sampleRate})');
-        // trace(buffer.data);
+        if (_buffer == null)
+        {
+            FlxG.log.error("[FlxWaveform] Invalid buffer");
+            return;
+        }
 
-        if (buffer.channels == 2)
-            _stereo = true;
-        else if (buffer.channels == 1)
-            _stereo = false;
-        else
-            FlxG.log.error('[FlxWaveform] Unsupported channels value: ${buffer.channels}');
+        _stereo = _buffer.numChannels == 2;
 
         _peaksLeft = recycleArray(_peaksLeft);
         if (_stereo)
             _peaksRight = recycleArray(_peaksRight);
-
-        _normalizedSamples = switch (buffer.bitsPerSample) 
-        {
-            // assume unsigned?
-            case 8: normalizeSamplesUI8(_bufferDataBytes, _stereo);
-            case 16: normalizeSamplesI16(_bufferDataBytes, _stereo);
-            case 24: normalizeSamplesI24(_bufferDataBytes, _stereo);
-        
-            // Right now, we can't figure out if 32bit sounds are
-            // stored as a float or int.
-            // Temporarily, we'll handle it as a Float32 array 
-            // as it seems they're more common.
-            // If my Lime pull request gets merged it will be possible
-            // to properly differentiate between 32bit int and 32bit float sounds:
-            // https://github.com/openfl/lime/pull/1861
-            case 32: 
-                normalizeSamplesF32(_bufferDataBytes, _stereo);
-                //normalizeSamplesI32(_bufferDataBytes, _stereo);
-                
-            case _: null;
-        }
-
-        if (_normalizedSamples == null)
-            FlxG.log.error('[FlxWaveform] Unsupported bitsPerSample value: ${buffer.bitsPerSample}');
     }
 
     /**
@@ -391,7 +315,7 @@ class FlxWaveform extends FlxSprite
         if (startTime < 0)
             startTime = 0.0;
         if (endTime < 0)
-            endTime = (_normalizedSamples.left.length / _buffer.sampleRate) * 1000;
+            endTime = (_buffer.getChannelData(0).length / _buffer.sampleRate) * 1000;
 
         _curRangeStart = startTime;
         _curRangeEnd = endTime;
@@ -403,13 +327,12 @@ class FlxWaveform extends FlxSprite
 
         // ? run gc to hopefully clear old data?
         // System.gc();
-
         var slicePos:Int = Std.int((_curRangeStart / 1000) * _buffer.sampleRate);
         var sliceEnd:Int = Std.int((_curRangeEnd / 1000) * _buffer.sampleRate);
-        var sectionSamplesLeft:Array<Float> = _normalizedSamples.left.slice(slicePos, sliceEnd);
-        var sectionSamplesRight:Array<Float> = null;
+        var sectionSamplesLeft = _buffer.getChannelData(0).subarray(slicePos, sliceEnd);
+        var sectionSamplesRight = null;
         if (_stereo)
-            sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
+            sectionSamplesRight = _buffer.getChannelData(1).subarray(slicePos, sliceEnd);
 
         samplesPerPixel = Std.int(Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / waveformWidth);
         calculatePeaks(sectionSamplesLeft, _peaksLeft);
@@ -438,71 +361,102 @@ class FlxWaveform extends FlxSprite
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
 
-        if (waveformDrawMode == COMBINED)
+        if (samplesPerPixel == 1)
         {
-            var centerY:Float = waveformHeight / 2;
+            _shape.graphics.clear();
+            _shape.graphics.lineStyle(1, waveformColor);
 
-            if (waveformDrawBaseline)
+            if (waveformDrawMode == COMBINED)
             {
-                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+                var centerY:Float = waveformHeight / 2;
+                var prevX:Float = 0;
+                var prevY:Float = centerY;
+
+                for (i in 0...waveformWidth)
+                {
+                    var peakLeft:Float = _peaksLeft[i];
+
+                    var curX:Float = i;
+                    var curY:Float = centerY + peakLeft * (waveformHeight / 2);
+
+                    _shape.graphics.moveTo(prevX, prevY);
+                    _shape.graphics.lineTo(curX, curY);
+
+                    prevX = curX;
+                    prevY = curY;
+                }
             }
 
-            for (i in 0...waveformWidth)
-            {
-                var peakLeft:Float = _peaksLeft[i];
-                var peakRight:Float = 0;
-                if (_stereo)
-                    peakRight = _peaksRight[i];
-
-                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                    continue;
-
-                var segmentHeightLeft:Float = peakLeft * centerY;
-                var segmentHeightRight:Float = 0;
-                if (_stereo)
-                    segmentHeightRight = peakRight * centerY;
-
-                var segmentHeight:Float = Math.max(segmentHeightLeft, segmentHeightRight);
-
-                var y1:Float = centerY - segmentHeight;
-                var y2:Float = centerY + segmentHeight;
-
-                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), waveformColor);
-            }
+            pixels.draw(_shape);
         }
-        else if (waveformDrawMode == SPLIT_CHANNELS)
+        else
         {
-            var half:Float = waveformHeight / 2;
-            var centerY:Float = waveformHeight / 4;
-
-            if (waveformDrawBaseline)
+            if (waveformDrawMode == COMBINED)
             {
-                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
-                pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
+                var centerY:Float = waveformHeight / 2;
+
+                if (waveformDrawBaseline)
+                {
+                    pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+                }
+
+                for (i in 0...waveformWidth)
+                {
+                    var peakLeft:Float = _peaksLeft[i];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _peaksRight[i];
+
+                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                        continue;
+
+                    var segmentHeightLeft:Float = peakLeft * centerY;
+                    var segmentHeightRight:Float = 0;
+                    if (_stereo)
+                        segmentHeightRight = peakRight * centerY;
+
+                    var segmentHeight:Float = Math.max(segmentHeightLeft, segmentHeightRight);
+
+                    var y1:Float = centerY - segmentHeight;
+                    var y2:Float = centerY + segmentHeight;
+
+                    pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), waveformColor);
+                }
             }
-
-            for (i in 0...waveformWidth)
+            else if (waveformDrawMode == SPLIT_CHANNELS)
             {
-                var peakLeft:Float = _peaksLeft[i];
-                var peakRight:Float = 0;
-                if (_stereo)
-                    peakRight = _peaksRight[i];
+                var half:Float = waveformHeight / 2;
+                var centerY:Float = waveformHeight / 4;
 
-                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                    continue;
+                if (waveformDrawBaseline)
+                {
+                    pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+                    pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
+                }
 
-                var segmentHeightLeft:Float = peakLeft * centerY;
-                var segmentHeightRight:Float = 0;
-                if (_stereo)
-                    segmentHeightRight = peakRight * centerY;
+                for (i in 0...waveformWidth)
+                {
+                    var peakLeft:Float = _peaksLeft[i];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _peaksRight[i];
 
-                var y1l:Float = centerY - segmentHeightLeft;
-                var y2l:Float = centerY + segmentHeightLeft;
-                var y1r:Float = half + (centerY - segmentHeightRight);
-                var y2r:Float = half + (centerY + segmentHeightRight);
+                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                        continue;
 
-                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), waveformColor);
-                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), waveformColor);
+                    var segmentHeightLeft:Float = peakLeft * centerY;
+                    var segmentHeightRight:Float = 0;
+                    if (_stereo)
+                        segmentHeightRight = peakRight * centerY;
+
+                    var y1l:Float = centerY - segmentHeightLeft;
+                    var y2l:Float = centerY + segmentHeightLeft;
+                    var y1r:Float = half + (centerY - segmentHeightRight);
+                    var y2r:Float = half + (centerY + segmentHeightRight);
+
+                    pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), waveformColor);
+                    pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), waveformColor);
+                }
             }
         }
     }
@@ -537,7 +491,7 @@ class FlxWaveform extends FlxSprite
      * @param samples Input samples
      * @param out Output array containing peaks.
      */
-    private function calculatePeaks(samples:Array<Float>, out:Array<Float>):Void
+    private function calculatePeaks(samples:Float32Array, out:Array<Float>):Void
     {
         clearArray(out);
         for (i in 0...waveformWidth)
@@ -545,7 +499,7 @@ class FlxWaveform extends FlxSprite
             var startIndex:Int = Math.floor(i * samplesPerPixel);
             var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
 
-            var segment:Array<Float> = samples.slice(startIndex, endIndex);
+            var segment = samples.subarray(startIndex, endIndex);
 
             var peak:Float = 0.0;
             for (sample in segment)
@@ -556,149 +510,6 @@ class FlxWaveform extends FlxSprite
 
             out.push(peak);
         }
-    }
-
-    /**
-     * Does nothing really, as Float32 data is already normalized.
-     * Just seperates both channels into different arrays.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
-     */
-    private function normalizeSamplesF32(samples:Bytes, stereo:Bool):NormalizedSampleData
-    {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int32 is 4 bytes, times 2 for both channels.
-        var step:Int = stereo ? 8 : 4;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.getFloat(i * step));
-            if (stereo)
-                right.push(samples.getFloat(i * step + 4));
-        }
-
-        return {left: left, right: right};
-    }
-
-    /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a signed 32bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
-     */
-    private function normalizeSamplesI32(samples:Bytes, stereo:Bool):NormalizedSampleData
-    {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int32 is 4 bytes, times 2 for both channels.
-        var step:Int = stereo ? 8 : 4;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeInt32(i * step));
-            if (stereo)
-                right.push(samples.normalizeInt32(i * step + 4));
-        }
-
-        return {left: left, right: right};
-    }
-
-    /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a signed 24bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
-     * 
-     * @param samples The audio buffer bytes data containing audio Fsamples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
-     */
-    private function normalizeSamplesI24(samples:Bytes, stereo:Bool):NormalizedSampleData
-    {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int24 is 3 bytes, times 6 for both channels.
-        var step:Int = stereo ? 6 : 3;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeInt24(i * step));
-            if (stereo)
-                right.push(samples.normalizeInt24(i * step + 3));
-        }
-
-        return {left: left, right: right};
-    }
-
-    /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a signed 16bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
-     */
-    private function normalizeSamplesI16(samples:Bytes, stereo:Bool):NormalizedSampleData
-    {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int16 is 2 bytes, times 2 for both channels.
-        var step:Int = stereo ? 4 : 2;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeInt16(i * step));
-            if (stereo)
-                right.push(samples.normalizeInt16(i * step + 2));
-        }
-
-        return {left: left, right: right};
-    }
-
-    /**
-     * Processes a `Bytes` instance containing audio data in 
-     * an unsigned 8bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
-     */
-    private function normalizeSamplesUI8(samples:Bytes, stereo:Bool):NormalizedSampleData
-    {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int8 is 1 bytes, times 2 for both channels.
-        var step:Int = stereo ? 2 : 1;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeUInt8(i * step));
-            if (stereo)
-                right.push(samples.normalizeUInt8(i * step + 1));
-        }
-
-        return {left: left, right: right};
     }
 
     /**
@@ -734,21 +545,10 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
-    /**
-     * Checks if a `lime.media.AudioBuffer` has all the
-     * properties required for rendering a waveform.
-     * 
-     * @param buffer Audio buffer
-     * @return Whether the audio buffer is valid
-     */
-    private inline function bufferValid(buffer:AudioBuffer):Bool
+    @:deprecated("TODO: Beta")
+    inline private function bufferValid(buffer:FlxWaveformBuffer):Bool
     {
-        return buffer != null 
-            && buffer.data != null 
-            // on js ints can be null, but on static targets they can't.
-            && buffer.bitsPerSample != #if js null #else 0 #end
-            && buffer.channels != #if js null #else 0 #end
-            && buffer.sampleRate != #if js null #else 0 #end;
+        return buffer != null;
     }
 
     @:noCompletion private function get_waveformWidth():Int
@@ -836,13 +636,6 @@ class FlxWaveform extends FlxSprite
 
         return autoUpdateBitmap = value;
     }
-}
-
-// TODO: Should this be a class with structInit? Do typedefs negatively impact performance?
-typedef NormalizedSampleData =
-{
-    left:Array<Float>,
-    ?right:Array<Float>
 }
 
 enum WaveformDrawMode
