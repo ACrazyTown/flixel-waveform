@@ -1,6 +1,7 @@
 
 package flixel.addons.display.waveform;
 
+import flixel.util.FlxDestroyUtil;
 import openfl.display.Shape;
 import lime.utils.Float32Array;
 import lime.utils.UInt8Array;
@@ -182,7 +183,7 @@ class FlxWaveform extends FlxSprite
         _peaksRight = null;
 
         // TODO: Should the buffer be disposed?
-        _buffer.dispose();
+        FlxDestroyUtil.destroy(_buffer);
     }
 
     @:inheritDoc(FlxSprite.draw)
@@ -247,27 +248,10 @@ class FlxWaveform extends FlxSprite
      * Loads the audio buffer data neccessary for processing the
      * waveform from a `flash.media.Sound`.
      * @param sound The `flash.media.Sound` to get data from.
-     * @param buffer The buffer to fill with data. If null will make a new one.
      */
-    public function loadDataFromFlashSound(sound:Sound, ?buffer:AudioBuffer):Void
+    public function loadDataFromFlashSound(sound:Sound):Void
     {
-        if (buffer == null)
-            buffer = new AudioBuffer();
-
-        // These values are always hardcoded.
-        // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Sound.html#extract()
-        buffer.sampleRate = 44100;
-        buffer.channels = 2;
-        buffer.bitsPerSample = 32;
-
-        var numSamples:Float = 44100 * (sound.length / 1000);
-        var length:Int = Std.int(numSamples * 2 * 4);
-        var bytes:Bytes = Bytes.alloc(length);
-
-        sound.extract(bytes.getData(), numSamples);
-        buffer.data = UInt8Array.fromBytes(bytes);
-
-        loadDataFromAudioBuffer(buffer);
+        loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromFlashSound(sound));
     }
     #end
 
@@ -284,6 +268,9 @@ class FlxWaveform extends FlxSprite
 
     public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
     {
+        // TODO: Destroy previous buffer?
+        FlxDestroyUtil.destroy(_buffer);
+        
         _buffer = buffer;
         if (_buffer == null)
         {

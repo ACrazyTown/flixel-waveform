@@ -1,5 +1,7 @@
 package flixel.addons.display.waveform;
 
+import flixel.util.FlxDestroyUtil;
+import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import lime.media.howlerjs.Howl;
 import lime.utils.Float32Array;
 import haxe.io.Bytes;
@@ -7,17 +9,44 @@ import lime.media.AudioBuffer;
 
 using flixel.addons.display.waveform.BytesExt;
 
-class ChannelPair
+/**
+ * A `ChannelPair` is a helper class containing
+ * audio data for both audio channels.
+ */
+class ChannelPair implements IFlxDestroyable
 {
+    /**
+     * Internal variable holding raw audio data 
+     * in a 32bit float format for the left channel.
+     */
     var _leftChannel:Null<Float32Array>;
+
+    /**
+     * Internal variable holding raw audio data 
+     * in a 32bit float format for the right channel.
+     */
     var _rightChannel:Null<Float32Array>;
 
+    /**
+     * Creates a new `ChannelPair` from two `Float32Array` instances.
+     * @param left `Float32Array` instance containing 
+     * audio data for the left channel
+     * @param right `Float32Array` instance containing 
+     * audio data for the right channel
+     */
     public function new(left:Float32Array, right:Float32Array)
     {
         _leftChannel = left;
         _rightChannel = right;
     }
 
+    /**
+     * Returns a `Float32Array` containing raw audio data
+     * for the specified audio channel.
+     * @param channel The audio channel to get audio data for
+     * @return A `Float32Array` or `null` if there's no 
+     * audio data for the specified channel.
+     */
     inline public function getChannelData(channel:Int):Null<Float32Array>
     {
         return switch (channel)
@@ -28,7 +57,10 @@ class ChannelPair
         }
     }
 
-    public function dispose():Void
+    /**
+     * Nulls all data related to the `ChannelPair`
+     */
+    public function destroy():Void
     {
         _leftChannel = null;
         _rightChannel = null;
@@ -39,7 +71,7 @@ class ChannelPair
  * A `FlxWaveformBuffer` holds various data related to an audio track
  * that is required for further processing.
  */
-class FlxWaveformBuffer
+class FlxWaveformBuffer implements IFlxDestroyable
 {
     /**
      * The number of audio samples per second, in Hz.
@@ -96,9 +128,17 @@ class FlxWaveformBuffer
     }
 
     #if js
+    /**
+     * Creates a `FlxWaveformBuffer` from a `js.html.audio.AudioBuffer` instance.
+     * 
+     * @param buffer The `js.html.audio.AudioBuffer` instance
+     * @return A `FlxWaveformBuffer` or `null` if the buffer isn't valid.
+     */
     public static function fromJSAudioBuffer(buffer:js.html.audio.AudioBuffer):Null<FlxWaveformBuffer>
     {
         // TODO: check if valid
+        if (buffer == null)
+            return null;
 
         var _buffer:FlxWaveformBuffer = new FlxWaveformBuffer();
         _buffer.sampleRate = buffer.sampleRate;
@@ -118,6 +158,7 @@ class FlxWaveformBuffer
      * NOTE: The `Howl` sound has to have been played before
      * this function is called, otherwise it is not possible
      * to retrieve any data.
+     * 
      * @param howl The `Howl` instance of the sound.
      * @return A `FlxWaveformBuffer` or `null` if it wasn't 
      * possible to get data from the `Howl` instance.
@@ -145,24 +186,16 @@ class FlxWaveformBuffer
     #end
 
     #if flash
+    /**
+     * Creates a `FlxWaveformBuffer` from a `flash.media.Sound` instance.
+     * 
+     * @param sound The `flash.media.Sound` instance
+     * @return A `FlxWaveformBuffer` instance or `null` if the sound isn't valid.
+     */
     public static function fromFlashSound(sound:flash.media.Sound):Null<FlxWaveformBuffer>
     {
-        /*
-        // These values are always hardcoded.
-        // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Sound.html#extract()
-        buffer.sampleRate = 44100;
-        buffer.channels = 2;
-        buffer.bitsPerSample = 32;
-
-        var numSamples:Float = 44100 * (sound.length / 1000);
-        var length:Int = Std.int(numSamples * 2 * 4);
-        var bytes:Bytes = Bytes.alloc(length);
-
-        sound.extract(bytes.getData(), numSamples);
-        buffer.data = UInt8Array.fromBytes(bytes);
-
-        loadDataFromAudioBuffer(buffer);
-        */
+        if (sound == null)
+            return null;
 
         var _buffer:FlxWaveformBuffer = new FlxWaveformBuffer();
 
@@ -184,26 +217,17 @@ class FlxWaveformBuffer
     }
     #end
 
+    /**
+     * Uninterleaves and normalizes audio data in a 32bit float 
+     * format ranging from -1.0 to 1.0
+     * 
+     * @param data Interleaved audio data
+     * @param inBitsPerSample The number of bits per audio sample in the data
+     * @param stereo Whether the audio data is in stereo (has 2 channels)
+     * @return A `ChannelPair` instance containing the uninterleaved audio data.
+     */
     static function uninterleaveAndNormalize(data:Bytes, inBitsPerSample:Int, stereo:Bool):ChannelPair
     {
-        /*
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int32 is 4 bytes, times 2 for both channels.
-        var step:Int = stereo ? 8 : 4;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.getFloat(i * step));
-            if (stereo)
-                right.push(samples.getFloat(i * step + 4));
-        }
-
-        return {left: left, right: right};
-        */
-
         var nbytes:Int = Std.int(inBitsPerSample / 8);
         var step:Int = stereo ? nbytes * 2 : nbytes;
         var len:Int = Std.int(data.length / step);
@@ -224,6 +248,18 @@ class FlxWaveformBuffer
         return pair;
     }
 
+    /**
+     * Gets a 32bit float sample from the provided bytes.
+     * 
+     * if `bitsPerSample` is 32 it will just read the float from the bytes.
+     * Otherwise it will read the integer and normalize it as a 32bit float
+     * in the range of -1.0 to 1.0
+     * 
+     * @param data The data to read the samples from
+     * @param pos The position in the bytes to read from
+     * @param bitsPerSample The number of bits per audio sample in the data
+     * @return Audio sample in the range of -1.0 to 1.0
+     */
     static function getNormalizedSample(data:Bytes, pos:Int, bitsPerSample:Int):Float
     {
         return switch (bitsPerSample)
@@ -248,6 +284,7 @@ class FlxWaveformBuffer
     /**
      * Checks if the `lime.media.AudioBuffer` is valid and has all
      * the data required for further processing
+     * 
      * @param buffer The `lime.media.AudioBuffer` to check
      * @return Bool Whether the buffer is valid
      */
@@ -261,6 +298,14 @@ class FlxWaveformBuffer
             && buffer.sampleRate != #if js null #else 0 #end;
     }
 
+    /**
+     * Creates a new `FlxWaveformBuffer` instance.
+     * The buffer is not ready for data processing yet.
+     * 
+     * Unless you have a reason to access this directly you
+     * should probably use one of the static methods 
+     * to create the buffer from pre-existing data.
+     */
     public function new():Void 
     {
         sampleRate = null;
@@ -272,6 +317,7 @@ class FlxWaveformBuffer
 
     /**
      * Returns the raw audio data for the specified audio channel.
+     * 
      * @param channel The audio channel (1 for mono, 2 for stereo)
      * @return Null<Float32Array> A `Float32Array` containing the raw audio data
      * or `null` if there's no audio data available for the specified channel.
@@ -281,16 +327,17 @@ class FlxWaveformBuffer
         return _channels.getChannelData(channel);
     }
 
-    public function dispose():Void
+    /**
+     * Nulls all data related to the buffer.
+     * The buffer is not safe to be used after this operation.
+     */
+    public function destroy():Void
     {
         sampleRate = null;
         bitsPerSample = null;
         numChannels = null;
 
-        if (_channels != null)
-        {
-            _channels.dispose();
-            _channels = null;
-        }
+        FlxDestroyUtil.destroy(_channels);
+        _channels = null;
     }
 }
