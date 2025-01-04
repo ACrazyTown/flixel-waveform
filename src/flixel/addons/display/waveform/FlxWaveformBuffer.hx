@@ -10,64 +10,6 @@ import lime.media.AudioBuffer;
 using flixel.addons.display.waveform.BytesExt;
 
 /**
- * A `ChannelPair` is a helper class containing
- * audio data for both audio channels.
- */
-class ChannelPair implements IFlxDestroyable
-{
-    /**
-     * Internal variable holding raw audio data 
-     * in a 32bit float format for the left channel.
-     */
-    var _leftChannel:Null<Float32Array>;
-
-    /**
-     * Internal variable holding raw audio data 
-     * in a 32bit float format for the right channel.
-     */
-    var _rightChannel:Null<Float32Array>;
-
-    /**
-     * Creates a new `ChannelPair` from two `Float32Array` instances.
-     * @param left `Float32Array` instance containing 
-     * audio data for the left channel
-     * @param right `Float32Array` instance containing 
-     * audio data for the right channel
-     */
-    public function new(left:Float32Array, right:Float32Array)
-    {
-        _leftChannel = left;
-        _rightChannel = right;
-    }
-
-    /**
-     * Returns a `Float32Array` containing raw audio data
-     * for the specified audio channel.
-     * @param channel The audio channel to get audio data for
-     * @return A `Float32Array` or `null` if there's no 
-     * audio data for the specified channel.
-     */
-    inline public function getChannelData(channel:Int):Null<Float32Array>
-    {
-        return switch (channel)
-        {
-            case 0: return _leftChannel;
-            case 1: return _rightChannel;
-            default: null;
-        }
-    }
-
-    /**
-     * Nulls all data related to the `ChannelPair`
-     */
-    public function destroy():Void
-    {
-        _leftChannel = null;
-        _rightChannel = null;
-    }
-}
-
-/**
  * A `FlxWaveformBuffer` holds various data related to an audio track
  * that is required for further processing.
  */
@@ -76,17 +18,17 @@ class FlxWaveformBuffer implements IFlxDestroyable
     /**
      * The number of audio samples per second, in Hz.
      */
-    public var sampleRate:Null<Float>;
+    public var sampleRate(default, null):Null<Float>;
 
     /**
      * The number of bits each audio sample takes.
      */
-    public var bitsPerSample:Null<Int>;
+    public var bitsPerSample(default, null):Null<Int>;
 
     /**
      * The number of audio channels (1 for mono, 2 for stereo).
      */
-    public var numChannels:Null<Int>;
+    public var numChannels(default, null):Null<Int>;
 
     /**
      * Internal variable holding the actual raw audio data
@@ -173,12 +115,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
         // Attempting to access it before playing a sound will not work.
         var bufferSource:js.html.audio.AudioBufferSourceNode = untyped howl?._sounds[0]?._node?.bufferSource;
         if (bufferSource != null)
-        {
-            var buffer:FlxWaveformBuffer = new FlxWaveformBuffer();
-            var jsBuffer:js.html.audio.AudioBuffer = bufferSource.buffer;
-
-            return fromJSAudioBuffer(jsBuffer);
-        }
+            return fromJSAudioBuffer(bufferSource.buffer);
 
         return null;
     }
@@ -339,5 +276,63 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
         FlxDestroyUtil.destroy(_channels);
         _channels = null;
+    }
+}
+
+/**
+ * A `ChannelPair` is a helper class containing
+ * audio data for both audio channels.
+ */
+class ChannelPair implements IFlxDestroyable
+{
+    /**
+     * Internal variable holding raw audio data 
+     * in a 32bit float format for the left channel.
+     */
+    var _leftChannel:Null<Float32Array>;
+
+    /**
+     * Internal variable holding raw audio data 
+     * in a 32bit float format for the right channel.
+     */
+    var _rightChannel:Null<Float32Array>;
+
+    /**
+     * Creates a new `ChannelPair` from two `Float32Array` instances.
+     * @param left `Float32Array` instance containing 
+     * audio data for the left channel
+     * @param right `Float32Array` instance containing 
+     * audio data for the right channel
+     */
+    public function new(left:Float32Array, right:Float32Array)
+    {
+        _leftChannel = left;
+        _rightChannel = right;
+    }
+
+    /**
+     * Returns a `Float32Array` containing raw audio data
+     * for the specified audio channel.
+     * @param channel The audio channel to get audio data for
+     * @return A `Float32Array` or `null` if there's no 
+     * audio data for the specified channel.
+     */
+    inline public function getChannelData(channel:Int):Null<Float32Array>
+    {
+        return switch (channel)
+        {
+            case 0: return _leftChannel;
+            case 1: return _rightChannel;
+            default: null;
+        }
+    }
+
+    /**
+     * Nulls all data related to the `ChannelPair`
+     */
+    public function destroy():Void
+    {
+        _leftChannel = null;
+        _rightChannel = null;
     }
 }
