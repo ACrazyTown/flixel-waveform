@@ -322,9 +322,9 @@ class FlxWaveform extends FlxSprite
             sectionSamplesRight = _buffer.getChannelData(1).subarray(slicePos, sliceEnd);
 
         samplesPerPixel = Std.int(Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / waveformWidth);
-        calculatePeaks(sectionSamplesLeft, _peaksLeft);
+        prepareDrawData(sectionSamplesLeft, _peaksLeft);
         if (_stereo)
-            calculatePeaks(sectionSamplesRight, _peaksRight);
+            prepareDrawData(sectionSamplesRight, _peaksRight);
 
         if (autoUpdateBitmap)
             _waveformDirty = true;
@@ -348,104 +348,155 @@ class FlxWaveform extends FlxSprite
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
 
-        if (samplesPerPixel == 1)
+        if (samplesPerPixel > 1)
+            drawPeaks();
+        else
+            drawGraphedSamples();
+    }
+
+    /**
+     * Internal method which draws audio sample peaks as rectangles.
+     * Used when `samplesPerPixel` is larger than 1
+     */
+    function drawPeaks():Void
+    {
+        if (waveformDrawMode == COMBINED)
         {
-            _shape.graphics.clear();
-            _shape.graphics.lineStyle(1, waveformColor);
+            var centerY:Float = waveformHeight / 2;
 
-            if (waveformDrawMode == COMBINED)
+            if (waveformDrawBaseline)
+                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+
+            for (i in 0...waveformWidth)
             {
-                var centerY:Float = waveformHeight / 2;
-                var prevX:Float = 0;
-                var prevY:Float = centerY;
+                var peakLeft:Float = _peaksLeft[i];
+                var peakRight:Float = 0;
+                if (_stereo)
+                    peakRight = _peaksRight[i];
 
-                for (i in 0...waveformWidth)
-                {
-                    var peakLeft:Float = _peaksLeft[i];
+                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                    continue;
 
-                    var curX:Float = i;
-                    var curY:Float = centerY + peakLeft * (waveformHeight / 2);
+                var segmentHeightLeft:Float = peakLeft * centerY;
+                var segmentHeightRight:Float = 0;
+                if (_stereo)
+                    segmentHeightRight = peakRight * centerY;
 
-                    _shape.graphics.moveTo(prevX, prevY);
-                    _shape.graphics.lineTo(curX, curY);
+                var segmentHeight:Float = Math.max(segmentHeightLeft, segmentHeightRight);
 
-                    prevX = curX;
-                    prevY = curY;
-                }
+                var y1:Float = centerY - segmentHeight;
+                var y2:Float = centerY + segmentHeight;
+
+                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), waveformColor);
+            }
+        }
+        else if (waveformDrawMode == SPLIT_CHANNELS)
+        {
+            var half:Float = waveformHeight / 2;
+            var centerY:Float = waveformHeight / 4;
+
+            if (waveformDrawBaseline)
+            {
+                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+                pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
             }
 
-            pixels.draw(_shape);
+            for (i in 0...waveformWidth)
+            {
+                var peakLeft:Float = _peaksLeft[i];
+                var peakRight:Float = 0;
+                if (_stereo)
+                    peakRight = _peaksRight[i];
+
+                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                    continue;
+
+                var segmentHeightLeft:Float = peakLeft * centerY;
+                var segmentHeightRight:Float = 0;
+                if (_stereo)
+                    segmentHeightRight = peakRight * centerY;
+
+                var y1l:Float = centerY - segmentHeightLeft;
+                var y2l:Float = centerY + segmentHeightLeft;
+                var y1r:Float = half + (centerY - segmentHeightRight);
+                var y2r:Float = half + (centerY + segmentHeightRight);
+
+                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), waveformColor);
+                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), waveformColor);
+            }
+        }
+    }
+
+    /**
+     * Internal method which graphs audio samples.
+     * Used when `samplesPerPixel` is equal to 1.
+     */
+    function drawGraphedSamples():Void
+    {
+        _shape.graphics.clear();
+        _shape.graphics.lineStyle(1, waveformColor);
+
+        var centerY:Float = waveformHeight / 2;
+        var halfCenter:Float = centerY / 2;
+
+        if (waveformDrawMode == COMBINED)
+        {
+            var prevX:Float = 0;
+            var prevY:Float = centerY;
+
+            _shape.graphics.moveTo(prevX, prevY);
+
+            for (i in 0...waveformWidth)
+            {
+                var peak:Float = _peaksLeft[i];
+                if (_stereo)
+                {
+                    // Can't graph both so let's get average?
+                    peak += _peaksRight[i];
+                    peak /= 2;
+                }
+
+                var curX:Float = i;
+                var curY:Float = centerY + peak * centerY;
+
+                _shape.graphics.lineTo(curX, curY);
+
+                prevX = curX;
+                prevY = curY;
+            }
         }
         else
         {
-            if (waveformDrawMode == COMBINED)
+            var prevX:Float = 0;
+            var prevYL:Float = halfCenter;
+            var prevYR:Float = centerY + halfCenter;
+
+            for (i in 0...waveformWidth)
             {
-                var centerY:Float = waveformHeight / 2;
+                var peakLeft:Float = _peaksLeft[i];
+                var peakRight:Float = 0;
+                if (_stereo)
+                    peakRight = _peaksRight[i];
 
-                if (waveformDrawBaseline)
-                {
-                    pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
-                }
+                var curX:Float = i;
+                var curYL:Float = halfCenter - peakLeft * halfCenter;
+                var curYR:Float = (centerY + halfCenter) - peakRight * halfCenter;
 
-                for (i in 0...waveformWidth)
-                {
-                    var peakLeft:Float = _peaksLeft[i];
-                    var peakRight:Float = 0;
-                    if (_stereo)
-                        peakRight = _peaksRight[i];
+                // left
+                _shape.graphics.moveTo(prevX, prevYL);
+                _shape.graphics.lineTo(curX, curYL);
 
-                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                        continue;
+                // right
+                _shape.graphics.moveTo(prevX, prevYR);
+                _shape.graphics.lineTo(curX, curYR);
 
-                    var segmentHeightLeft:Float = peakLeft * centerY;
-                    var segmentHeightRight:Float = 0;
-                    if (_stereo)
-                        segmentHeightRight = peakRight * centerY;
-
-                    var segmentHeight:Float = Math.max(segmentHeightLeft, segmentHeightRight);
-
-                    var y1:Float = centerY - segmentHeight;
-                    var y2:Float = centerY + segmentHeight;
-
-                    pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), waveformColor);
-                }
-            }
-            else if (waveformDrawMode == SPLIT_CHANNELS)
-            {
-                var half:Float = waveformHeight / 2;
-                var centerY:Float = waveformHeight / 4;
-
-                if (waveformDrawBaseline)
-                {
-                    pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
-                    pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
-                }
-
-                for (i in 0...waveformWidth)
-                {
-                    var peakLeft:Float = _peaksLeft[i];
-                    var peakRight:Float = 0;
-                    if (_stereo)
-                        peakRight = _peaksRight[i];
-
-                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                        continue;
-
-                    var segmentHeightLeft:Float = peakLeft * centerY;
-                    var segmentHeightRight:Float = 0;
-                    if (_stereo)
-                        segmentHeightRight = peakRight * centerY;
-
-                    var y1l:Float = centerY - segmentHeightLeft;
-                    var y2l:Float = centerY + segmentHeightLeft;
-                    var y1r:Float = half + (centerY - segmentHeightRight);
-                    var y2r:Float = half + (centerY + segmentHeightRight);
-
-                    pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), waveformColor);
-                    pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), waveformColor);
-                }
+                prevX = curX;
+                prevYL = curYL;
+                prevYR = curYR;
             }
         }
+
+        pixels.draw(_shape);
     }
 
     /**
@@ -472,30 +523,46 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Writes an array the size of `waveformWidth` containing audio peaks
-     * for each pixel.
+     * Writes `waveformWidth` elements to array `out` containing
+     * the data neccessary for the waveform to be rendered.
+     * 
+     * If `samplesPerPixel` is higher than 1 this data will be
+     * the highest sample out of a sample segment,
+     * otherwise it will just contain the audio sample values
+     * to be graphed.
      * 
      * @param samples Input samples
      * @param out Output array containing peaks.
      */
-    private function calculatePeaks(samples:Float32Array, out:Array<Float>):Void
+    private function prepareDrawData(samples:Float32Array, out:Array<Float>):Void
     {
         clearArray(out);
-        for (i in 0...waveformWidth)
+
+        if (samplesPerPixel > 1)
         {
-            var startIndex:Int = Math.floor(i * samplesPerPixel);
-            var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
-
-            var segment = samples.subarray(startIndex, endIndex);
-
-            var peak:Float = 0.0;
-            for (sample in segment)
+            for (i in 0...waveformWidth)
             {
-                if (sample > peak)
-                    peak = sample;
-            }
+                var startIndex:Int = Math.floor(i * samplesPerPixel);
+                var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
 
-            out.push(peak);
+                var peak:Float = 0.0;
+                for (j in startIndex...endIndex)
+                {
+                    var sample = Math.abs(samples[j]);
+                    if (sample > peak)
+                        peak = sample;
+                }
+
+                out.push(peak);
+            }
+        }
+        else
+        {
+            var visibleSamples:Int = Std.int(Math.min(samples.length, waveformWidth));
+            for (i in 0...visibleSamples)
+            {
+                out.push(samples[i]);
+            }
         }
     }
 

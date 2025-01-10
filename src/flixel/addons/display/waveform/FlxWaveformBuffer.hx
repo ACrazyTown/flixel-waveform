@@ -37,7 +37,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * Unless you have a reason to access this directly you
      * should probably use the `getChannelData()` function.
      */
-    var _channels:ChannelPair;
+    var _channels(default, null):ChannelPair;
 
     /**
      * Creates a `FlxWaveformBuffer` from a `lime.media.AudioBuffer`.
