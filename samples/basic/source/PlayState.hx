@@ -13,15 +13,14 @@ class PlayState extends FlxState
     {
         super.create();
 
+        // Setup some stuff
         #if debug
         FlxG.console.registerEnum(WaveformDrawMode);
         #end
         FlxG.autoPause = false;
-        FlxG.camera.bgColor = 0xFF152E5A;
+        FlxG.camera.bgColor = 0xFF253475;
 
-        FlxG.sound.playMusic("assets/beeper.ogg");
-        FlxG.sound.music.stop();
-        FlxG.sound.music.looped = true;
+        FlxG.sound.music = FlxG.sound.load("assets/beeper.ogg", 1.0, true);
 
         // NOTE: Due to a limitation, on HTML5
         // you have to play the audio source
@@ -46,18 +45,43 @@ class PlayState extends FlxState
         #end
 
         // Create a new FlxWaveform instance.
-        waveform = new FlxWaveform(0, 0, Std.int(FlxG.sound.music.length / pixelsPerMs), FlxG.height, 0xFF1C98E0);
+        waveform = new FlxWaveform(0, 0, Std.int(FlxG.sound.music.length / pixelsPerMs), FlxG.height);
+
         // Load data from the FlxSound so the waveform renderer can process it.
         waveform.loadDataFromFlxSound(FlxG.sound.music);
+
         // We set our draw range.
         // When we leave it blank it'll default to a range from the beginning to the full length of the sound.
         waveform.setDrawRange();
+
         // We'll render both channels of the waveform seperately.
         waveform.waveformDrawMode = SPLIT_CHANNELS;
+
         // We don't have to manually generate the bitmap here, because `FlxWaveform.autoUpdateBitmap`
         // is true by default, and changing the waveform draw mode above will trigger a redraw.
         // waveform.generateWaveformBitmap();
+
+        // Set the color of the waveform.
+        waveform.waveformColor = 0xFF4577BE;
+
+        // Set the color of the waveform's background.
+        // In this case we won't set it as our camera's bgColor is the same.
+        // waveform.waveformBgColor = 0xFF152E5A;
+
+        // Toggle whether the RMS (root mean square) of the waveform should be drawn.
+        // The RMS represents the average/effective loudness of audio.
+        // See Audacity's manual for additional information:
+        // https://manual.audacityteam.org/man/audacity_waveform.html#rms
+        waveform.waveformDrawRMS = true;
+
+        // Set the color of the RMS waveform.
+        waveform.waveformRMSColor = 0xFF68C3FF;
+
         add(waveform);
+
+        // waveform.waveformShowRMS = true;
+        // waveform.waveformRMSColor = 0xFFFFFFFF;
+        // waveform.waveformDrawMode = COMBINED;
     }
 
     override public function update(elapsed:Float):Void

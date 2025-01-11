@@ -1,6 +1,7 @@
 
 package flixel.addons.display.waveform;
 
+import flixel.system.scaleModes.RatioScaleMode;
 import flixel.util.FlxDestroyUtil;
 import openfl.display.Shape;
 import lime.utils.Float32Array;
@@ -20,7 +21,7 @@ import flash.media.Sound;
 using flixel.addons.display.waveform.BytesExt;
 
 /**
- * An `FlxSprite` extension that provides an API to render waveforms.
+ * An `FlxSprite` extension that provides an API to draw waveforms.
  * 
  * @author ACrazyTown (https://github.com/acrazytown/)
  */
@@ -53,9 +54,15 @@ class FlxWaveform extends FlxSprite
     public var waveformBgColor(default, set):FlxColor;
 
     /**
-     * The color used for rendering the actual waveform.
+     * The color used for drawing the actual waveform.
      */
     public var waveformColor(default, set):FlxColor;
+
+    /**
+     * The color used for drawing the waveform RMS.
+     * @since 1.3.0
+     */
+    public var waveformRMSColor(default, set):FlxColor;
 
     /**
      * The width of the entire waveform graphic.
@@ -97,6 +104,18 @@ class FlxWaveform extends FlxSprite
      */
     public var waveformDrawBaseline(default, set):Bool;
 
+    /**
+     * Whether the waveform's RMS (root mean square) should be drawn.
+     * The RMS represents the average/effective loudness of audio.
+     * 
+     * Use `waveformRMSColor` to control the color the RMS will be
+     * drawn with.
+     *
+     * @see https://manual.audacityteam.org/man/audacity_waveform.html#rms
+     * @since 1.3.0
+     */
+    public var waveformDrawRMS(default, set):Bool;
+
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -122,19 +141,37 @@ class FlxWaveform extends FlxSprite
     var _curRangeEnd:Float = -1;
 
     /**
-     * Internal array of Floats that holds the values of audio peaks 
-     * for the left channel from 0.0 to 1.0 in a specified time frame.
+     * Internal array of Floats that either contain:
+     * - Peaks in a range of 0.0 to 1.0 for a given time frame.
+     * - Audio samples in a range of -1.0 to 1.0 to be graphed
+     * 
+     * What the array will contain is dependant on `samplesPerPixel`
      */
-    var _peaksLeft:Array<Float> = null;
+    var _drawPointsLeft:Array<Float> = null;
 
     /**
-     * Internal array of Floats that holds the values of audio peaks 
-     * for the right channel from 0.0 to 1.0 in a specified time frame.
+     * Internal array of Floats that either contain:
+     * - Peaks in a range of 0.0 to 1.0 for a given time frame.
+     * - Audio samples in a range of -1.0 to 1.0 to be graphed
+     * 
+     * What the array will contain is dependant on `samplesPerPixel`
      */
-    var _peaksRight:Array<Float> = null;
+    var _drawPointsRight:Array<Float> = null;
 
     /**
-     * Internal helper
+     * Internal array of Floats that contains the RMS (root mean square) 
+     * values of the left channel for a given time frame.
+     */
+    var _drawRMSLeft:Array<Float> = null;
+
+    /**
+     * Internal array of Floats that contains the RMS (root mean square) 
+     * values of the right channel for a given time frame.
+     */
+    var _drawRMSRight:Array<Float> = null;
+
+    /**
+     * Internal helper that decides whether the waveform should be redrawn.
      */
     var _waveformDirty:Bool = true;
 
@@ -179,8 +216,10 @@ class FlxWaveform extends FlxSprite
         super.destroy();
 
         _shape = null;
-        _peaksLeft = null;
-        _peaksRight = null;
+        _drawPointsLeft = null;
+        _drawPointsRight = null;
+        _drawRMSLeft = null;
+        _drawRMSRight = null;
 
         // TODO: Should the buffer be disposed?
         FlxDestroyUtil.destroy(_buffer);
@@ -247,6 +286,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Loads the audio buffer data neccessary for processing the
      * waveform from a `flash.media.Sound`.
+     * 
      * @param sound The `flash.media.Sound` to get data from.
      */
     public function loadDataFromFlashSound(sound:Sound):Void
@@ -280,9 +320,14 @@ class FlxWaveform extends FlxSprite
 
         _stereo = _buffer.numChannels == 2;
 
-        _peaksLeft = recycleArray(_peaksLeft);
+        _drawPointsLeft = recycleArray(_drawPointsLeft);
+        _drawRMSLeft = recycleArray(_drawRMSLeft);
+
         if (_stereo)
-            _peaksRight = recycleArray(_peaksRight);
+        {
+            _drawPointsRight = recycleArray(_drawPointsRight);
+            _drawRMSRight = recycleArray(_drawRMSRight);
+        }
     }
 
     /**
@@ -293,12 +338,6 @@ class FlxWaveform extends FlxSprite
      */
     public function setDrawRange(?endTime:Float = -1, ?startTime:Float = -1):Void
     {
-        if (!bufferValid(_buffer))
-        {
-            FlxG.log.error("[FlxWaveform] Can't do any operations with invalid buffer.");
-            return;
-        }
-
         if (startTime < 0)
             startTime = 0.0;
         if (endTime < 0)
@@ -307,24 +346,14 @@ class FlxWaveform extends FlxSprite
         _curRangeStart = startTime;
         _curRangeEnd = endTime;
 
-        // clear previous peak data
-        clearArray(_peaksLeft);
-        if (_stereo)
-            clearArray(_peaksRight);
-
-        // ? run gc to hopefully clear old data?
-        // System.gc();
-        var slicePos:Int = Std.int((_curRangeStart / 1000) * _buffer.sampleRate);
+        var sliceStart:Int = Std.int((_curRangeStart / 1000) * _buffer.sampleRate);
         var sliceEnd:Int = Std.int((_curRangeEnd / 1000) * _buffer.sampleRate);
-        var sectionSamplesLeft = _buffer.getChannelData(0).subarray(slicePos, sliceEnd);
-        var sectionSamplesRight = null;
-        if (_stereo)
-            sectionSamplesRight = _buffer.getChannelData(1).subarray(slicePos, sliceEnd);
+        var numSamples:Int = sliceEnd - sliceStart;
 
-        samplesPerPixel = Std.int(Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / waveformWidth);
-        prepareDrawData(sectionSamplesLeft, _peaksLeft);
+        samplesPerPixel = Std.int(numSamples / waveformWidth);
+        prepareDrawData(0);
         if (_stereo)
-            prepareDrawData(sectionSamplesRight, _peaksRight);
+            prepareDrawData(1);
 
         if (autoUpdateBitmap)
             _waveformDirty = true;
@@ -338,12 +367,6 @@ class FlxWaveform extends FlxSprite
      */
     public function generateWaveformBitmap():Void
     {
-        if (!bufferValid(_buffer))
-        {
-            FlxG.log.error("[FlxWaveform] Can't do any operations with invalid buffer.");
-            return;
-        }
-
         // clear previous draw
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
@@ -369,25 +392,29 @@ class FlxWaveform extends FlxSprite
 
             for (i in 0...waveformWidth)
             {
-                var peakLeft:Float = _peaksLeft[i];
+                var peakLeft:Float = _drawPointsLeft[i];
                 var peakRight:Float = 0;
                 if (_stereo)
-                    peakRight = _peaksRight[i];
+                    peakRight = _drawPointsRight[i];
 
                 if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
                     continue;
 
-                var segmentHeightLeft:Float = peakLeft * centerY;
-                var segmentHeightRight:Float = 0;
-                if (_stereo)
-                    segmentHeightRight = peakRight * centerY;
+                var peakest:Float = Math.max(peakLeft, peakRight);
+                pixels.fillRect(getPeakRect(i, 0, 1, waveformHeight, peakest), waveformColor);
+                if (waveformDrawRMS)
+                {
+                    var rmsLeft:Float = _drawRMSLeft[i];
+                    var rmsRight:Float = 0;
+                    if (_stereo)
+                        rmsRight = _drawRMSRight[i];
 
-                var segmentHeight:Float = Math.max(segmentHeightLeft, segmentHeightRight);
+                    if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                        continue;
 
-                var y1:Float = centerY - segmentHeight;
-                var y2:Float = centerY + segmentHeight;
-
-                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), waveformColor);
+                    var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
+                    pixels.fillRect(getPeakRect(i, 0, 1, waveformHeight, combinedRMS), waveformRMSColor);
+                }
             }
         }
         else if (waveformDrawMode == SPLIT_CHANNELS)
@@ -395,7 +422,7 @@ class FlxWaveform extends FlxSprite
             var half:Float = waveformHeight / 2;
             var centerY:Float = waveformHeight / 4;
 
-            if (waveformDrawBaseline)
+            if (waveformDrawBaseline) 
             {
                 pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
                 pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
@@ -403,26 +430,30 @@ class FlxWaveform extends FlxSprite
 
             for (i in 0...waveformWidth)
             {
-                var peakLeft:Float = _peaksLeft[i];
+                var peakLeft:Float = _drawPointsLeft[i];
                 var peakRight:Float = 0;
                 if (_stereo)
-                    peakRight = _peaksRight[i];
+                    peakRight = _drawPointsRight[i];
 
                 if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
                     continue;
 
-                var segmentHeightLeft:Float = peakLeft * centerY;
-                var segmentHeightRight:Float = 0;
-                if (_stereo)
-                    segmentHeightRight = peakRight * centerY;
+                pixels.fillRect(getPeakRect(i, 0, 1, half, peakLeft), waveformColor);
+                pixels.fillRect(getPeakRect(i, half, 1, half, peakRight), waveformColor);
 
-                var y1l:Float = centerY - segmentHeightLeft;
-                var y2l:Float = centerY + segmentHeightLeft;
-                var y1r:Float = half + (centerY - segmentHeightRight);
-                var y2r:Float = half + (centerY + segmentHeightRight);
+                if (waveformDrawRMS)
+                {
+                    var rmsLeft:Float = _drawRMSLeft[i];
+                    var rmsRight:Float = 0;
+                    if (_stereo)
+                        rmsRight = _drawRMSRight[i];
 
-                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), waveformColor);
-                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), waveformColor);
+                    if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                        continue;
+
+                    pixels.fillRect(getPeakRect(i, 0, 1, half, rmsLeft), waveformRMSColor);
+                    pixels.fillRect(getPeakRect(i, half, 1, half, rmsRight), waveformRMSColor);
+                }
             }
         }
     }
@@ -448,11 +479,11 @@ class FlxWaveform extends FlxSprite
 
             for (i in 0...waveformWidth)
             {
-                var peak:Float = _peaksLeft[i];
+                var peak:Float = _drawPointsLeft[i];
                 if (_stereo)
                 {
                     // Can't graph both so let's get average?
-                    peak += _peaksRight[i];
+                    peak += _drawPointsRight[i];
                     peak /= 2;
                 }
 
@@ -473,10 +504,10 @@ class FlxWaveform extends FlxSprite
 
             for (i in 0...waveformWidth)
             {
-                var peakLeft:Float = _peaksLeft[i];
+                var peakLeft:Float = _drawPointsLeft[i];
                 var peakRight:Float = 0;
                 if (_stereo)
-                    peakRight = _peaksRight[i];
+                    peakRight = _drawPointsRight[i];
 
                 var curX:Float = i;
                 var curYL:Float = halfCenter - peakLeft * halfCenter;
@@ -523,20 +554,29 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Writes `waveformWidth` elements to array `out` containing
-     * the data neccessary for the waveform to be rendered.
-     * 
-     * If `samplesPerPixel` is higher than 1 this data will be
-     * the highest sample out of a sample segment,
-     * otherwise it will just contain the audio sample values
-     * to be graphed.
-     * 
-     * @param samples Input samples
-     * @param out Output array containing peaks.
+     * Prepares data neccessary for the waveform to be drawn. 
+     * @param channel The channel to prepare the data for
      */
-    private function prepareDrawData(samples:Float32Array, out:Array<Float>):Void
+    private function prepareDrawData(channel:Int):Void
     {
-        clearArray(out);
+        var drawPoints:Array<Float> = null;
+        var drawRMS:Array<Float> = null;
+
+        switch (channel)
+        {
+            case 0:
+                drawPoints = _drawPointsLeft;
+                drawRMS = _drawRMSLeft;
+
+            case 1:
+                drawPoints = _drawPointsRight;
+                drawRMS = _drawRMSRight;
+        }
+
+        clearArray(drawPoints);
+        clearArray(drawRMS);
+
+        var samples:Null<Float32Array> = _buffer.getChannelData(channel);
 
         if (samplesPerPixel > 1)
         {
@@ -544,25 +584,17 @@ class FlxWaveform extends FlxSprite
             {
                 var startIndex:Int = Math.floor(i * samplesPerPixel);
                 var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
+                drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
 
-                var peak:Float = 0.0;
-                for (j in startIndex...endIndex)
-                {
-                    var sample = Math.abs(samples[j]);
-                    if (sample > peak)
-                        peak = sample;
-                }
-
-                out.push(peak);
+                // Avoid calculating RMS if we don't need to draw it
+                drawRMS.push(waveformDrawRMS ? _buffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
             }
         }
         else
         {
             var visibleSamples:Int = Std.int(Math.min(samples.length, waveformWidth));
             for (i in 0...visibleSamples)
-            {
-                out.push(samples[i]);
-            }
+                drawPoints.push(samples[i]);
         }
     }
 
@@ -599,10 +631,26 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
-    @:deprecated("TODO: Beta")
-    inline private function bufferValid(buffer:FlxWaveformBuffer):Bool
+    /**
+     * Returns an `openfl.geom.Rectangle` representing the rectangle
+     * of the audio peak.
+     * 
+     * @param x The rectangle's position on the X axis
+     * @param y Y offset
+     * @param width The width of the peak rectangle
+     * @param height The height of the peak rectangle
+     * @param sample The audio sample in the range of -1.0 to 1.0
+     * @return A `openfl.geom.Rectangle` instance
+     */
+    private function getPeakRect(x:Float, y:Float, width:Float, height:Float, sample:Float):Rectangle
     {
-        return buffer != null;
+        var half:Float = height / 2;
+        var segmentHeight:Float = sample * half;
+
+        var y1:Float = half - segmentHeight;
+        var y2:Float = half + segmentHeight;
+
+        return new Rectangle(x, y + y1, width, y2 - y1);
     }
 
     @:noCompletion private function get_waveformWidth():Int
@@ -657,6 +705,19 @@ class FlxWaveform extends FlxSprite
         return waveformColor;
     }
 
+    @:noCompletion function set_waveformRMSColor(value:FlxColor):FlxColor 
+    {
+        if (waveformRMSColor != value)
+        {
+            waveformRMSColor = value;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformRMSColor;
+    }
+
     @:noCompletion function set_waveformDrawMode(value:WaveformDrawMode):WaveformDrawMode 
     {
         if (waveformDrawMode != value)
@@ -690,6 +751,23 @@ class FlxWaveform extends FlxSprite
 
         return autoUpdateBitmap = value;
     }
+
+    @:noCompletion function set_waveformDrawRMS(value:Bool):Bool 
+    {
+        if (waveformDrawRMS != value)
+        {
+            waveformDrawRMS = value;
+            
+            // reset range so we can fill RMS arrays
+            setDrawRange(_curRangeEnd, _curRangeStart);
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformDrawRMS;
+    }
+    
 }
 
 enum WaveformDrawMode

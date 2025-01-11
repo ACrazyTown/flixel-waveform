@@ -1,5 +1,6 @@
 package flixel.addons.display.waveform;
 
+import flixel.math.FlxMath;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import lime.media.howlerjs.Howl;
@@ -12,6 +13,7 @@ using flixel.addons.display.waveform.BytesExt;
 /**
  * A `FlxWaveformBuffer` holds various data related to an audio track
  * that is required for further processing.
+ * @since 1.3.0
  */
 class FlxWaveformBuffer implements IFlxDestroyable
 {
@@ -59,14 +61,8 @@ class FlxWaveformBuffer implements IFlxDestroyable
         if (!isLimeAudioBufferValid(buffer))
             return null;
 
-        var _buffer:FlxWaveformBuffer = new FlxWaveformBuffer();
-        _buffer.sampleRate = buffer.sampleRate;
-        _buffer.bitsPerSample = buffer.bitsPerSample;
-        _buffer.numChannels = buffer.channels;
-
-        _buffer._channels = uninterleaveAndNormalize(buffer.data.toBytes(), buffer.bitsPerSample, buffer.channels == 2);
-
-        return _buffer;
+        var _channels:ChannelPair = uninterleaveAndNormalize(buffer.data.toBytes(), buffer.bitsPerSample, buffer.channels == 2);
+        return new FlxWaveformBuffer(buffer.sampleRate, buffer.bitsPerSample, buffer.channels, _channels);
     }
 
     #if js
@@ -82,16 +78,8 @@ class FlxWaveformBuffer implements IFlxDestroyable
         if (buffer == null)
             return null;
 
-        var _buffer:FlxWaveformBuffer = new FlxWaveformBuffer();
-        _buffer.sampleRate = buffer.sampleRate;
-        _buffer.bitsPerSample = 32; // always 32 on web?
-        _buffer.numChannels = buffer.numberOfChannels;
-
-        @:privateAccess _buffer._channels._leftChannel = cast buffer.getChannelData(0);
-        if (_buffer.numChannels > 1)
-            @:privateAccess _buffer._channels._rightChannel = cast buffer.getChannelData(1);
-
-        return _buffer;
+        var _channels:ChannelPair = new ChannelPair(cast buffer.getChannelData(0), buffer.numberOfChannels > 1 ? cast buffer.getChannelData(1) : null);
+        return new FlxWaveformBuffer(buffer.sampleRate, 32, buffer.numberOfChannels, _channels);
     }
 
     #if lime_howlerjs
@@ -148,7 +136,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
         sound.extract(bytes.getData(), numSamples);
 
-        _buffer._channels = uninterleaveAndNormalize(bytes, _buffer.bitsPerSample, true);
+        var _channels:ChannelPair = uninterleaveAndNormalize(bytes, _buffer.bitsPerSample, true);
 
         return _buffer;
     }
@@ -242,14 +230,33 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * Unless you have a reason to access this directly you
      * should probably use one of the static methods 
      * to create the buffer from pre-existing data.
+     * 
+     * @param sampleRate The number of audio samples per second, in Hz
+     * @param bitsPerSample The number of bits each audio sample takes
+     * @param numChannels The number of audio channels (1 for mono, 2 for stereo)
+     * @param channels A `ChannelPair` instance
      */
-    public function new():Void 
+    public function new(sampleRate:Null<Float>, bitsPerSample:Null<Int>, numChannels:Null<Int>, channels:Null<ChannelPair>):Void 
+    {
+        this.sampleRate = sampleRate;
+        this.bitsPerSample = bitsPerSample;
+        this.numChannels = numChannels;
+
+        _channels = channels;
+    }
+
+    /**
+     * Nulls all data related to the buffer.
+     * The buffer is not safe to be used after this operation.
+     */
+    public function destroy():Void
     {
         sampleRate = null;
         bitsPerSample = null;
         numChannels = null;
 
-        _channels = new ChannelPair(null, null);
+        FlxDestroyUtil.destroy(_channels);
+        _channels = null;
     }
 
     /**
@@ -265,17 +272,55 @@ class FlxWaveformBuffer implements IFlxDestroyable
     }
 
     /**
-     * Nulls all data related to the buffer.
-     * The buffer is not safe to be used after this operation.
+     * Returns the highest sample (peak) of the audio for a specified segment.
+     * 
+     * @param channel The channel to get data from
+     * @param startIndex The start index of the segment
+     * @param endIndex The end index of the segment
+     * @return The highest segment (peak) for the audio segment
      */
-    public function destroy():Void
+    public function getPeakForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
     {
-        sampleRate = null;
-        bitsPerSample = null;
-        numChannels = null;
+        var channel:Null<Float32Array> = getChannelData(channel);
+        var peak:Float = 0.0;
 
-        FlxDestroyUtil.destroy(_channels);
-        _channels = null;
+        for (i in startIndex...endIndex)
+        {
+            var sample = Math.abs(channel[i]);
+            if (sample > peak)
+                peak = sample;
+        }
+
+        return peak;
+    }
+
+    /**
+     * Returns the root mean square (RMS) of the audio for a specified segment.
+     * The RMS represents the average/effective loudness of audio.
+     * 
+     * @param channel The channel to get data from
+     * @param startIndex The start index of the segment
+     * @param endIndex The end index of the segment
+     * @return The RMS for the audio segment
+     */
+    public function getRMSForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
+    {
+        var channel:Null<Float32Array> = getChannelData(channel);
+        var numSamples:Int = endIndex - startIndex;
+
+        // return now to avoid div by 0
+        if (numSamples <= 0)
+            return 0.0;
+
+        var squareSum:Float = 0.0;
+
+        for (i in startIndex...endIndex)
+        {
+            var sample = channel[i];
+            squareSum += sample * sample;
+        }
+
+        return Math.sqrt(squareSum / numSamples);
     }
 }
 
