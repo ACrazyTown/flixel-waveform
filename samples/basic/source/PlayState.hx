@@ -78,10 +78,6 @@ class PlayState extends FlxState
         waveform.waveformRMSColor = 0xFF68C3FF;
 
         add(waveform);
-
-        // waveform.waveformShowRMS = true;
-        // waveform.waveformRMSColor = 0xFFFFFFFF;
-        // waveform.waveformDrawMode = COMBINED;
     }
 
     override public function update(elapsed:Float):Void
