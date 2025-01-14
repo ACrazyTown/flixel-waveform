@@ -1,12 +1,9 @@
 
 package flixel.addons.display.waveform;
 
-import flixel.system.scaleModes.RatioScaleMode;
 import flixel.util.FlxDestroyUtil;
 import openfl.display.Shape;
 import lime.utils.Float32Array;
-import lime.utils.UInt8Array;
-import haxe.io.Bytes;
 import lime.media.AudioBuffer;
 import openfl.geom.Rectangle;
 import flixel.FlxG;
@@ -21,7 +18,8 @@ import flash.media.Sound;
 using flixel.addons.display.waveform.BytesExt;
 
 /**
- * An `FlxSprite` extension that provides an API to draw waveforms.
+ * A `FlxWaveform` is an `FlxSprite` extension that provides a 
+ * simple yet powerful API that allows drawing waveforms from audio data.
  * 
  * @author ACrazyTown (https://github.com/acrazytown/)
  */
@@ -101,6 +99,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Whether the waveform baseline should be drawn.
+     * @since 1.3.0
      */
     public var waveformDrawBaseline(default, set):Bool;
 
@@ -115,6 +114,24 @@ class FlxWaveform extends FlxSprite
      * @since 1.3.0
      */
     public var waveformDrawRMS(default, set):Bool;
+
+    /**
+     * The size (in pixels) of one waveform peak bar.
+     * Default value is 1.
+     * 
+     * This value doesn't affect anything when the samples are graphed.
+     * @since 1.3.0
+     */
+    public var waveformBarSize(default, set):Int = 1;
+
+    /**
+     * The space (in pixels) between waveform peak bars.
+     * Default value is 0.
+     * 
+     * This value doesn't affect anything when the samples are graphed.
+     * @since 1.3.0
+     */
+    public var waveformBarPadding(default, set):Int = 0;
 
     /* ----------- INTERNALS ----------- */
 
@@ -131,14 +148,24 @@ class FlxWaveform extends FlxSprite
     var _stereo:Bool = false;
 
     /**
-     * Internal variable holding the current start of the draw range (in miliseconds)
+     * Internal variable holding the start of the draw range (in miliseconds)
      */
-    var _curRangeStart:Float = -1;
+    var _rangeStartMS:Float;
 
     /**
-     * Internal variable holding the current end of the draw range (in miliseconds)
+     * Internal variable holding the end of the draw range (in miliseconds)
      */
-    var _curRangeEnd:Float = -1;
+    var _rangeEndMS:Float;
+
+    /**
+     * Internal variable holding the start of the draw range (in samples)
+     */
+    var _rangeStartSample:Int;
+
+    /**
+     * Internal variable holding the end of the draw range (in samples)
+     */
+    var _rangeEndSample:Int;
 
     /**
      * Internal array of Floats that either contain:
@@ -343,17 +370,15 @@ class FlxWaveform extends FlxSprite
         if (endTime < 0)
             endTime = (_buffer.getChannelData(0).length / _buffer.sampleRate) * 1000;
 
-        _curRangeStart = startTime;
-        _curRangeEnd = endTime;
+        // TODO: Some kind of cache? If the range is not completely different but like only slightly
+        // eg. startTime goes from 0 to 100 don't dump whole array but add to it?
+        _rangeStartMS = startTime;
+        _rangeEndMS = endTime;
+        _rangeStartSample = Std.int((_rangeStartMS / 1000) * _buffer.sampleRate);
+        _rangeEndSample = Std.int((_rangeEndMS / 1000) * _buffer.sampleRate);
 
-        var sliceStart:Int = Std.int((_curRangeStart / 1000) * _buffer.sampleRate);
-        var sliceEnd:Int = Std.int((_curRangeEnd / 1000) * _buffer.sampleRate);
-        var numSamples:Int = sliceEnd - sliceStart;
-
-        samplesPerPixel = Std.int(numSamples / waveformWidth);
-        prepareDrawData(0);
-        if (_stereo)
-            prepareDrawData(1);
+        samplesPerPixel = Std.int((_rangeEndSample - _rangeStartSample) / waveformWidth);
+        refreshDrawData();
 
         if (autoUpdateBitmap)
             _waveformDirty = true;
@@ -378,11 +403,36 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
+     * Resizes the waveform's graphic.
+     * 
+     * It is recommended to use this function rather than 
+     * modifying `waveformWidth` and `waveformHeight` seperately 
+     * if you want to change both.
+     * 
+     * @param width New width of the graphic
+     * @param height New height of the graphic
+     */
+    public function resize(width:Int, height:Int):Void
+    {
+        if (waveformWidth != width)
+            setDrawRange(_rangeEndMS, _rangeStartMS);
+
+        // waveformWidth = width;
+        // waveformHeight = height;
+
+        makeGraphic(width, height, waveformBgColor);
+        if (autoUpdateBitmap)
+            _waveformDirty = true;
+    }
+
+    /**
      * Internal method which draws audio sample peaks as rectangles.
      * Used when `samplesPerPixel` is larger than 1
      */
-    function drawPeaks():Void
+    private function drawPeaks():Void
     {
+        var effectiveWidth:Int = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
+
         if (waveformDrawMode == COMBINED)
         {
             var centerY:Float = waveformHeight / 2;
@@ -390,7 +440,7 @@ class FlxWaveform extends FlxSprite
             if (waveformDrawBaseline)
                 pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
 
-            for (i in 0...waveformWidth)
+            for (i in 0...effectiveWidth)
             {
                 var peakLeft:Float = _drawPointsLeft[i];
                 var peakRight:Float = 0;
@@ -401,7 +451,9 @@ class FlxWaveform extends FlxSprite
                     continue;
 
                 var peakest:Float = Math.max(peakLeft, peakRight);
-                pixels.fillRect(getPeakRect(i, 0, 1, waveformHeight, peakest), waveformColor);
+                var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peakest), waveformColor);
                 if (waveformDrawRMS)
                 {
                     var rmsLeft:Float = _drawRMSLeft[i];
@@ -413,7 +465,7 @@ class FlxWaveform extends FlxSprite
                         continue;
 
                     var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
-                    pixels.fillRect(getPeakRect(i, 0, 1, waveformHeight, combinedRMS), waveformRMSColor);
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, combinedRMS), waveformRMSColor);
                 }
             }
         }
@@ -428,7 +480,7 @@ class FlxWaveform extends FlxSprite
                 pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
             }
 
-            for (i in 0...waveformWidth)
+            for (i in 0...effectiveWidth)
             {
                 var peakLeft:Float = _drawPointsLeft[i];
                 var peakRight:Float = 0;
@@ -438,8 +490,10 @@ class FlxWaveform extends FlxSprite
                 if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
                     continue;
 
-                pixels.fillRect(getPeakRect(i, 0, 1, half, peakLeft), waveformColor);
-                pixels.fillRect(getPeakRect(i, half, 1, half, peakRight), waveformColor);
+                var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, peakLeft), waveformColor);
+                pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, peakRight), waveformColor);
 
                 if (waveformDrawRMS)
                 {
@@ -451,8 +505,8 @@ class FlxWaveform extends FlxSprite
                     if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
                         continue;
 
-                    pixels.fillRect(getPeakRect(i, 0, 1, half, rmsLeft), waveformRMSColor);
-                    pixels.fillRect(getPeakRect(i, half, 1, half, rmsRight), waveformRMSColor);
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, rmsLeft), waveformRMSColor);
+                    pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, rmsRight), waveformRMSColor);
                 }
             }
         }
@@ -462,7 +516,7 @@ class FlxWaveform extends FlxSprite
      * Internal method which graphs audio samples.
      * Used when `samplesPerPixel` is equal to 1.
      */
-    function drawGraphedSamples():Void
+    private function drawGraphedSamples():Void
     {
         _shape.graphics.clear();
         _shape.graphics.lineStyle(1, waveformColor);
@@ -488,7 +542,7 @@ class FlxWaveform extends FlxSprite
                 }
 
                 var curX:Float = i;
-                var curY:Float = centerY + peak * centerY;
+                var curY:Float = centerY - peak * centerY;
 
                 _shape.graphics.lineTo(curX, curY);
 
@@ -531,29 +585,6 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Resizes the waveform's graphic.
-     * 
-     * It is recommended to use this function rather than 
-     * modifying `waveformWidth` and `waveformHeight` seperately 
-     * if you want to change both.
-     * 
-     * @param width New width of the graphic
-     * @param height New height of the graphic
-     */
-    public function resize(width:Int, height:Int):Void
-    {
-        if (waveformWidth != width)
-            setDrawRange(_curRangeEnd, _curRangeStart);
-
-        // waveformWidth = width;
-        // waveformHeight = height;
-
-        makeGraphic(width, height, waveformBgColor);
-        if (autoUpdateBitmap)
-            _waveformDirty = true;
-    }
-
-    /**
      * Prepares data neccessary for the waveform to be drawn. 
      * @param channel The channel to prepare the data for
      */
@@ -578,12 +609,15 @@ class FlxWaveform extends FlxSprite
 
         var samples:Null<Float32Array> = _buffer.getChannelData(channel);
 
+        // effectiveWidth takes in account barSize/padding only when samplesPerPixel > 1 (not graphing)
+        var effectiveWidth:Int = samplesPerPixel > 1 ? Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding)) : waveformWidth;
+
         if (samplesPerPixel > 1)
         {
-            for (i in 0...waveformWidth)
+            for (i in 0...effectiveWidth)
             {
-                var startIndex:Int = Math.floor(i * samplesPerPixel);
-                var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
+                var startIndex:Int = Math.floor(_rangeStartSample + i * samplesPerPixel * waveformBarSize);
+                var endIndex:Int = Std.int(Math.min(Math.ceil(_rangeStartSample + (i + 1) * samplesPerPixel * waveformBarSize), samples.length));
                 drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
 
                 // Avoid calculating RMS if we don't need to draw it
@@ -592,10 +626,19 @@ class FlxWaveform extends FlxSprite
         }
         else
         {
-            var visibleSamples:Int = Std.int(Math.min(samples.length, waveformWidth));
-            for (i in 0...visibleSamples)
+            for (i in _rangeStartSample..._rangeEndSample)
                 drawPoints.push(samples[i]);
         }
+    }
+
+    /**
+     * Helper function that calls `prepareDrawData` for both audio channels.
+     */
+    inline private function refreshDrawData():Void
+    {
+        prepareDrawData(0);
+        if (_stereo)
+            prepareDrawData(1);
     }
 
     /**
@@ -758,8 +801,7 @@ class FlxWaveform extends FlxSprite
         {
             waveformDrawRMS = value;
             
-            // reset range so we can fill RMS arrays
-            setDrawRange(_curRangeEnd, _curRangeStart);
+            refreshDrawData();
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
@@ -768,8 +810,49 @@ class FlxWaveform extends FlxSprite
         return waveformDrawRMS;
     }
     
+    @:noCompletion function set_waveformBarSize(value:Int):Int 
+    {
+        if (waveformBarSize != value)
+        {
+            waveformBarSize = value;
+
+            refreshDrawData();
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformBarSize;
+    }
+    
+    @:noCompletion function set_waveformBarPadding(value:Int):Int 
+    {
+        if (waveformBarPadding != value)
+        {
+            waveformBarPadding = value;
+
+            refreshDrawData();
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformBarPadding;
+    }
+    
 }
 
+/**
+ * An enum representing how the waveform will look visually.
+ * 
+ * `COMBINED` will draw both audio channels (if in stereo) onto the 
+ * full area of the graphic, causing an overlap between the two.
+ * 
+ * `SPLIT_CHANNELS` will horizontally split the waveform into 
+ * top and bottom parts, for the two audio channels.
+ * The top part represents the left audio channel, 
+ * while the bottom part represents the right channel.
+ */
 enum WaveformDrawMode
 {
     COMBINED;

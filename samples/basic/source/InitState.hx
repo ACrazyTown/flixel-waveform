@@ -1,8 +1,9 @@
 package;
 
-import flixel.text.FlxText;
 import flixel.FlxG;
 import flixel.FlxState;
+import flixel.text.FlxText;
+import flixel.util.FlxTimer;
 
 class InitState extends FlxState
 {
@@ -21,14 +22,22 @@ class InitState extends FlxState
         #end
     }
 
+    var switching:Bool = false;
     override function update(elapsed:Float):Void
     {
         super.update(elapsed);
 
         // Check for user interaction & switch state if we get one.
         #if js
-        if (FlxG.mouse.justPressed)
-            FlxG.switchState(PlayState.new);
+        if (FlxG.mouse.justPressed && !switching)
+        {
+            switching = true;
+
+            // Wait a small amount of time before switching to the state
+            // to give time for the audio context to start and avoid a crash
+            // See: https://github.com/ACrazyTown/flixel-waveform/issues/8#issuecomment-2585483164
+            FlxTimer.wait(0.1, () -> FlxG.switchState(PlayState.new));
+        }
         #end
     }
 }

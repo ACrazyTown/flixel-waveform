@@ -77,6 +77,11 @@ class PlayState extends FlxState
         // Set the color of the RMS waveform.
         waveform.waveformRMSColor = 0xFF68C3FF;
 
+        // For extra style points we can adjust the size and spacing of the waveform bars!
+        // As a demonstration, we'll set the size to 4px and the padding to 2px
+        waveform.waveformBarSize = 4;
+        waveform.waveformBarPadding = 2;
+
         add(waveform);
     }
 
@@ -87,7 +92,7 @@ class PlayState extends FlxState
         if (FlxG.sound.music.playing)
         {
             // Make our camera follow the audio time.
-            camera.scroll.x = FlxG.sound.music.time / pixelsPerMs;
+            camera.scroll.x = (FlxG.sound.music.time / pixelsPerMs) * (waveform.waveformBarPadding + waveform.waveformBarSize) / waveform.waveformBarSize;
         }
 
         if (FlxG.keys.justPressed.SPACE)
