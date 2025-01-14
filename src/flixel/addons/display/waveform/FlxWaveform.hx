@@ -203,6 +203,12 @@ class FlxWaveform extends FlxSprite
     var _waveformDirty:Bool = true;
 
     /**
+     * Internal helper that decides whether the waveform draw data 
+     * should be rebuilt.
+     */
+    var _drawDataDirty:Bool = false;
+
+    /**
      * Internal helper used for drawing lines.
      */
     var _shape:Shape;
@@ -262,6 +268,18 @@ class FlxWaveform extends FlxSprite
         }
 
         super.draw();
+    }
+
+    @:inheritDoc(flixel.FlxBasic.update)
+    override function update(elapsed:Float):Void
+    {
+        if (_drawDataDirty)
+        {
+            refreshDrawData();
+            _drawDataDirty = false;
+        }
+
+        super.update(elapsed);
     }
 
     /**
@@ -378,7 +396,7 @@ class FlxWaveform extends FlxSprite
         _rangeEndSample = Std.int((_rangeEndMS / 1000) * _buffer.sampleRate);
 
         samplesPerPixel = Std.int((_rangeEndSample - _rangeStartSample) / waveformWidth);
-        refreshDrawData();
+        _drawDataDirty = true;
 
         if (autoUpdateBitmap)
             _waveformDirty = true;
@@ -801,7 +819,7 @@ class FlxWaveform extends FlxSprite
         {
             waveformDrawRMS = value;
             
-            refreshDrawData();
+            _drawDataDirty = true;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
@@ -816,7 +834,7 @@ class FlxWaveform extends FlxSprite
         {
             waveformBarSize = value;
 
-            refreshDrawData();
+            _drawDataDirty = true;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
@@ -831,7 +849,7 @@ class FlxWaveform extends FlxSprite
         {
             waveformBarPadding = value;
 
-            refreshDrawData();
+            _drawDataDirty = true;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
