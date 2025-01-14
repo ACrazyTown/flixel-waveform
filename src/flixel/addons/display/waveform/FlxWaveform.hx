@@ -629,13 +629,14 @@ class FlxWaveform extends FlxSprite
 
         // effectiveWidth takes in account barSize/padding only when samplesPerPixel > 1 (not graphing)
         var effectiveWidth:Int = samplesPerPixel > 1 ? Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding)) : waveformWidth;
+        var samplesPerBar:Int = samplesPerPixel * waveformBarSize;
 
         if (samplesPerPixel > 1)
         {
             for (i in 0...effectiveWidth)
             {
-                var startIndex:Int = Math.floor(_rangeStartSample + i * samplesPerPixel * waveformBarSize);
-                var endIndex:Int = Std.int(Math.min(Math.ceil(_rangeStartSample + (i + 1) * samplesPerPixel * waveformBarSize), samples.length));
+                var startIndex:Int = Math.floor(_rangeStartSample + i * samplesPerBar);
+                var endIndex:Int = Std.int(Math.min(Math.ceil(_rangeStartSample + (i + 1) * samplesPerBar), samples.length));
                 drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
 
                 // Avoid calculating RMS if we don't need to draw it
