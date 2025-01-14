@@ -18,8 +18,8 @@ import flash.media.Sound;
 using flixel.addons.display.waveform.BytesExt;
 
 /**
- * A `FlxWaveform` is an `FlxSprite` extension that provides a 
- * simple yet powerful API that allows drawing waveforms from audio data.
+ * A `FlxWaveform` is an `FlxSprite` extension that provides a simple yet 
+ * powerful API for drawing waveforms from audio data.
  * 
  * @author ACrazyTown (https://github.com/acrazytown/)
  */

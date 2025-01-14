@@ -1,3 +1,16 @@
+## 1.3.0
+- Added `waveformBarSize`, `waveformBarPadding`, 
+    - Allows for more customizable waveform designs!
+    - Increase the bar size for more blockier waveforms which are also less expensive to compute
+- Added `waveformRMSColor`, `waveformDrawRMS`
+    - Allows for visualizing the RMS (root mean square) of the audio data.
+    - The RMS represents the average/effective loudness of audio.
+- Added `waveformDrawBaseline`
+    - Simply draws a line in the middle of the waveform to represent 0
+- Added sample graph renderer when trying to view very low time ranges
+    - A seamless way of transitioning from the peak-based renderer and the graphed samples is planned for a future release.
+- A good chunk of code was refactored, so probably quite a few bug fixes?
+
 ## 1.2
 - Added experimental HTML5 support
 - 32bit audio now assumes it's stored as in Float32 format
