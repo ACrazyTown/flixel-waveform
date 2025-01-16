@@ -92,8 +92,12 @@ class FlxWaveform extends FlxSprite
      * regenerated when there's a change in data that would
      * affect the waveform visually.
      *
-     *  If set to `false`, you have to call 
+     * If set to `false`, you have to call 
      * `FlxWaveform.generateWaveformBitmap()` to update the graphic.
+     * 
+     * Note that if a change that requires the draw data to be rebuilt, 
+     * it will be done during the first draw call after the change,
+     * which may result in a stutter.
      */
     public var autoUpdateBitmap(default, set):Bool = true;
 
@@ -173,6 +177,10 @@ class FlxWaveform extends FlxSprite
      * - Audio samples in a range of -1.0 to 1.0 to be graphed
      * 
      * What the array will contain is dependant on `samplesPerPixel`
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
     var _drawPointsLeft:Array<Float> = null;
 
@@ -182,18 +190,30 @@ class FlxWaveform extends FlxSprite
      * - Audio samples in a range of -1.0 to 1.0 to be graphed
      * 
      * What the array will contain is dependant on `samplesPerPixel`
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
     var _drawPointsRight:Array<Float> = null;
 
     /**
      * Internal array of Floats that contains the RMS (root mean square) 
      * values of the left channel for a given time frame.
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
     var _drawRMSLeft:Array<Float> = null;
 
     /**
      * Internal array of Floats that contains the RMS (root mean square) 
      * values of the right channel for a given time frame.
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
     var _drawRMSRight:Array<Float> = null;
 
@@ -268,18 +288,6 @@ class FlxWaveform extends FlxSprite
         }
 
         super.draw();
-    }
-
-    @:inheritDoc(flixel.FlxBasic.update)
-    override function update(elapsed:Float):Void
-    {
-        if (_drawDataDirty)
-        {
-            refreshDrawData();
-            _drawDataDirty = false;
-        }
-
-        super.update(elapsed);
     }
 
     /**
@@ -407,9 +415,19 @@ class FlxWaveform extends FlxSprite
      *
      * If you have `autoUpdateBitmap` enabled, you most likely
      * do not need to call this function manually.
+     * 
+     * Note that if a change that requires the draw data to be rebuilt, 
+     * it will be done during the first draw call after the change,
+     * which may result in a stutter.
      */
     public function generateWaveformBitmap():Void
     {
+        if (_drawDataDirty)
+        {
+            refreshDrawData();
+            _drawDataDirty = false;
+        }
+
         // clear previous draw
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
