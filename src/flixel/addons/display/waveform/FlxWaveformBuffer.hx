@@ -48,17 +48,23 @@ class FlxWaveformBuffer implements IFlxDestroyable
      */
     public static function fromLimeAudioBuffer(buffer:AudioBuffer):Null<FlxWaveformBuffer>
     {
+        var bufferValid:Bool = isLimeAudioBufferValid(buffer);
+
         #if (js && lime_howlerjs)
         // If the buffer isn't valid anyway we might as well
         // try to get something from Howler
         @:privateAccess
-        if (!isLimeAudioBufferValid(buffer) && buffer.__srcHowl != null)
+        if (!bufferValid && buffer.__srcHowl != null)
             return fromHowl(cast buffer.src);
         #end
 
-        // TODO: Flash
+        #if flash
+        @:privateAccess
+        if (!bufferValid && buffer.__srcSound != null)
+            return fromFlashSound(buffer.__srcSound);
+        #end
 
-        if (!isLimeAudioBufferValid(buffer))
+        if (!bufferValid)
             return null;
 
         var _channels:ChannelPair = uninterleaveAndNormalize(buffer.data.toBytes(), buffer.bitsPerSample, buffer.channels == 2);
@@ -122,23 +128,20 @@ class FlxWaveformBuffer implements IFlxDestroyable
         if (sound == null)
             return null;
 
-        var _buffer:FlxWaveformBuffer = new FlxWaveformBuffer();
-
-        // These values are always hardcoded.
+        // These values are always hardcoded:
+        // Sample rate: 44100hz
+        // Channels: 2
+        // Bits per sample: 32
         // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Sound.html#extract()
-        _buffer.sampleRate = 44100;
-        _buffer.bitsPerSample = 32;
-        _buffer.numChannels = 2;
 
-        var numSamples:Float = _buffer.sampleRate * (sound.length / 1000);
-        var length:Int = Std.int(numSamples * _buffer.numChannels * (_buffer.bitsPerSample / 8));
+        var numSamples:Float = 44100 * (sound.length / 1000);
+        var length:Int = Std.int(numSamples * 2 * (32 / 8));
         var bytes:Bytes = Bytes.alloc(length);
 
         sound.extract(bytes.getData(), numSamples);
+        var _channels:ChannelPair = uninterleaveAndNormalize(bytes, 32, true);
 
-        var _channels:ChannelPair = uninterleaveAndNormalize(bytes, _buffer.bitsPerSample, true);
-
-        return _buffer;
+        return new FlxWaveformBuffer(44100, 32, 2, _channels);
     }
     #end
 

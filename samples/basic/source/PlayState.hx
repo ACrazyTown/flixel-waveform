@@ -20,7 +20,7 @@ class PlayState extends FlxState
         FlxG.autoPause = false;
         FlxG.camera.bgColor = 0xFF253475;
 
-        FlxG.sound.music = FlxG.sound.load("assets/beeper.ogg", 1.0, true);
+        FlxG.sound.music = FlxG.sound.load("assets/beeper" + #if flash ".mp3" #else ".ogg" #end, 1.0, true);
 
         // NOTE: Due to a limitation, on HTML5
         // you have to play the audio source
