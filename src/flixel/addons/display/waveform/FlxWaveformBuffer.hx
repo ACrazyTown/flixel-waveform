@@ -33,6 +33,15 @@ class FlxWaveformBuffer implements IFlxDestroyable
     public var numChannels(default, null):Null<Int>;
 
     /**
+     * Whether the buffer should be automatically destroyed when an associated
+     * `FlxWaveform` instance is destroyed.
+     * 
+     * Set this to false if you want to reuse the same buffer on multiple waveforms,
+     * at the cost of having to clean up the buffer manually.
+     */
+    public var autoDestroy:Bool = true;
+
+    /**
      * Internal variable holding the actual raw audio data
      * for both audio channels.
      * 
@@ -80,8 +89,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      */
     public static function fromJSAudioBuffer(buffer:js.html.audio.AudioBuffer):Null<FlxWaveformBuffer>
     {
-        // TODO: check if valid
-        if (buffer == null)
+        if (!isJSAudioBufferValid(buffer))
             return null;
 
         var _channels:ChannelPair = new ChannelPair(cast buffer.getChannelData(0), buffer.numberOfChannels > 1 ? cast buffer.getChannelData(1) : null);
@@ -140,6 +148,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
         sound.extract(bytes.getData(), numSamples);
         var _channels:ChannelPair = uninterleaveAndNormalize(bytes, 32, true);
+        bytes = null;
 
         return new FlxWaveformBuffer(44100, 32, 2, _channels);
     }
@@ -221,10 +230,27 @@ class FlxWaveformBuffer implements IFlxDestroyable
         return buffer != null 
             && buffer.data != null 
             // on js ints can be null, but on static targets they can't.
-            && buffer.bitsPerSample != #if js null #else 0 #end
-            && buffer.channels != #if js null #else 0 #end
-            && buffer.sampleRate != #if js null #else 0 #end;
+            #if js && buffer.bitsPerSample != null #end && buffer.bitsPerSample > 0
+            #if js && buffer.channels != null #end && buffer.channels > 0
+            #if js && buffer.sampleRate != null #end && buffer.sampleRate > 0;
     }
+
+    #if js
+    /**
+     * Checks if the `js.html.audio.AudioBuffer` is valid and has all
+     * the data required for further processing
+     * 
+     * @param buffer The `js.html.audio.AudioBuffer` to check
+     * @return Bool Whether the buffer is valid
+     */
+    static inline function isJSAudioBufferValid(buffer:js.html.audio.AudioBuffer):Bool
+    {
+        return buffer != null
+            && buffer.numberOfChannels > 0
+            && buffer.length > 0
+            && buffer.getChannelData(0) != null;
+    }
+    #end
 
     /**
      * Creates a new `FlxWaveformBuffer` instance.
@@ -239,7 +265,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param numChannels The number of audio channels (1 for mono, 2 for stereo)
      * @param channels A `ChannelPair` instance
      */
-    public function new(sampleRate:Null<Float>, bitsPerSample:Null<Int>, numChannels:Null<Int>, channels:Null<ChannelPair>):Void 
+    function new(sampleRate:Null<Float>, bitsPerSample:Null<Int>, numChannels:Null<Int>, channels:Null<ChannelPair>):Void 
     {
         this.sampleRate = sampleRate;
         this.bitsPerSample = bitsPerSample;

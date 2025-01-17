@@ -274,8 +274,8 @@ class FlxWaveform extends FlxSprite
         _drawRMSLeft = null;
         _drawRMSRight = null;
 
-        // TODO: Should the buffer be disposed?
-        FlxDestroyUtil.destroy(_buffer);
+        if (_buffer.autoDestroy)
+            FlxDestroyUtil.destroy(_buffer);
     }
 
     @:inheritDoc(FlxSprite.draw)
@@ -359,10 +359,17 @@ class FlxWaveform extends FlxSprite
         loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromLimeAudioBuffer(buffer));
     }
 
+   /**
+     * Loads the audio buffer data neccessary for processing the 
+     * waveform from a `FlxWaveformBuffer`.
+     * 
+     * @param buffer The `FlxWaveformBuffer` to get data from.
+     * @since 1.3.0
+     */
     public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
     {
-        // TODO: Destroy previous buffer?
-        FlxDestroyUtil.destroy(_buffer);
+        if (_buffer.autoDestroy)
+            FlxDestroyUtil.destroy(_buffer);
         
         _buffer = buffer;
         if (_buffer == null)
