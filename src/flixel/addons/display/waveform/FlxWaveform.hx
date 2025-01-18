@@ -46,6 +46,8 @@ class FlxWaveform extends FlxSprite
      * while the bottom part represents the right channel.
      * 
      * `SINGLE_CHANNEL` draws one audio channel across the full area of the graphic.
+     * The argument provided must be either 
+     * 0 (for the left channel) or 1 (for the right channel)
      */
     public var waveformDrawMode(default, set):WaveformDrawMode;
 
