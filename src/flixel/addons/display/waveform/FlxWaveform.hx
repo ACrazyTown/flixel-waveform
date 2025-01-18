@@ -38,11 +38,14 @@ class FlxWaveform extends FlxSprite
      * 
      * `COMBINED` will draw both audio channels (if in stereo) onto the 
      * full area of the graphic, causing an overlap between the two.
+     * It also may be slightly more expensive to compute.
      * 
      * `SPLIT_CHANNELS` will horizontally split the waveform into 
      * top and bottom parts, for the two audio channels.
      * The top part represents the left audio channel, 
      * while the bottom part represents the right channel.
+     * 
+     * `SINGLE_CHANNEL` draws one audio channel across the full area of the graphic.
      */
     public var waveformDrawMode(default, set):WaveformDrawMode;
 
@@ -114,14 +117,13 @@ class FlxWaveform extends FlxSprite
      * Use `waveformRMSColor` to control the color the RMS will be
      * drawn with.
      *
-     * @see https://manual.audacityteam.org/man/audacity_waveform.html#rms
      * @since 1.3.0
      */
     public var waveformDrawRMS(default, set):Bool;
 
     /**
      * The size (in pixels) of one waveform peak bar.
-     * Default value is 1.
+     * Default value is 1px.
      * 
      * This value doesn't affect anything when the samples are graphed.
      * @since 1.3.0
@@ -130,7 +132,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * The space (in pixels) between waveform peak bars.
-     * Default value is 0.
+     * Default value is 0px.
      * 
      * This value doesn't affect anything when the samples are graphed.
      * @since 1.3.0
@@ -274,7 +276,7 @@ class FlxWaveform extends FlxSprite
         _drawRMSLeft = null;
         _drawRMSRight = null;
 
-        if (_buffer.autoDestroy)
+        if (_buffer?.autoDestroy)
             FlxDestroyUtil.destroy(_buffer);
     }
 
@@ -368,7 +370,7 @@ class FlxWaveform extends FlxSprite
      */
     public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
     {
-        if (_buffer.autoDestroy)
+        if (_buffer?.autoDestroy)
             FlxDestroyUtil.destroy(_buffer);
         
         _buffer = buffer;
@@ -476,82 +478,110 @@ class FlxWaveform extends FlxSprite
     {
         var effectiveWidth:Int = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
 
-        if (waveformDrawMode == COMBINED)
+        var half:Float = waveformHeight / 2;
+
+        switch (waveformDrawMode)
         {
-            var centerY:Float = waveformHeight / 2;
+            case COMBINED:
+                if (waveformDrawBaseline)
+                    pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
 
-            if (waveformDrawBaseline)
-                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
-
-            for (i in 0...effectiveWidth)
-            {
-                var peakLeft:Float = _drawPointsLeft[i];
-                var peakRight:Float = 0;
-                if (_stereo)
-                    peakRight = _drawPointsRight[i];
-
-                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                    continue;
-
-                var peakest:Float = Math.max(peakLeft, peakRight);
-                var x:Float = i * (waveformBarSize + waveformBarPadding);
-
-                pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peakest), waveformColor);
-                if (waveformDrawRMS)
+                for (i in 0...effectiveWidth)
                 {
-                    var rmsLeft:Float = _drawRMSLeft[i];
-                    var rmsRight:Float = 0;
+                    var peakLeft:Float = _drawPointsLeft[i];
+                    var peakRight:Float = 0;
                     if (_stereo)
-                        rmsRight = _drawRMSRight[i];
+                        peakRight = _drawPointsRight[i];
 
-                    if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
                         continue;
 
-                    var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, combinedRMS), waveformRMSColor);
+                    var peakest:Float = Math.max(peakLeft, peakRight);
+                    var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peakest), waveformColor);
+                    if (waveformDrawRMS)
+                    {
+                        var rmsLeft:Float = _drawRMSLeft[i];
+                        var rmsRight:Float = 0;
+                        if (_stereo)
+                            rmsRight = _drawRMSRight[i];
+
+                        if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                            continue;
+
+                        var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, combinedRMS), waveformRMSColor);
+                    }
                 }
-            }
-        }
-        else if (waveformDrawMode == SPLIT_CHANNELS)
-        {
-            var half:Float = waveformHeight / 2;
-            var centerY:Float = waveformHeight / 4;
 
-            if (waveformDrawBaseline) 
-            {
-                pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
-                pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
-            }
+            case SPLIT_CHANNELS:
+                var centerY:Float = waveformHeight / 4;
 
-            for (i in 0...effectiveWidth)
-            {
-                var peakLeft:Float = _drawPointsLeft[i];
-                var peakRight:Float = 0;
-                if (_stereo)
-                    peakRight = _drawPointsRight[i];
-
-                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                    continue;
-
-                var x:Float = i * (waveformBarSize + waveformBarPadding);
-
-                pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, peakLeft), waveformColor);
-                pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, peakRight), waveformColor);
-
-                if (waveformDrawRMS)
+                if (waveformDrawBaseline) 
                 {
-                    var rmsLeft:Float = _drawRMSLeft[i];
-                    var rmsRight:Float = 0;
-                    if (_stereo)
-                        rmsRight = _drawRMSRight[i];
+                    pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+                    pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
+                }
 
-                    if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                for (i in 0...effectiveWidth)
+                {
+                    var peakLeft:Float = _drawPointsLeft[i];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _drawPointsRight[i];
+
+                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
                         continue;
 
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, rmsLeft), waveformRMSColor);
-                    pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, rmsRight), waveformRMSColor);
+                    var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, peakLeft), waveformColor);
+                    pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, peakRight), waveformColor);
+
+                    if (waveformDrawRMS)
+                    {
+                        var rmsLeft:Float = _drawRMSLeft[i];
+                        var rmsRight:Float = 0;
+                        if (_stereo)
+                            rmsRight = _drawRMSRight[i];
+
+                        if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                            continue;
+
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, rmsLeft), waveformRMSColor);
+                        pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, rmsRight), waveformRMSColor);
+                    }
                 }
-            }
+
+            case SINGLE_CHANNEL(channel):
+                if (waveformDrawBaseline)
+                    pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
+
+                for (i in 0...effectiveWidth)
+                {
+                    var peakLeft:Float = _drawPointsLeft[i];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _drawPointsRight[i];
+
+                    var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
+
+                    if (peak == 0)
+                        continue;
+
+                    var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peak), waveformColor);
+                    if (waveformDrawRMS)
+                    {
+                        var rms:Float = channel == 0 ? _drawRMSLeft[i] : _drawRMSRight[i];
+                        if (rms == 0)
+                            continue;
+
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, rms), waveformRMSColor);
+                    }
+                }
         }
     }
 
@@ -567,61 +597,80 @@ class FlxWaveform extends FlxSprite
         var centerY:Float = waveformHeight / 2;
         var halfCenter:Float = centerY / 2;
 
-        if (waveformDrawMode == COMBINED)
+        switch (waveformDrawMode)
         {
-            var prevX:Float = 0;
-            var prevY:Float = centerY;
+            case COMBINED:
+                var prevX:Float = 0;
+                var prevY:Float = centerY;
 
-            _shape.graphics.moveTo(prevX, prevY);
+                _shape.graphics.moveTo(prevX, prevY);
 
-            for (i in 0...waveformWidth)
-            {
-                var peak:Float = _drawPointsLeft[i];
-                if (_stereo)
+                for (i in 0...waveformWidth)
                 {
-                    // Can't graph both so let's get average?
-                    peak += _drawPointsRight[i];
-                    peak /= 2;
+                    var peak:Float = _drawPointsLeft[i];
+                    if (_stereo)
+                    {
+                        // Can't graph both so let's get average?
+                        peak += _drawPointsRight[i];
+                        peak /= 2;
+                    }
+
+                    var curX:Float = i;
+                    var curY:Float = centerY - peak * centerY;
+
+                    _shape.graphics.lineTo(curX, curY);
+
+                    prevX = curX;
+                    prevY = curY;
                 }
 
-                var curX:Float = i;
-                var curY:Float = centerY - peak * centerY;
+            case SPLIT_CHANNELS:
+                var prevX:Float = 0;
+                var prevYL:Float = halfCenter;
+                var prevYR:Float = centerY + halfCenter;
 
-                _shape.graphics.lineTo(curX, curY);
+                for (i in 0...waveformWidth)
+                {
+                    var peakLeft:Float = _drawPointsLeft[i];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _drawPointsRight[i];
 
-                prevX = curX;
-                prevY = curY;
-            }
-        }
-        else
-        {
-            var prevX:Float = 0;
-            var prevYL:Float = halfCenter;
-            var prevYR:Float = centerY + halfCenter;
+                    var curX:Float = i;
+                    var curYL:Float = halfCenter - peakLeft * halfCenter;
+                    var curYR:Float = (centerY + halfCenter) - peakRight * halfCenter;
 
-            for (i in 0...waveformWidth)
-            {
-                var peakLeft:Float = _drawPointsLeft[i];
-                var peakRight:Float = 0;
-                if (_stereo)
-                    peakRight = _drawPointsRight[i];
+                    // left
+                    _shape.graphics.moveTo(prevX, prevYL);
+                    _shape.graphics.lineTo(curX, curYL);
 
-                var curX:Float = i;
-                var curYL:Float = halfCenter - peakLeft * halfCenter;
-                var curYR:Float = (centerY + halfCenter) - peakRight * halfCenter;
+                    // right
+                    _shape.graphics.moveTo(prevX, prevYR);
+                    _shape.graphics.lineTo(curX, curYR);
 
-                // left
-                _shape.graphics.moveTo(prevX, prevYL);
-                _shape.graphics.lineTo(curX, curYL);
+                    prevX = curX;
+                    prevYL = curYL;
+                    prevYR = curYR;
+                }
 
-                // right
-                _shape.graphics.moveTo(prevX, prevYR);
-                _shape.graphics.lineTo(curX, curYR);
+            case SINGLE_CHANNEL(channel):
+                var prevX:Float = 0;
+                var prevY:Float = centerY;
 
-                prevX = curX;
-                prevYL = curYL;
-                prevYR = curYR;
-            }
+                _shape.graphics.moveTo(prevX, prevY);
+
+                for (i in 0...waveformWidth)
+                {
+                    var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
+
+                    var curX:Float = i;
+                    var curY:Float = centerY - peak * centerY;
+
+                    _shape.graphics.lineTo(curX, curY);
+
+                    prevX = curX;
+                    prevY = curY;
+                }
         }
 
         pixels.draw(_shape);
@@ -678,11 +727,21 @@ class FlxWaveform extends FlxSprite
     /**
      * Helper function that calls `prepareDrawData` for both audio channels.
      */
-    inline private function refreshDrawData():Void
+    private function refreshDrawData():Void
     {
-        prepareDrawData(0);
-        if (_stereo)
-            prepareDrawData(1);
+        switch (waveformDrawMode)
+        {
+            case SINGLE_CHANNEL(channel):
+                if (channel != 0 && channel != 1)
+                    FlxG.log.error('[FlxWaveform] Invalid SINGLE_CHANNEL argument: $channel (must be 0 or 1)');
+
+                prepareDrawData(channel);
+
+            default:
+                prepareDrawData(0);
+                if (_stereo)
+                    prepareDrawData(1);
+        }
     }
 
     /**
@@ -860,10 +919,15 @@ class FlxWaveform extends FlxSprite
         {
             waveformBarSize = value;
 
-            _drawDataDirty = true;
+            // we have to call setDrawRange to reset
+            // stuff like samplesPerPixel otherwise
+            // the rendering will be out of bounds
+            setDrawRange(_rangeEndMS, _rangeStartMS);
 
-            if (autoUpdateBitmap)
-                _waveformDirty = true;
+            // _drawDataDirty = true;
+
+            // if (autoUpdateBitmap)
+            //     _waveformDirty = true;
         }
 
         return waveformBarSize;
@@ -875,10 +939,10 @@ class FlxWaveform extends FlxSprite
         {
             waveformBarPadding = value;
 
-            _drawDataDirty = true;
+            // _drawDataDirty = true;
 
-            if (autoUpdateBitmap)
-                _waveformDirty = true;
+            // if (autoUpdateBitmap)
+            //     _waveformDirty = true;
         }
 
         return waveformBarPadding;
@@ -891,14 +955,20 @@ class FlxWaveform extends FlxSprite
  * 
  * `COMBINED` will draw both audio channels (if in stereo) onto the 
  * full area of the graphic, causing an overlap between the two.
+ * It also may be slightly more expensive to compute.
  * 
  * `SPLIT_CHANNELS` will horizontally split the waveform into 
  * top and bottom parts, for the two audio channels.
  * The top part represents the left audio channel, 
  * while the bottom part represents the right channel.
+ * 
+ * `SINGLE_CHANNEL` draws one audio channel across the full area of the graphic.
+ * The argument provided must be either 
+ * 0 (for the left channel) or 1 (for the right channel)
  */
 enum WaveformDrawMode
 {
     COMBINED;
     SPLIT_CHANNELS;
+    SINGLE_CHANNEL(channel:Int);
 }

@@ -70,8 +70,6 @@ class PlayState extends FlxState
 
         // Toggle whether the RMS (root mean square) of the waveform should be drawn.
         // The RMS represents the average/effective loudness of audio.
-        // See Audacity's manual for additional information:
-        // https://manual.audacityteam.org/man/audacity_waveform.html#rms
         waveform.waveformDrawRMS = true;
 
         // Set the color of the RMS waveform.
