@@ -698,7 +698,6 @@ class FlxWaveform extends FlxSprite
         var drawPoints:Array<Float> = null;
         var drawRMS:Array<Float> = null;
 
-        trace("prepare");
         switch (channel)
         {
             case 0:
