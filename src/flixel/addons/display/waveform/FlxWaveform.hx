@@ -118,6 +118,8 @@ class FlxWaveform extends FlxSprite
      * 
      * Use `waveformRMSColor` to control the color the RMS will be
      * drawn with.
+     * 
+     * Enabling this option may make the waveform more expensive to compute.
      *
      * @since 1.3.0
      */
@@ -696,6 +698,7 @@ class FlxWaveform extends FlxSprite
         var drawPoints:Array<Float> = null;
         var drawRMS:Array<Float> = null;
 
+        trace("prepare");
         switch (channel)
         {
             case 0:
@@ -721,6 +724,7 @@ class FlxWaveform extends FlxSprite
             {
                 var startIndex:Int = Math.floor(_rangeStartSample + i * samplesPerPixel);
                 var endIndex:Int = Std.int(Math.min(Math.ceil(_rangeStartSample + (i + 1) * samplesPerPixel), samples.length));
+
                 drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
 
                 // Avoid calculating RMS if we don't need to draw it
@@ -776,6 +780,9 @@ class FlxWaveform extends FlxSprite
         return new Rectangle(x, y + y1, width, y2 - y1);
     }
 
+    /**
+     * Helper function to calculate the effective width.
+     */
     private inline function calcEffectiveWidth():Void
     {
         _effectiveWidth = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));

@@ -89,8 +89,7 @@ class PlayState extends FlxState
 
         if (FlxG.sound.music.playing)
         {
-            // Make our camera follow the audio time.
-            camera.scroll.x = (FlxG.sound.music.time / pixelsPerMs) * (waveform.waveformBarPadding + waveform.waveformBarSize) / waveform.waveformBarSize;
+            waveform.x = -(FlxG.sound.music.time / pixelsPerMs);
         }
 
         if (FlxG.keys.justPressed.SPACE)
