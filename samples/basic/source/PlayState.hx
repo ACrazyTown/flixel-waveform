@@ -84,6 +84,9 @@ class PlayState extends FlxUIState
         // Set the color of the RMS waveform.
         waveform.waveformRMSColor = 0xFF68C3FF;
 
+        // Whether the waveform baseline (line in the middle representing 0.0 of the sample) should be drawn
+        waveform.waveformDrawBaseline = true;
+
         // For extra style points we can adjust the size and spacing of the waveform bars!
         // As a demonstration, we'll set the size to 4px and the padding to 2px
         waveform.waveformBarSize = 4;
