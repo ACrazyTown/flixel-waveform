@@ -126,6 +126,8 @@ class FlxWaveform extends FlxSprite
     /**
      * The size (in pixels) of one waveform peak bar.
      * Default value is 1px.
+     * Increasing this value will make the waveform less detailed,
+     * which by extension will also make it less expensive to compute.
      * 
      * This value must be more than or equal to 1. 
      * 
@@ -137,6 +139,8 @@ class FlxWaveform extends FlxSprite
     /**
      * The space (in pixels) between waveform peak bars.
      * Default value is 0px.
+     * Increasing this value will make the waveform less detailed,
+     * which by extension will also make it less expensive to compute.
      * 
      * This value must be more than or equal to 0.
      * 
@@ -242,7 +246,9 @@ class FlxWaveform extends FlxSprite
     var _shape:Shape;
 
     /**
-     * 
+     * Internal helper that includes `waveformBarSize` and `waveformBarPadding`
+     * into the waveform width to calculate how much data is actually
+     * needed to draw a waveform.
      */
     var _effectiveWidth:Int;
 
@@ -496,7 +502,6 @@ class FlxWaveform extends FlxSprite
                 if (waveformDrawBaseline)
                     pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
 
-                trace("ok");
                 for (i in 0..._effectiveWidth)
                 {
                     var peakLeft:Float = _drawPointsLeft[i];
