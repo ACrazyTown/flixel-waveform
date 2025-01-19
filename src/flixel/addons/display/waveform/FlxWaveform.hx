@@ -127,6 +127,8 @@ class FlxWaveform extends FlxSprite
      * The size (in pixels) of one waveform peak bar.
      * Default value is 1px.
      * 
+     * This value must be more than or equal to 1. 
+     * 
      * This value doesn't affect anything when the samples are graphed.
      * @since 1.3.0
      */
@@ -135,6 +137,8 @@ class FlxWaveform extends FlxSprite
     /**
      * The space (in pixels) between waveform peak bars.
      * Default value is 0px.
+     * 
+     * This value must be more than or equal to 0.
      * 
      * This value doesn't affect anything when the samples are graphed.
      * @since 1.3.0
@@ -238,6 +242,11 @@ class FlxWaveform extends FlxSprite
     var _shape:Shape;
 
     /**
+     * 
+     */
+    var _effectiveWidth:Int;
+
+    /**
      * Creates a new `FlxWaveform` instance with the specified draw data.
      * The waveform is not ready to display anything yet.
      *
@@ -263,6 +272,7 @@ class FlxWaveform extends FlxSprite
         // _waveformHeight = height;
         waveformDrawMode = drawMode;
         makeGraphic(width, height, waveformBgColor);
+        calcEffectiveWidth();
 
         _shape = new Shape();
     }
@@ -414,7 +424,7 @@ class FlxWaveform extends FlxSprite
         _rangeStartSample = Std.int((_rangeStartMS / 1000) * _buffer.sampleRate);
         _rangeEndSample = Std.int((_rangeEndMS / 1000) * _buffer.sampleRate);
 
-        samplesPerPixel = Std.int((_rangeEndSample - _rangeStartSample) / waveformWidth);
+        samplesPerPixel = Std.int((_rangeEndSample - _rangeStartSample) / _effectiveWidth);
         _drawDataDirty = true;
 
         if (autoUpdateBitmap)
@@ -478,8 +488,6 @@ class FlxWaveform extends FlxSprite
      */
     private function drawPeaks():Void
     {
-        var effectiveWidth:Int = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
-
         var half:Float = waveformHeight / 2;
 
         switch (waveformDrawMode)
@@ -488,7 +496,8 @@ class FlxWaveform extends FlxSprite
                 if (waveformDrawBaseline)
                     pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
 
-                for (i in 0...effectiveWidth)
+                trace("ok");
+                for (i in 0..._effectiveWidth)
                 {
                     var peakLeft:Float = _drawPointsLeft[i];
                     var peakRight:Float = 0;
@@ -526,7 +535,7 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
                 }
 
-                for (i in 0...effectiveWidth)
+                for (i in 0..._effectiveWidth)
                 {
                     var peakLeft:Float = _drawPointsLeft[i];
                     var peakRight:Float = 0;
@@ -560,13 +569,8 @@ class FlxWaveform extends FlxSprite
                 if (waveformDrawBaseline)
                     pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
 
-                for (i in 0...effectiveWidth)
+                for (i in 0..._effectiveWidth)
                 {
-                    var peakLeft:Float = _drawPointsLeft[i];
-                    var peakRight:Float = 0;
-                    if (_stereo)
-                        peakRight = _drawPointsRight[i];
-
                     var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
 
                     if (peak == 0)
@@ -704,15 +708,14 @@ class FlxWaveform extends FlxSprite
         var samples:Null<Float32Array> = _buffer.getChannelData(channel);
 
         // effectiveWidth takes in account barSize/padding only when samplesPerPixel > 1 (not graphing)
-        var effectiveWidth:Int = samplesPerPixel > 1 ? Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding)) : waveformWidth;
-        var samplesPerBar:Int = samplesPerPixel * waveformBarSize;
+        var effectiveWidth:Int = samplesPerPixel > 1 ? _effectiveWidth : waveformWidth;
 
         if (samplesPerPixel > 1)
         {
             for (i in 0...effectiveWidth)
             {
-                var startIndex:Int = Math.floor(_rangeStartSample + i * samplesPerBar);
-                var endIndex:Int = Std.int(Math.min(Math.ceil(_rangeStartSample + (i + 1) * samplesPerBar), samples.length));
+                var startIndex:Int = Math.floor(_rangeStartSample + i * samplesPerPixel);
+                var endIndex:Int = Std.int(Math.min(Math.ceil(_rangeStartSample + (i + 1) * samplesPerPixel), samples.length));
                 drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
 
                 // Avoid calculating RMS if we don't need to draw it
@@ -744,6 +747,33 @@ class FlxWaveform extends FlxSprite
                 if (_stereo)
                     prepareDrawData(1);
         }
+    }
+
+    /**
+     * Returns an `openfl.geom.Rectangle` representing the rectangle
+     * of the audio peak.
+     * 
+     * @param x The rectangle's position on the X axis
+     * @param y Y offset
+     * @param width The width of the peak rectangle
+     * @param height The height of the peak rectangle
+     * @param sample The audio sample in the range of -1.0 to 1.0
+     * @return A `openfl.geom.Rectangle` instance
+     */
+    private function getPeakRect(x:Float, y:Float, width:Float, height:Float, sample:Float):Rectangle
+    {
+        var half:Float = height / 2;
+        var segmentHeight:Float = sample * half;
+
+        var y1:Float = half - segmentHeight;
+        var y2:Float = half + segmentHeight;
+
+        return new Rectangle(x, y + y1, width, y2 - y1);
+    }
+
+    private inline function calcEffectiveWidth():Void
+    {
+        _effectiveWidth = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
     }
 
     /**
@@ -779,28 +809,6 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
-    /**
-     * Returns an `openfl.geom.Rectangle` representing the rectangle
-     * of the audio peak.
-     * 
-     * @param x The rectangle's position on the X axis
-     * @param y Y offset
-     * @param width The width of the peak rectangle
-     * @param height The height of the peak rectangle
-     * @param sample The audio sample in the range of -1.0 to 1.0
-     * @return A `openfl.geom.Rectangle` instance
-     */
-    private function getPeakRect(x:Float, y:Float, width:Float, height:Float, sample:Float):Rectangle
-    {
-        var half:Float = height / 2;
-        var segmentHeight:Float = sample * half;
-
-        var y1:Float = half - segmentHeight;
-        var y2:Float = half + segmentHeight;
-
-        return new Rectangle(x, y + y1, width, y2 - y1);
-    }
-
     @:noCompletion private function get_waveformWidth():Int
     {
         return this.frameWidth;
@@ -809,7 +817,10 @@ class FlxWaveform extends FlxSprite
     @:noCompletion private function set_waveformWidth(value:Int):Int
     {
         if (waveformWidth != value)
+        {
             resize(waveformWidth, waveformHeight);
+            calcEffectiveWidth();
+        }
 
         return waveformWidth;
     }
@@ -919,7 +930,12 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformBarSize != value)
         {
+            if (value < 1)
+                FlxG.log.error('[FlxWaveform] waveformBarSize cannot be less than 1!');
+
             waveformBarSize = value;
+
+            calcEffectiveWidth();
 
             // we have to call setDrawRange to reset
             // stuff like samplesPerPixel otherwise
@@ -940,6 +956,15 @@ class FlxWaveform extends FlxSprite
         if (waveformBarPadding != value)
         {
             waveformBarPadding = value;
+            if (value < 0)
+                FlxG.log.error('[FlxWaveform] waveformBarPadding cannot be less than 0!');
+
+            calcEffectiveWidth();
+
+            // we have to call setDrawRange to reset
+            // stuff like samplesPerPixel otherwise
+            // the rendering will be out of bounds
+            setDrawRange(_rangeEndMS, _rangeStartMS);
 
             // _drawDataDirty = true;
 
