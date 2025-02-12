@@ -1,19 +1,19 @@
 package flixel.addons.display.waveform;
 
 import flixel.math.FlxMath;
-import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
-import lime.media.howlerjs.Howl;
-import lime.utils.Float32Array;
+import flixel.util.FlxDestroyUtil;
 import haxe.io.Bytes;
 import lime.media.AudioBuffer;
+import lime.media.howlerjs.Howl;
+import lime.utils.Float32Array;
 
 using flixel.addons.display.waveform.BytesExt;
 
 /**
  * A `FlxWaveformBuffer` holds various data related to an audio track
  * that is required for further processing.
- * @since 1.3.0
+ * @since 2.0.0
  */
 class FlxWaveformBuffer implements IFlxDestroyable
 {

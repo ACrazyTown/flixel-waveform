@@ -1,4 +1,4 @@
-## 1.3.0
+## 2.0.0
 - Added `waveformBarSize`, `waveformBarPadding`,
     - Allows for more customizable waveform designs!
     - Increase the bar size for more blockier waveforms which are also less expensive to compute
