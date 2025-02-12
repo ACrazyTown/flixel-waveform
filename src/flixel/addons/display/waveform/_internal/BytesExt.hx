@@ -1,4 +1,4 @@
-package flixel.addons.display.waveform;
+package flixel.addons.display.waveform._internal;
 
 import haxe.io.Bytes;
 import flixel.math.FlxMath;

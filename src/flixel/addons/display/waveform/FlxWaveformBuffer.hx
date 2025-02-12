@@ -8,7 +8,7 @@ import lime.media.AudioBuffer;
 import lime.media.howlerjs.Howl;
 import lime.utils.Float32Array;
 
-using flixel.addons.display.waveform.BytesExt;
+using flixel.addons.display.waveform._internal.BytesExt;
 
 /**
  * A `FlxWaveformBuffer` holds various data related to an audio track

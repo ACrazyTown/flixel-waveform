@@ -11,7 +11,7 @@ import lime.utils.Float32Array;
 import openfl.display.Shape;
 import openfl.geom.Rectangle;
 
-using flixel.addons.display.waveform.BytesExt;
+using flixel.addons.display.waveform._internal.BytesExt;
 #if flash
 import flash.media.Sound;
 #end
