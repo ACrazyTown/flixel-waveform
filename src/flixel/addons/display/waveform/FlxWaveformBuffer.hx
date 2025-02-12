@@ -1,5 +1,6 @@
 package flixel.addons.display.waveform;
 
+import flixel.sound.FlxSound;
 import flixel.math.FlxMath;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.FlxDestroyUtil;
@@ -51,9 +52,44 @@ class FlxWaveformBuffer implements IFlxDestroyable
     var _channels(default, null):ChannelPair;
 
     /**
+     * Creates a `FlxWaveformBuffer` from a `flixel.sound.FlxSound`.
+     * @param sound The `flixel.sound.FlxSound` to be converted
+     * @return A `FlxWaveformBuffer` or `null` if the sound is invalid.
+     */
+    inline public static function fromFlxSound(sound:FlxSound):Null<FlxWaveformBuffer>
+    {
+        #if flash
+        @:privateAccess
+        return fromFlashSound(sound._sound);
+        #else
+        var buffer = getLimeAudioBufferFromFlxSound(sound);
+        return fromLimeAudioBuffer(buffer);
+        #end
+    }
+
+    /**
+     * Helper function to get a `lime.media.AudioBuffer` from a `flixel.sound.FlxSound`
+     * @param sound The `flixel.sound.FlxSound` to get the buffer from
+     * @return A `lime.media.AudioBuffer` or `null` if it's invalid.
+     */
+    static function getLimeAudioBufferFromFlxSound(sound:FlxSound):Null<AudioBuffer>
+    {
+        @:privateAccess
+        var buffer:AudioBuffer = sound?._channel?.__audioSource?.buffer;
+
+        if (buffer == null)
+        {
+            @:privateAccess
+            buffer = sound?._sound?.__buffer;
+        }
+        
+        return buffer;
+    }
+
+    /**
      * Creates a `FlxWaveformBuffer` from a `lime.media.AudioBuffer`.
      * @param buffer The `lime.media.AudioBuffer` to be converted
-     * @return A `FlxWaveformBuffer` or `null` if the Lime AudioBuffer isn't valid.
+     * @return A `FlxWaveformBuffer` or `null` if the Lime AudioBuffer is invalid.
      */
     public static function fromLimeAudioBuffer(buffer:AudioBuffer):Null<FlxWaveformBuffer>
     {
@@ -85,7 +121,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * Creates a `FlxWaveformBuffer` from a `js.html.audio.AudioBuffer` instance.
      * 
      * @param buffer The `js.html.audio.AudioBuffer` instance
-     * @return A `FlxWaveformBuffer` or `null` if the buffer isn't valid.
+     * @return A `FlxWaveformBuffer` or `null` if the buffer is invalid.
      */
     public static function fromJSAudioBuffer(buffer:js.html.audio.AudioBuffer):Null<FlxWaveformBuffer>
     {
@@ -129,7 +165,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * Creates a `FlxWaveformBuffer` from a `flash.media.Sound` instance.
      * 
      * @param sound The `flash.media.Sound` instance
-     * @return A `FlxWaveformBuffer` instance or `null` if the sound isn't valid.
+     * @return A `FlxWaveformBuffer` instance or `null` if the sound is invalid.
      */
     public static function fromFlashSound(sound:flash.media.Sound):Null<FlxWaveformBuffer>
     {

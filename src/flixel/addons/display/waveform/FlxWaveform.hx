@@ -320,41 +320,7 @@ class FlxWaveform extends FlxSprite
      */
     public function loadDataFromFlxSound(sound:FlxSound):Void
     {
-        if (sound == null)
-        {
-            FlxG.log.error("[FlxWaveform] Waveform sound null!");
-            return;
-        }
-
-        #if flash
-        @:privateAccess
-        var flashSound:Sound = sound._sound;
-
-        if (flashSound == null)
-        {
-            FlxG.log.error("[FlxWaveform] Waveform buffer null!");
-            return;
-        }
-
-        loadDataFromFlashSound(flashSound);
-        #else
-        @:privateAccess
-        var buffer:AudioBuffer = sound?._channel?.__audioSource?.buffer;
-
-        if (buffer == null)
-        {
-            @:privateAccess
-            buffer = sound?._sound?.__buffer;
-
-            if (buffer == null)
-            {
-                FlxG.log.error("[FlxWaveform] Waveform buffer null!");
-                return;
-            }
-        }
-        
-        loadDataFromAudioBuffer(buffer);
-        #end
+        loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromFlxSound(sound));
     }
 
     #if flash
