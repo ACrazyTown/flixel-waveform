@@ -63,7 +63,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * The color used for drawing the waveform RMS.
-	 * @since 2.0.0
+     * @since 2.0.0
      */
     public var waveformRMSColor(default, set):FlxColor;
 
@@ -108,7 +108,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Whether the waveform baseline should be drawn.
-	 * @since 2.0.0
+     * @since 2.0.0
      */
     public var waveformDrawBaseline(default, set):Bool;
 
@@ -121,7 +121,7 @@ class FlxWaveform extends FlxSprite
      * 
      * Enabling this option may make the waveform more expensive to compute.
      *
-	 * @since 2.0.0
+     * @since 2.0.0
      */
     public var waveformDrawRMS(default, set):Bool;
 
@@ -134,7 +134,7 @@ class FlxWaveform extends FlxSprite
      * This value must be more than or equal to 1. 
      * 
      * This value doesn't affect anything when the samples are graphed.
-	 * @since 2.0.0
+     * @since 2.0.0
      */
     public var waveformBarSize(default, set):Int = 1;
 
@@ -147,7 +147,7 @@ class FlxWaveform extends FlxSprite
      * This value must be more than or equal to 0.
      * 
      * This value doesn't affect anything when the samples are graphed.
-	 * @since 2.0.0
+     * @since 2.0.0
      */
     public var waveformBarPadding(default, set):Int = 0;
 
@@ -386,7 +386,7 @@ class FlxWaveform extends FlxSprite
      * waveform from a `FlxWaveformBuffer`.
      * 
      * @param buffer The `FlxWaveformBuffer` to get data from.
-	 * @since 2.0.0
+     * @since 2.0.0
      */
     public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
     {
