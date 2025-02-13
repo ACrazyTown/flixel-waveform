@@ -1,13 +1,14 @@
 package flixel.addons.display.waveform;
 
 import flixel.sound.FlxSound;
-import flixel.math.FlxMath;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.FlxDestroyUtil;
 import haxe.io.Bytes;
 import lime.media.AudioBuffer;
-import lime.media.howlerjs.Howl;
 import lime.utils.Float32Array;
+#if lime_howlerjs
+import lime.media.howlerjs.Howl;
+#end
 
 using flixel.addons.display.waveform._internal.BytesExt;
 
@@ -261,7 +262,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param buffer The `lime.media.AudioBuffer` to check
      * @return Bool Whether the buffer is valid
      */
-    static inline function isLimeAudioBufferValid(buffer:AudioBuffer):Bool
+    inline static function isLimeAudioBufferValid(buffer:AudioBuffer):Bool
     {
         return buffer != null 
             && buffer.data != null 
@@ -279,7 +280,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param buffer The `js.html.audio.AudioBuffer` to check
      * @return Bool Whether the buffer is valid
      */
-    static inline function isJSAudioBufferValid(buffer:js.html.audio.AudioBuffer):Bool
+    inline static function isJSAudioBufferValid(buffer:js.html.audio.AudioBuffer):Bool
     {
         return buffer != null
             && buffer.numberOfChannels > 0

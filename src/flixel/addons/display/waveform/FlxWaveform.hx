@@ -10,12 +10,9 @@ import lime.media.AudioBuffer;
 import lime.utils.Float32Array;
 import openfl.display.Shape;
 import openfl.geom.Rectangle;
-
-using flixel.addons.display.waveform._internal.BytesExt;
 #if flash
 import flash.media.Sound;
 #end
-
 
 /**
  * A `FlxWaveform` is an `FlxSprite` extension that provides a simple yet 
@@ -460,7 +457,7 @@ class FlxWaveform extends FlxSprite
      * Internal method which draws audio sample peaks as rectangles.
      * Used when `samplesPerPixel` is larger than 1
      */
-    private function drawPeaks():Void
+     function drawPeaks():Void
     {
         var half:Float = waveformHeight / 2;
 
@@ -568,7 +565,7 @@ class FlxWaveform extends FlxSprite
      * Internal method which graphs audio samples.
      * Used when `samplesPerPixel` is equal to 1.
      */
-    private function drawGraphedSamples():Void
+     function drawGraphedSamples():Void
     {
         _shape.graphics.clear();
         _shape.graphics.lineStyle(1, waveformColor);
@@ -659,7 +656,7 @@ class FlxWaveform extends FlxSprite
      * Prepares data neccessary for the waveform to be drawn. 
      * @param channel The channel to prepare the data for
      */
-    private function prepareDrawData(channel:Int):Void
+     function prepareDrawData(channel:Int):Void
     {
         var drawPoints:Array<Float> = null;
         var drawRMS:Array<Float> = null;
@@ -706,7 +703,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Helper function that calls `prepareDrawData` for both audio channels.
      */
-    private function refreshDrawData():Void
+    function refreshDrawData():Void
     {
         switch (waveformDrawMode)
         {
@@ -734,7 +731,7 @@ class FlxWaveform extends FlxSprite
      * @param sample The audio sample in the range of -1.0 to 1.0
      * @return A `openfl.geom.Rectangle` instance
      */
-    private function getPeakRect(x:Float, y:Float, width:Float, height:Float, sample:Float):Rectangle
+    function getPeakRect(x:Float, y:Float, width:Float, height:Float, sample:Float):Rectangle
     {
         var half:Float = height / 2;
         var segmentHeight:Float = sample * half;
@@ -748,7 +745,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Helper function to calculate the effective width.
      */
-    private inline function calcEffectiveWidth():Void
+    inline function calcEffectiveWidth():Void
     {
         _effectiveWidth = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
     }
@@ -758,7 +755,7 @@ class FlxWaveform extends FlxSprite
      * 
      * @param array The array to be cleared.
      */
-    private function clearArray<T>(array:Array<T>):Void
+    function clearArray<T>(array:Array<T>):Void
     {
         // TODO: untyped array.length = 0;
         // seems to be the fastest method, but it doesn't seem to work
@@ -777,7 +774,7 @@ class FlxWaveform extends FlxSprite
      * @param array Input array
      * @return Array<T> Output array
      */
-    private function recycleArray<T>(array:Array<T>):Array<T>
+    function recycleArray<T>(array:Array<T>):Array<T>
     {
         if (array == null)
             return [];
@@ -786,12 +783,12 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
-    @:noCompletion private function get_waveformWidth():Int
+    @:noCompletion function get_waveformWidth():Int
     {
         return this.frameWidth;
     }
 
-    @:noCompletion private function set_waveformWidth(value:Int):Int
+    @:noCompletion function set_waveformWidth(value:Int):Int
     {
         if (waveformWidth != value)
         {
@@ -802,12 +799,12 @@ class FlxWaveform extends FlxSprite
         return waveformWidth;
     }
 
-    @:noCompletion private function get_waveformHeight():Int
+    @:noCompletion function get_waveformHeight():Int
     {
         return this.frameHeight;
     }
 
-    @:noCompletion private function set_waveformHeight(value:Int):Int 
+    @:noCompletion function set_waveformHeight(value:Int):Int 
     {
         if (waveformHeight != value)
             resize(waveformWidth, waveformHeight);
