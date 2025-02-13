@@ -457,7 +457,7 @@ class FlxWaveform extends FlxSprite
      * Internal method which draws audio sample peaks as rectangles.
      * Used when `samplesPerPixel` is larger than 1
      */
-     function drawPeaks():Void
+    function drawPeaks():Void
     {
         var half:Float = waveformHeight / 2;
 
@@ -565,7 +565,7 @@ class FlxWaveform extends FlxSprite
      * Internal method which graphs audio samples.
      * Used when `samplesPerPixel` is equal to 1.
      */
-     function drawGraphedSamples():Void
+    function drawGraphedSamples():Void
     {
         _shape.graphics.clear();
         _shape.graphics.lineStyle(1, waveformColor);
@@ -656,7 +656,7 @@ class FlxWaveform extends FlxSprite
      * Prepares data neccessary for the waveform to be drawn. 
      * @param channel The channel to prepare the data for
      */
-     function prepareDrawData(channel:Int):Void
+    function prepareDrawData(channel:Int):Void
     {
         var drawPoints:Array<Float> = null;
         var drawRMS:Array<Float> = null;
