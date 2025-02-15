@@ -17,7 +17,6 @@ class PlayState extends FlxUIState
     var playPauseBtn:FlxButton;
 
     var waveform:FlxWaveform;
-    var pixelsPerMs:Int;
 
     override public function create():Void
     {
@@ -37,38 +36,24 @@ class PlayState extends FlxUIState
         // See: https://github.com/ACrazyTown/flixel-waveform/issues/8
         FlxG.sound.music.play(true);
 
-        // Check if bitmap max texture size is available.
-        #if FLX_OPENGL_AVAILABLE
-        if (FlxG.bitmap.maxTextureSize != -1)
-        {
-            // Calculate how far can we stretch the waveform before hitting bitmap max limits?
-            pixelsPerMs = Math.ceil(FlxG.sound.music.length / FlxG.bitmap.maxTextureSize);
-        }
-        else
-        {
-            // In case we don't have a hardware accelerated renderer, we can't accurately
-            // get a maximum texture size, so let's just arbitrarily set it to a random number.
-            pixelsPerMs = 16;
-        }
-        #else
-        pixelsPerMs = 16;
-        #end
 
         // Create a new FlxWaveform instance.
-        waveform = new FlxWaveform(0, 50, Std.int(FlxG.sound.music.length / pixelsPerMs), FlxG.height - 50);
+        waveform = new FlxWaveform(0, 50, FlxG.width, FlxG.height - 50);
 
         // Load data from the FlxSound so the waveform renderer can process it.
         waveform.loadDataFromFlxSound(FlxG.sound.music);
 
-        // We set our draw range.
-        // When we leave it blank it'll default to a range from the beginning to the full length of the sound.
-        waveform.setDrawRange();
+        // Set our waveform's starting time at 0ms.
+        waveform.waveformTime = 0;
+
+        // We want to visualize up to 5000ms (5s) ahead
+        waveform.waveformDuration = 5000;
 
         // We'll render both channels of the waveform seperately.
         waveform.waveformDrawMode = SPLIT_CHANNELS;
 
         // We don't have to manually generate the bitmap here, because `FlxWaveform.autoUpdateBitmap`
-        // is true by default, and changing the waveform draw mode above will trigger a redraw.
+        // is true by default, and changing anything that visually affects the wavefrom will trigger a redraw.
         // waveform.generateWaveformBitmap();
 
         // Set the color of the waveform.
@@ -103,7 +88,8 @@ class PlayState extends FlxUIState
 
         if (FlxG.sound.music.playing)
         {
-            waveform.x = -(FlxG.sound.music.time / pixelsPerMs);
+            // Set our waveform's time to the music's time, keeping them in sync.
+            waveform.waveformTime = FlxG.sound.music.time;
         }
 
         if (FlxG.keys.justPressed.SPACE)
