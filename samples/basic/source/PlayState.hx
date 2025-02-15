@@ -37,7 +37,7 @@ class PlayState extends FlxUIState
         waveform.waveformTime = 0;
 
         // We want to visualize up to 5000ms (5s) ahead
-        waveform.waveformDuration = 10;
+        waveform.waveformDuration = 5000;
 
         // We'll render both channels of the waveform seperately.
         waveform.waveformDrawMode = SPLIT_CHANNELS;
