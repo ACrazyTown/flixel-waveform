@@ -11,8 +11,6 @@
     - The RMS represents the average/effective loudness of audio.
 - ✨ **Added** `waveformDrawBaseline`
     - Simply draws a line in the middle of the waveform to represent 0
-- ✨ **Added** sample graph renderer when trying to view very low time ranges
-    - A seamless way of transitioning from the peak-based renderer and the graphed samples is planned for a future release.
 - ✨ **Added** `SINGLE_CHANNEL(channel)` to `WaveformDrawMode` to allow drawing a single channel across the entire waveform area.
 - 🛠️ **Moved** `flixel.addons.display.waveform.BytesExt` to `flixel.addons.display.waveform._internal.BytesExt`
     - This was never meant to be a public class anyways...

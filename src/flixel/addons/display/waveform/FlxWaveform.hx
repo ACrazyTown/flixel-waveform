@@ -24,8 +24,10 @@ class FlxWaveform extends FlxSprite
     /* ----------- PUBLIC API ----------- */
 
     /**
-     * Represents how many audio samples 1 pixel is equal to.
-     * This value is dependant on the draw range & width of the waveform.
+     * Represents how many audio samples are equal to 1px.
+     * 
+     * This value is set automatically when changing anything that
+     * affets the "effective width" of the waveform (eg. changing bar size, padding...)
      */
     public var samplesPerPixel(default, null):Int;
 
@@ -67,10 +69,6 @@ class FlxWaveform extends FlxSprite
      * The width of the entire waveform graphic.
      * This is essentially a shortcut to `FlxSprite.frameWidth`
      * with a setter for resizing.
-     *
-     * If you want to change both the width and height of the graphic
-     * it is recommended to use the `resize()` function to prevent
-     * a double redraw.
      */
     public var waveformWidth(get, set):Int;
 
@@ -81,10 +79,6 @@ class FlxWaveform extends FlxSprite
      * 
      * When `waveformDrawMode` is set to `SPLIT_CHANNELS`, each channel
      * will be half of `waveformHeight`.
-     * 
-     * If you want to change both the width and height of the graphic
-     * it is recommended to use the `resize()` function to prevent
-     * a double redraw.
      */
     public var waveformHeight(get, set):Int;
 
@@ -146,6 +140,7 @@ class FlxWaveform extends FlxSprite
      * @since 2.0.0
      */
     public var waveformBarPadding(default, set):Int = 0;
+
     /**
      * The audio time, in miliseconds, this waveform will start at.
      * 
@@ -403,10 +398,12 @@ class FlxWaveform extends FlxSprite
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
 
-        if (samplesPerPixel > 1)
-            drawPeaks();
-        else
-            drawGraphedSamples();
+        // TODO: Enable graphed sample renderer!
+        // if (samplesPerPixel > 1)
+        //     drawPeaks();
+        // else
+        //     drawGraphedSamples();
+        drawPeaks();
     }
 
     /**
@@ -670,31 +667,32 @@ class FlxWaveform extends FlxSprite
 
         var samples:Null<Float32Array> = _buffer.getChannelData(channel);
 
-        if (samplesPerPixel > 1)
+        // TODO: Enable graphed sample renderer!
+        // if (samplesPerPixel > 1)
+        // {
+        var samplesGenerated:Int = 0;
+        while (samplesGenerated < samples.length)
         {
-            var samplesGenerated:Int = 0;
-            while (samplesGenerated < samples.length)
+            for (i in 0..._effectiveWidth)
             {
-                for (i in 0..._effectiveWidth)
-                {
-                    var startIndex:Int = samplesGenerated + i * samplesPerPixel;
-                    var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
+                var startIndex:Int = samplesGenerated + i * samplesPerPixel;
+                var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
 
-                    drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
+                drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
 
-                    // Avoid calculating RMS if we don't need to draw it
-                    drawRMS.push(waveformDrawRMS ? _buffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
-                }
-
-                samplesGenerated += _durationSamples;
+                // Avoid calculating RMS if we don't need to draw it
+                drawRMS.push(waveformDrawRMS ? _buffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
             }
+
+            samplesGenerated += _durationSamples;
         }
-        else
-        {
-            var endSamples:Int = _timeSamples + _durationSamples;
-            for (i in _timeSamples...endSamples)
-                drawPoints.push(samples[i]);
-        }
+        // }
+        // else
+        // {
+        //     var endSamples:Int = _timeSamples + _durationSamples;
+        //     for (i in _timeSamples...endSamples)
+        //         drawPoints.push(samples[i]);
+        // }
     }
 
     /**
