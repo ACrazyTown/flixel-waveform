@@ -431,6 +431,8 @@ class FlxWaveform extends FlxSprite
         // waveformHeight = height;
 
         makeGraphic(width, height, waveformBgColor);
+        calcEffectiveWidth();
+        calcSamplesPerPixel();
 
         _drawDataDirty = true;
 
