@@ -1,11 +1,11 @@
 {
     "name": "flixel-waveform",
     "url": "https://github.com/ACrazyTown/flixel-waveform",
-    "description": "A `FlxWaveform` is an `FlxSprite` extension that provides a simple yet powerful API for drawing waveforms from audio data.",
+    "description": "A simple yet powerful HaxeFlixel addon for drawing waveforms from sounds.",
     "tags": ["audio", "waveform", "haxe", "haxeflixel", "flixel"],
     "contributors": ["ACrazyTown"],
     "classPath": "src",
     "license": "MIT",
     "version": "2.0.0",
-    "releasenote": "Stylization options, Graph samples, RMS; See CHANGELOG.md"
+    "releasenote": "Reworked API, more customization; See CHANGELOG.md"
 }
