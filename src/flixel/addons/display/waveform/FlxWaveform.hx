@@ -1,24 +1,22 @@
 
 package flixel.addons.display.waveform;
 
-import lime.utils.Float32Array;
-import lime.utils.UInt8Array;
-import haxe.io.Bytes;
-import lime.media.AudioBuffer;
-import openfl.geom.Rectangle;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.sound.FlxSound;
 import flixel.util.FlxColor;
-
+import flixel.util.FlxDestroyUtil;
+import lime.media.AudioBuffer;
+import lime.utils.Float32Array;
+import openfl.display.Shape;
+import openfl.geom.Rectangle;
 #if flash
 import flash.media.Sound;
 #end
 
-using flixel.addons.display.waveform.BytesExt;
-
 /**
- * An `FlxSprite` extension that provides an API to render waveforms.
+ * A `FlxWaveform` is an `FlxSprite` extension that provides a simple yet 
+ * powerful API for drawing waveforms from audio data.
  * 
  * @author ACrazyTown (https://github.com/acrazytown/)
  */
@@ -30,33 +28,46 @@ class FlxWaveform extends FlxSprite
      * Represents how many audio samples 1 pixel is equal to.
      * This value is dependant on the draw range & width of the waveform.
      */
-    public var samplesPerPixel(default, null):Float;
+    public var samplesPerPixel(default, null):Int;
 
     /**
      * An enum representing how the waveform will look visually.
      * 
      * `COMBINED` will draw both audio channels (if in stereo) onto the 
      * full area of the graphic, causing an overlap between the two.
+     * It also may be slightly more expensive to compute.
      * 
      * `SPLIT_CHANNELS` will horizontally split the waveform into 
      * top and bottom parts, for the two audio channels.
      * The top part represents the left audio channel, 
      * while the bottom part represents the right channel.
+     * 
+     * `SINGLE_CHANNEL` draws one audio channel across the full area of the graphic.
+     * The argument provided must be either 
+     * 0 (for the left channel) or 1 (for the right channel)
      */
-    public var waveformDrawMode(get, set):WaveformDrawMode;
+    public var waveformDrawMode(default, set):WaveformDrawMode;
 
     /**
      * The background color of the waveform graphic.
      */
-    public var waveformBgColor(get, set):FlxColor;
+    public var waveformBgColor(default, set):FlxColor;
 
     /**
-     * The color used for rendering the actual waveform.
+     * The color used for drawing the actual waveform.
      */
-    public var waveformColor(get, set):FlxColor;
+    public var waveformColor(default, set):FlxColor;
+
+    /**
+     * The color used for drawing the waveform RMS.
+     * @since 2.0.0
+     */
+    public var waveformRMSColor(default, set):FlxColor;
 
     /**
      * The width of the entire waveform graphic.
+     * This is essentially a shortcut to `FlxSprite.frameWidth`
+     * with a setter for resizing.
      *
      * If you want to change both the width and height of the graphic
      * it is recommended to use the `resize()` function to prevent
@@ -66,7 +77,9 @@ class FlxWaveform extends FlxSprite
 
     /**
      * The height of the entire waveform graphic.
-     *
+     * This is essentially a shortcut to `FlxSprite.frameHeight`
+     * with a setter for resizing.
+     * 
      * When `waveformDrawMode` is set to `SPLIT_CHANNELS`, each channel
      * will be half of `waveformHeight`.
      * 
@@ -81,24 +94,84 @@ class FlxWaveform extends FlxSprite
      * regenerated when there's a change in data that would
      * affect the waveform visually.
      *
-     *  If set to `false`, you have to call 
+     * If set to `false`, you have to call 
      * `FlxWaveform.generateWaveformBitmap()` to update the graphic.
+     * 
+     * Note that if a change that requires the draw data to be rebuilt, 
+     * it will be done during the first draw call after the change,
+     * which may result in a stutter.
      */
-    public var autoUpdateBitmap:Bool = true;
+    public var autoUpdateBitmap(default, set):Bool = true;
 
+    /**
+     * Whether the waveform baseline should be drawn.
+     * @since 2.0.0
+     */
+    public var waveformDrawBaseline(default, set):Bool;
+
+    /**
+     * Whether the waveform's RMS (root mean square) should be drawn.
+     * The RMS represents the average/effective loudness of audio.
+     * 
+     * Use `waveformRMSColor` to control the color the RMS will be
+     * drawn with.
+     * 
+     * Enabling this option may make the waveform more expensive to compute.
+     *
+     * @since 2.0.0
+     */
+    public var waveformDrawRMS(default, set):Bool;
+
+    /**
+     * The size (in pixels) of one waveform peak bar.
+     * Default value is 1px.
+     * Increasing this value will make the waveform less detailed,
+     * which by extension will also make it less expensive to compute.
+     * 
+     * This value must be more than or equal to 1. 
+     * 
+     * This value doesn't affect anything when the samples are graphed.
+     * @since 2.0.0
+     */
+    public var waveformBarSize(default, set):Int = 1;
+
+    /**
+     * The space (in pixels) between waveform peak bars.
+     * Default value is 0px.
+     * Increasing this value will make the waveform less detailed,
+     * which by extension will also make it less expensive to compute.
+     * 
+     * This value must be more than or equal to 0.
+     * 
+     * This value doesn't affect anything when the samples are graphed.
+     * @since 2.0.0
+     */
+    public var waveformBarPadding(default, set):Int = 0;
+    /**
+     * The audio time, in miliseconds, this waveform will start at.
+     * 
+     * @since 2.0.0
+     */
+    public var waveformTime(default, set):Float;
+
+    /**
+     * The amount of time, in miliseconds, this waveform will represent.
+     * 
+     * Changing this value will trigger a data rebuild, which may induce a
+     * temporary freeze/stutter.
+     * Avoid changing it frequently.
+     * 
+     * @since 2.0.0
+     */
+    public var waveformDuration(default, set):Float;
+    
     /* ----------- INTERNALS ----------- */
 
     /**
      * Internal variable holding a reference to a 
-     * lime `AudioBuffer` used for analyzing the audio data.
+     * `FlxWaveformBuffer` used for analyzing the audio data.
      */
-    var _buffer:AudioBuffer = null;
-
-    /**
-     * Internal variable that holds a reference to the 
-     * Bytes representation of the lime `AudioBuffer` data
-     */
-    var _bufferDataBytes:Bytes;
+    var _buffer:Null<FlxWaveformBuffer> = null;
 
     /**
      * Internal helper variable indicating whether the 
@@ -107,162 +180,163 @@ class FlxWaveform extends FlxSprite
     var _stereo:Bool = false;
 
     /**
-     * Internal structure that holds a reference to 2 arrays 
-     * holding normalized sample data for both channels.
-     * The normalized sample data is an array of 
-     * `Floats` that range from -1.0 to 1.0
+     * Internal helper that stores the value of `waveformTime` but in audio samples.
+     */
+    var _timeSamples:Int;
+
+    /**
+     * Internal helper that stores the value of `waveformDuration` but in audio samples.
+     */
+    var _durationSamples:Int;
+
+    /**
+     * Internal array of Floats that either contain:
+     * - Peaks in a range of 0.0 to 1.0 for a given time frame.
+     * - Audio samples in a range of -1.0 to 1.0 to be graphed
      * 
-     * If the sound is not in stereo, only the left channel array will be used.
+     * What the array will contain is dependant on `samplesPerPixel`
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
-    var _normalizedSamples:NormalizedSampleData = null;
+    var _drawPointsLeft:Array<Float> = null;
 
     /**
-     * Internal variable holding the current start of the draw range (in miliseconds)
+     * Internal array of Floats that either contain:
+     * - Peaks in a range of 0.0 to 1.0 for a given time frame.
+     * - Audio samples in a range of -1.0 to 1.0 to be graphed
+     * 
+     * What the array will contain is dependant on `samplesPerPixel`
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
-    var _curRangeStart:Float = -1;
+    var _drawPointsRight:Array<Float> = null;
 
     /**
-     * Internal variable holding the current end of the draw range (in miliseconds)
+     * Internal array of Floats that contains the RMS (root mean square) 
+     * values of the left channel for a given time frame.
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
-    var _curRangeEnd:Float = -1;
+    var _drawRMSLeft:Array<Float> = null;
 
     /**
-     * Internal array of Floats that holds the values of audio peaks 
-     * for the left channel from -1.0 to 1.0 in a specified time frame.
+     * Internal array of Floats that contains the RMS (root mean square) 
+     * values of the right channel for a given time frame.
+     * 
+     * This array does not update in real time. 
+     * If the draw data needs to be rebuilt, it will be done on
+     * the first draw call after setting the `_drawDataDirty` flag.
      */
-    var _peaksLeft:Array<Float> = null;
+    var _drawRMSRight:Array<Float> = null;
 
     /**
-     * Internal array of Floats that holds the values of audio peaks 
-     * for the right channel from -1.0 to 1.0 in a specified time frame.
+     * Internal helper that decides whether the waveform should be redrawn.
      */
-    var _peaksRight:Array<Float> = null;
-
-    // TODO: Move to a class or typedef?
-    /**
-     * Internal helper
-     */
-    var _waveformWidth:Int;
+    var _waveformDirty:Bool = true;
 
     /**
-     * Internal helper
+     * Internal helper that decides whether the waveform draw data 
+     * should be rebuilt.
      */
-    var _waveformHeight:Int;
+    var _drawDataDirty:Bool = false;
 
     /**
-     * Internal helper
+     * Internal helper used for drawing lines.
      */
-    var _waveformColor:FlxColor;
+    var _shape:Shape;
 
     /**
-     * Internal helper
+     * Internal helper that includes `waveformBarSize` and `waveformBarPadding`
+     * into the waveform width to calculate how much data is actually
+     * needed to draw a waveform.
      */
-    var _waveformBgColor:FlxColor;
-
-    /**
-     * Internal helper
-     */
-    var _waveformDrawMode:WaveformDrawMode;
+    var _effectiveWidth:Int;
 
     /**
      * Creates a new `FlxWaveform` instance with the specified draw data.
      * The waveform is not ready to display anything yet.
      *
-     * In order to display anything you need to load audio buffer data
-     * from one of the available `loadDataFrom` functions & specify
-     * a draw range using `setDrawRange()`.
+     * Before setting any options you should first call a `loadDataFrom()` method
+     * to get data for the waveform to process.
      * 
-     * @param x The initial position of the sprite on the X axis.
-     * @param y The initial position of the sprite on the Y axis.
-     * @param width The initial width of the waveform graphic.
-     * @param height The initial height of the waveform graphic.
-     * @param color The color used for drawing the actual waveform.
-     * @param backgroundColor The background color of the waveform graphic.
-     * @param drawMode The visual appearance of the waveform. See `FlxWaveform.drawMode` for more info.
+     * @param x The initial X position of the waveform.
+     * @param y The initial Y position of the waveform.
+     * @param width The initial width of the waveform.
+     * @param height The initial height of the waveform.
+     * @param color The color used for drawing the waveform.
+     * @param backgroundColor The background color of the waveform.
+     * @param drawMode How the waveform data should be interpreted and rendered. See `FlxWaveform.waveformDrawMode` for more info.
      */
     public function new(x:Float, y:Float, ?width:Int, ?height:Int, ?color:FlxColor = 0xFFFFFFFF, ?backgroundColor:FlxColor = 0x00000000, ?drawMode:WaveformDrawMode = COMBINED)
     {
         super(x, y);
 
-        _waveformBgColor = backgroundColor;
-        _waveformColor = color;
-        _waveformWidth = width;
-        _waveformHeight = height;
-        _waveformDrawMode = drawMode;
-        makeGraphic(_waveformWidth, _waveformHeight, _waveformBgColor);
+        waveformBgColor = backgroundColor;
+        waveformColor = color;
+        // _waveformWidth = width;
+        // _waveformHeight = height;
+        waveformDrawMode = drawMode;
+        makeGraphic(width, height, waveformBgColor);
+        calcEffectiveWidth();
+
+        _shape = new Shape();
+    }
+
+    @:inheritDoc(FlxSprite.destroy)
+    override function destroy():Void
+    {
+        super.destroy();
+
+        _shape = null;
+        _drawPointsLeft = null;
+        _drawPointsRight = null;
+        _drawRMSLeft = null;
+        _drawRMSRight = null;
+
+        if (_buffer?.autoDestroy)
+            FlxDestroyUtil.destroy(_buffer);
+    }
+
+    @:inheritDoc(FlxSprite.draw)
+    override function draw():Void
+    {
+        if (_waveformDirty)
+        {
+            generateWaveformBitmap();
+            dirty = true;
+            _waveformDirty = false;
+        }
+
+        super.draw();
     }
 
     /**
      * Loads the audio buffer data neccessary for processing the 
-     * waveform from a HaxeFlixel `FlxSound`.
+     * waveform from a `flixel.sound.FlxSound`
      * 
-     * @param sound The FlxSound to get data from.
+     * @param sound The `flixel.sound.FlxSound` to get data from.
      */
     public function loadDataFromFlxSound(sound:FlxSound):Void
     {
-        if (sound == null)
-        {
-            FlxG.log.error("[FlxWaveform] Waveform sound null!");
-            return;
-        }
-
-        #if flash
-        @:privateAccess
-        var flashSound:Sound = sound._sound;
-
-        if (flashSound == null)
-        {
-            FlxG.log.error("[FlxWaveform] Waveform buffer null!");
-            return;
-        }
-
-        loadDataFromFlashSound(flashSound);
-        #else
-        @:privateAccess
-        var buffer:AudioBuffer = sound?._channel?.__audioSource?.buffer;
-
-        if (buffer == null)
-        {
-            @:privateAccess
-            buffer = sound?._sound?.__buffer;
-
-            if (buffer == null)
-            {
-                FlxG.log.error("[FlxWaveform] Waveform buffer null!");
-                return;
-            }
-        }
-        
-        loadDataFromAudioBuffer(buffer);
-        #end
+        loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromFlxSound(sound));
     }
 
     #if flash
     /**
      * Loads the audio buffer data neccessary for processing the
      * waveform from a `flash.media.Sound`.
+     * 
      * @param sound The `flash.media.Sound` to get data from.
-     * @param buffer The buffer to fill with data. If null will make a new one.
      */
-    public function loadDataFromFlashSound(sound:Sound, ?buffer:AudioBuffer):Void
+    public function loadDataFromFlashSound(sound:Sound):Void
     {
-        if (buffer == null)
-            buffer = new AudioBuffer();
-
-        // These values are always hardcoded.
-        // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/media/Sound.html#extract()
-        buffer.sampleRate = 44100;
-        buffer.channels = 2;
-        buffer.bitsPerSample = 32;
-
-        var numSamples:Float = 44100 * (sound.length / 1000);
-        var length:Int = Std.int(numSamples * 2 * 4);
-        var bytes:Bytes = Bytes.alloc(length);
-
-        sound.extract(bytes.getData(), numSamples);
-        buffer.data = UInt8Array.fromBytes(bytes);
-
-        loadDataFromAudioBuffer(buffer);
+        loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromFlashSound(sound));
     }
     #end
 
@@ -272,150 +346,40 @@ class FlxWaveform extends FlxSprite
      * 
      * @param buffer The `lime.media.AudioBuffer` to get data from.
      */
-    public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
+    inline public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
     {
-        #if (js && html5 && lime_howlerjs)
-        // On HTML5 Lime does not expose any kind of AudioBuffer
-        // data which makes it difficult to do anything.
-        // Our only hope is to try to get it from howler.js
-
-        @:privateAccess
-        if (!bufferValid(buffer) && buffer.__srcHowl != null)
-        {
-            // TODO: This approach seems very unstable, as good as it gets right now?
-            // bufferSource seems to be available DURING sound playback.
-            // Attempting to access it before playing a sound will not work.
-            var bufferSource:js.html.audio.AudioBufferSourceNode = buffer?.src?._sounds[0]?._node?.bufferSource;
-            if (bufferSource != null)
-            {
-                var jsBuffer:js.html.audio.AudioBuffer = bufferSource.buffer;
-
-                // Data is always a Float32Array
-                buffer.bitsPerSample = 32;
-                buffer.channels = jsBuffer.numberOfChannels;
-                buffer.sampleRate = Std.int(jsBuffer.sampleRate);
-
-                var left = jsBuffer.getChannelData(0);
-                var right = null;
-                if (buffer.channels == 2)
-                    right = jsBuffer.getChannelData(1);
-                
-                // convert into lime friendly format
-                // TODO: How does this affect memory?
-                var combined:js.lib.Float32Array = null;
-                if (buffer.channels == 2)
-                {
-                    combined = new Float32Array(left.length * 2);
-                    for (i in 0...left.length)
-                    {
-                        combined[i * 2] = left[i];
-                        if (buffer.channels == 2)
-                            combined[i * 2 + 1] = right[i];
-                    }
-                }
-
-                // TODO: is it safe to cast this?
-                buffer.data = buffer.channels == 2 ? cast combined : cast left;
-            }
-        }
-        #elseif flash
-        @:privateAccess
-        if (!bufferValid(buffer) && buffer.__srcSound != null)
-        {
-            @:privateAccess
-            loadDataFromFlashSound(buffer.__srcSound, buffer);
-            return;
-        }
-        #end
-
-        if (!bufferValid(buffer))
-        {
-            FlxG.log.error("[FlxWaveform] Tried to load invalid buffer! Make sure the audio buffer has valid sampleRate, bitsPerSample, channels and data.");
-            return;
-        }
-
-        _buffer = buffer;
-        _bufferDataBytes = _buffer.data.toBytes();
-        // trace('Processing sound data (channels: ${buffer.channels}, bps: ${buffer.bitsPerSample}, sample rate: ${buffer.sampleRate})');
-        // trace(buffer.data);
-
-        if (buffer.channels == 2)
-            _stereo = true;
-        else if (buffer.channels == 1)
-            _stereo = false;
-        else
-            FlxG.log.error('Unsupported channels value: ${buffer.channels}');
-
-        _peaksLeft = recycleArray(_peaksLeft);
-        if (_stereo)
-            _peaksRight = recycleArray(_peaksRight);
-
-        _normalizedSamples = switch (buffer.bitsPerSample) 
-        {
-            // assume unsigned?
-            case 8: normalizeSamplesUI8(_bufferDataBytes, _stereo);
-            case 16: normalizeSamplesI16(_bufferDataBytes, _stereo);
-            case 24: normalizeSamplesI24(_bufferDataBytes, _stereo);
-        
-            // Right now, we can't figure out if 32bit sounds are
-            // stored as a float or int.
-            // Temporarily, we'll handle it as a Float32 array 
-            // as it seems they're more common.
-            // If my Lime pull request gets merged it will be possible
-            // to properly differentiate between 32bit int and 32bit float sounds:
-            // https://github.com/openfl/lime/pull/1861
-            case 32: 
-                normalizeSamplesF32(_bufferDataBytes, _stereo);
-                //normalizeSamplesI32(_bufferDataBytes, _stereo);
-                
-            case _: null;
-        }
-
-        if (_normalizedSamples == null)
-            FlxG.log.error('Unsupported bitsPerSample value: ${buffer.bitsPerSample}');
+        loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromLimeAudioBuffer(buffer));
     }
 
-    /**
-     * Sets the time range that the waveform represents.
+   /**
+     * Loads the audio buffer data neccessary for processing the 
+     * waveform from a `FlxWaveformBuffer`.
      * 
-     * @param endTime The end of the range, in miliseconds. If not specified will be the length of the sound.
-     * @param startTime The start of the range, in miliseconds. If not specified will be the start of the sound.
+     * @param buffer The `FlxWaveformBuffer` to get data from.
+     * @since 2.0.0
      */
-    public function setDrawRange(?endTime:Float = -1, ?startTime:Float = -1):Void
+    public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
     {
-        if (!bufferValid(_buffer))
+        if (_buffer?.autoDestroy)
+            FlxDestroyUtil.destroy(_buffer);
+        
+        _buffer = buffer;
+        if (_buffer == null)
         {
-            FlxG.log.error("[FlxWaveform] Can't do any operations with invalid buffer.");
+            FlxG.log.error("[FlxWaveform] Invalid buffer");
             return;
         }
 
-        if (startTime < 0)
-            startTime = 0.0;
-        if (endTime < 0)
-            endTime = (_normalizedSamples.left.length / _buffer.sampleRate) * 1000;
+        _stereo = _buffer.numChannels == 2;
 
-        _curRangeStart = startTime;
-        _curRangeEnd = endTime;
+        _drawPointsLeft = recycleArray(_drawPointsLeft);
+        _drawRMSLeft = recycleArray(_drawRMSLeft);
 
-        // clear previous peak data
-        clearArray(_peaksLeft);
         if (_stereo)
-            clearArray(_peaksRight);
-
-        // ? run gc to hopefully clear old data?
-        // System.gc();
-
-        var slicePos:Int = Std.int((_curRangeStart / 1000) * _buffer.sampleRate);
-        var sliceEnd:Int = Std.int((_curRangeEnd / 1000) * _buffer.sampleRate);
-        var sectionSamplesLeft:Array<Float> = _normalizedSamples.left.slice(slicePos, sliceEnd);
-        var sectionSamplesRight:Array<Float> = null;
-        if (_stereo)
-            sectionSamplesRight = _normalizedSamples.right.slice(slicePos, sliceEnd);
-
-        samplesPerPixel = Math.max(sectionSamplesLeft.length, sectionSamplesRight != null ? sectionSamplesRight.length : 0) / _waveformWidth;
-        calculatePeaks(sectionSamplesLeft, _peaksLeft);
-        if (_stereo)
-            calculatePeaks(sectionSamplesRight, _peaksRight);
+        {
+            _drawPointsRight = recycleArray(_drawPointsRight);
+            _drawRMSRight = recycleArray(_drawRMSRight);
+        }
     }
 
     /**
@@ -423,75 +387,27 @@ class FlxWaveform extends FlxSprite
      *
      * If you have `autoUpdateBitmap` enabled, you most likely
      * do not need to call this function manually.
+     * 
+     * Note that if a change that requires the draw data to be rebuilt, 
+     * it will be done during the first draw call after the change,
+     * which may result in a stutter.
      */
     public function generateWaveformBitmap():Void
     {
-        if (!bufferValid(_buffer))
+        if (_drawDataDirty)
         {
-            FlxG.log.error("[FlxWaveform] Can't do any operations with invalid buffer.");
-            return;
+            refreshDrawData();
+            _drawDataDirty = false;
         }
 
         // clear previous draw
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
-        pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), _waveformBgColor);
+        pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
 
-        if (waveformDrawMode == COMBINED)
-        {
-            var centerY:Float = _waveformHeight / 2;
-
-            for (i in 0..._waveformWidth)
-            {
-                var peakLeft:Float = _peaksLeft[i];
-                var peakRight:Float = 0;
-                if (_stereo)
-                    peakRight = _peaksRight[i];
-
-                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                    continue;
-
-                var segmentHeightLeft:Float = peakLeft * centerY;
-                var segmentHeightRight:Float = 0;
-                if (_stereo)
-                    segmentHeightRight = peakRight * centerY;
-
-                var segmentHeight:Float = Math.max(segmentHeightLeft, segmentHeightRight);
-
-                var y1:Float = centerY - segmentHeight;
-                var y2:Float = centerY + segmentHeight;
-
-                pixels.fillRect(new Rectangle(i, y1, 1, y2 - y1), _waveformColor);
-            }
-        }
-        else if (waveformDrawMode == SPLIT_CHANNELS)
-        {
-            var half:Float = _waveformHeight / 2;
-            var centerY:Float = _waveformHeight / 4;
-
-            for (i in 0..._waveformWidth)
-            {
-                var peakLeft:Float = _peaksLeft[i];
-                var peakRight:Float = 0;
-                if (_stereo)
-                    peakRight = _peaksRight[i];
-
-                if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
-                    continue;
-
-                var segmentHeightLeft:Float = peakLeft * centerY;
-                var segmentHeightRight:Float = 0;
-                if (_stereo)
-                    segmentHeightRight = peakRight * centerY;
-
-                var y1l:Float = centerY - segmentHeightLeft;
-                var y2l:Float = centerY + segmentHeightLeft;
-                var y1r:Float = half + (centerY - segmentHeightRight);
-                var y2r:Float = half + (centerY + segmentHeightRight);
-
-                pixels.fillRect(new Rectangle(i, y1l, 1, y2l - y1l), _waveformColor);
-                pixels.fillRect(new Rectangle(i, y1r, 1, y2r - y1r), _waveformColor);
-            }
-        }
+        if (samplesPerPixel > 1)
+            drawPeaks();
+        else
+            drawGraphedSamples();
     }
 
     /**
@@ -506,189 +422,335 @@ class FlxWaveform extends FlxSprite
      */
     public function resize(width:Int, height:Int):Void
     {
-        // We don't need to do this?
-        // I think flixel will take care of it
-        // if (graphic != null)
-        //     graphic.destroy();
+        // if (waveformWidth != width)
+        // {
+        //     setDrawRange(_rangeEndMS, _rangeStartMS)
+        // }
 
-        makeGraphic(width, height, _waveformBgColor);
+        // waveformWidth = width;
+        // waveformHeight = height;
 
-        _waveformWidth = width;
-        _waveformHeight = height;
+        makeGraphic(width, height, waveformBgColor);
+        calcEffectiveWidth();
+        calcSamplesPerPixel();
+
+        _drawDataDirty = true;
 
         if (autoUpdateBitmap)
-            generateWaveformBitmap();
+            _waveformDirty = true;
     }
 
     /**
-     * Writes an array the size of `waveformWidth` containing audio peaks
-     * for each pixel.
-     * 
-     * @param samples Input samples
-     * @param out Output array containing peaks.
+     * Internal method which draws audio sample peaks as rectangles.
+     * Used when `samplesPerPixel` is larger than 1
      */
-    private function calculatePeaks(samples:Array<Float>, out:Array<Float>):Void
+    function drawPeaks():Void
     {
-        clearArray(out);
-        for (i in 0..._waveformWidth)
+        var half:Float = waveformHeight / 2;
+        var timeOffset:Float = _timeSamples / samplesPerPixel;
+
+        switch (waveformDrawMode)
         {
-            var startIndex:Int = Math.floor(i * samplesPerPixel);
-            var endIndex:Int = Std.int(Math.min(Math.ceil((i + 1) * samplesPerPixel), samples.length));
+            case COMBINED:
+                if (waveformDrawBaseline)
+                    pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
 
-            var segment:Array<Float> = samples.slice(startIndex, endIndex);
+                for (i in 0..._effectiveWidth)
+                {
+                    var sampleIndex:Int = Math.round(timeOffset + i);
 
-            var peak:Float = 0.0;
-            for (sample in segment)
+                    var peakLeft:Float = _drawPointsLeft[sampleIndex];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _drawPointsRight[sampleIndex];
+
+                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                        continue;
+
+                    var peakest:Float = Math.max(peakLeft, peakRight);
+                    var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peakest), waveformColor);
+                    if (waveformDrawRMS)
+                    {
+                        var rmsLeft:Float = _drawRMSLeft[sampleIndex];
+                        var rmsRight:Float = 0;
+                        if (_stereo)
+                            rmsRight = _drawRMSRight[sampleIndex];
+
+                        if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                            continue;
+
+                        var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, combinedRMS), waveformRMSColor);
+                    }
+                }
+
+            case SPLIT_CHANNELS:
+                var centerY:Float = waveformHeight / 4;
+
+                if (waveformDrawBaseline) 
+                {
+                    pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
+                    pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
+                }
+
+                for (i in 0..._effectiveWidth)
+                {
+                    var sampleIndex:Int = Math.round(timeOffset + i);
+
+                    var peakLeft:Float = _drawPointsLeft[sampleIndex];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _drawPointsRight[sampleIndex];
+
+                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                        continue;
+
+                    var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, peakLeft), waveformColor);
+                    pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, peakRight), waveformColor);
+
+                    if (waveformDrawRMS)
+                    {
+                        var rmsLeft:Float = _drawRMSLeft[sampleIndex];
+                        var rmsRight:Float = 0;
+                        if (_stereo)
+                            rmsRight = _drawRMSRight[sampleIndex];
+
+                        if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
+                            continue;
+
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, rmsLeft), waveformRMSColor);
+                        pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, rmsRight), waveformRMSColor);
+                    }
+                }
+
+            case SINGLE_CHANNEL(channel):
+                if (waveformDrawBaseline)
+                    pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
+
+                for (i in 0..._effectiveWidth)
+                {
+                    var sampleIndex:Int = Math.round(timeOffset + i);
+
+                    var peak:Float = channel == 0 ? _drawPointsLeft[sampleIndex] : _drawPointsRight[sampleIndex];
+
+                    if (peak == 0)
+                        continue;
+
+                    var x:Float = i * (waveformBarSize + waveformBarPadding);
+
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peak), waveformColor);
+                    if (waveformDrawRMS)
+                    {
+                        var rms:Float = channel == 0 ? _drawRMSLeft[sampleIndex] : _drawRMSRight[sampleIndex];
+                        if (rms == 0)
+                            continue;
+
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, rms), waveformRMSColor);
+                    }
+                }
+        }
+    }
+
+    /**
+     * Internal method which graphs audio samples.
+     * Used when `samplesPerPixel` is equal to 1.
+     */
+    function drawGraphedSamples():Void
+    {
+        _shape.graphics.clear();
+        _shape.graphics.lineStyle(1, waveformColor);
+
+        var centerY:Float = waveformHeight / 2;
+        var halfCenter:Float = centerY / 2;
+
+        switch (waveformDrawMode)
+        {
+            case COMBINED:
+                var prevX:Float = 0;
+                var prevY:Float = centerY;
+
+                _shape.graphics.moveTo(prevX, prevY);
+
+                for (i in 0...waveformWidth)
+                {
+                    var peak:Float = _drawPointsLeft[i];
+                    if (_stereo)
+                    {
+                        // Can't graph both so let's get average?
+                        peak += _drawPointsRight[i];
+                        peak /= 2;
+                    }
+
+                    var curX:Float = i;
+                    var curY:Float = centerY - peak * centerY;
+
+                    _shape.graphics.lineTo(curX, curY);
+
+                    prevX = curX;
+                    prevY = curY;
+                }
+
+            case SPLIT_CHANNELS:
+                var prevX:Float = 0;
+                var prevYL:Float = halfCenter;
+                var prevYR:Float = centerY + halfCenter;
+
+                for (i in 0...waveformWidth)
+                {
+                    var peakLeft:Float = _drawPointsLeft[i];
+                    var peakRight:Float = 0;
+                    if (_stereo)
+                        peakRight = _drawPointsRight[i];
+
+                    var curX:Float = i;
+                    var curYL:Float = halfCenter - peakLeft * halfCenter;
+                    var curYR:Float = (centerY + halfCenter) - peakRight * halfCenter;
+
+                    // left
+                    _shape.graphics.moveTo(prevX, prevYL);
+                    _shape.graphics.lineTo(curX, curYL);
+
+                    // right
+                    _shape.graphics.moveTo(prevX, prevYR);
+                    _shape.graphics.lineTo(curX, curYR);
+
+                    prevX = curX;
+                    prevYL = curYL;
+                    prevYR = curYR;
+                }
+
+            case SINGLE_CHANNEL(channel):
+                var prevX:Float = 0;
+                var prevY:Float = centerY;
+
+                _shape.graphics.moveTo(prevX, prevY);
+
+                for (i in 0...waveformWidth)
+                {
+                    var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
+
+                    var curX:Float = i;
+                    var curY:Float = centerY - peak * centerY;
+
+                    _shape.graphics.lineTo(curX, curY);
+
+                    prevX = curX;
+                    prevY = curY;
+                }
+        }
+
+        pixels.draw(_shape);
+    }
+
+    /**
+     * Prepares data neccessary for the waveform to be drawn. 
+     * @param channel The channel to prepare the data for
+     */
+    function prepareDrawData(channel:Int):Void
+    {
+        var drawPoints:Array<Float> = null;
+        var drawRMS:Array<Float> = null;
+
+        switch (channel)
+        {
+            case 0:
+                drawPoints = _drawPointsLeft;
+                drawRMS = _drawRMSLeft;
+
+            case 1:
+                drawPoints = _drawPointsRight;
+                drawRMS = _drawRMSRight;
+        }
+
+        clearArray(drawPoints);
+        clearArray(drawRMS);
+
+        var samples:Null<Float32Array> = _buffer.getChannelData(channel);
+
+        if (samplesPerPixel > 1)
+        {
+            var samplesGenerated:Int = 0;
+            while (samplesGenerated < samples.length)
             {
-                if (sample > peak)
-                    peak = sample;
+                for (i in 0..._effectiveWidth)
+                {
+                    var startIndex:Int = samplesGenerated + i * samplesPerPixel;
+                    var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
+
+                    drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
+
+                    // Avoid calculating RMS if we don't need to draw it
+                    drawRMS.push(waveformDrawRMS ? _buffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
+                }
+
+                samplesGenerated += _durationSamples;
             }
-
-            out.push(peak);
+        }
+        else
+        {
+            var endSamples:Int = _timeSamples + _durationSamples;
+            for (i in _timeSamples...endSamples)
+                drawPoints.push(samples[i]);
         }
     }
 
     /**
-     * Does nothing really, as Float32 data is already normalized.
-     * Just seperates both channels into different arrays.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
+     * Helper function that calls `prepareDrawData` for both audio channels.
      */
-    private function normalizeSamplesF32(samples:Bytes, stereo:Bool):NormalizedSampleData
+    function refreshDrawData():Void
     {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int32 is 4 bytes, times 2 for both channels.
-        var step:Int = stereo ? 8 : 4;
-        for (i in 0...Std.int(samples.length / step))
+        switch (waveformDrawMode)
         {
-            left.push(samples.getFloat(i * step));
-            if (stereo)
-                right.push(samples.getFloat(i * step + 4));
-        }
+            case SINGLE_CHANNEL(channel):
+                prepareDrawData(channel);
 
-        return {left: left, right: right};
+            default:
+                prepareDrawData(0);
+                if (_stereo)
+                    prepareDrawData(1);
+        }
     }
 
     /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a signed 32bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
+     * Returns an `openfl.geom.Rectangle` representing the rectangle
+     * of the audio peak.
      * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
+     * @param x The rectangle's position on the X axis
+     * @param y Y offset
+     * @param width The width of the peak rectangle
+     * @param height The height of the peak rectangle
+     * @param sample The audio sample in the range of -1.0 to 1.0
+     * @return A `openfl.geom.Rectangle` instance
      */
-    private function normalizeSamplesI32(samples:Bytes, stereo:Bool):NormalizedSampleData
+    function getPeakRect(x:Float, y:Float, width:Float, height:Float, sample:Float):Rectangle
     {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
+        var half:Float = height / 2;
+        var segmentHeight:Float = sample * half;
 
-        // Int32 is 4 bytes, times 2 for both channels.
-        var step:Int = stereo ? 8 : 4;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeInt32(i * step));
-            if (stereo)
-                right.push(samples.normalizeInt32(i * step + 4));
-        }
+        var y1:Float = half - segmentHeight;
+        var y2:Float = half + segmentHeight;
 
-        return {left: left, right: right};
+        return new Rectangle(x, y + y1, width, y2 - y1);
     }
 
     /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a signed 24bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
+     * Helper function to calculate the effective width.
      */
-    private function normalizeSamplesI24(samples:Bytes, stereo:Bool):NormalizedSampleData
+    inline function calcEffectiveWidth():Void
     {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int24 is 3 bytes, times 2 for both channels.
-        var step:Int = stereo ? 6 : 3;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeInt24(i * step));
-            if (stereo)
-                right.push(samples.normalizeInt24(i * step + 3));
-        }
-
-        return {left: left, right: right};
+        _effectiveWidth = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
     }
 
     /**
-     * Processes a `Bytes` instance containing audio data in 
-     * a signed 16bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
+     * Helper function to calculate the amount of samples per pixel.
      */
-    private function normalizeSamplesI16(samples:Bytes, stereo:Bool):NormalizedSampleData
+    inline function calcSamplesPerPixel():Void
     {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int16 is 2 bytes, times 2 for both channels.
-        var step:Int = stereo ? 4 : 2;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeInt16(i * step));
-            if (stereo)
-                right.push(samples.normalizeInt16(i * step + 2));
-        }
-
-        return {left: left, right: right};
-    }
-
-    /**
-     * Processes a `Bytes` instance containing audio data in 
-     * an unsigned 8bit integer format and returns 2 arrays
-     * containing normalized samples in the range from -1 to 1
-     * for both audio channels.
-     * 
-     * @param samples The audio buffer bytes data containing audio samples.
-     * @param stereo Whether the data should be treated as stereo (2 channels).
-     * @return A `NormalizedSampleData` containing normalized samples for both channels.
-     */
-    private function normalizeSamplesUI8(samples:Bytes, stereo:Bool):NormalizedSampleData
-    {
-        var left:Array<Float> = [];
-        var right:Array<Float> = null;
-        if (stereo)
-            right = [];
-
-        // Int8 is 1 bytes, times 2 for both channels.
-        var step:Int = stereo ? 2 : 1;
-        for (i in 0...Std.int(samples.length / step))
-        {
-            left.push(samples.normalizeUInt8(i * step));
-            if (stereo)
-                right.push(samples.normalizeUInt8(i * step + 1));
-        }
-
-        return {left: left, right: right};
+        samplesPerPixel = Std.int(_durationSamples / _effectiveWidth);
     }
 
     /**
@@ -696,7 +758,7 @@ class FlxWaveform extends FlxSprite
      * 
      * @param array The array to be cleared.
      */
-    private function clearArray<T>(array:Array<T>):Void
+    function clearArray<T>(array:Array<T>):Void
     {
         // TODO: untyped array.length = 0;
         // seems to be the fastest method, but it doesn't seem to work
@@ -715,7 +777,7 @@ class FlxWaveform extends FlxSprite
      * @param array Input array
      * @return Array<T> Output array
      */
-    private function recycleArray<T>(array:Array<T>):Array<T>
+    function recycleArray<T>(array:Array<T>):Array<T>
     {
         if (array == null)
             return [];
@@ -724,122 +786,232 @@ class FlxWaveform extends FlxSprite
         return array;
     }
 
-    /**
-     * Checks if a `lime.media.AudioBuffer` has all the
-     * properties required for rendering a waveform.
-     * 
-     * @param buffer Audio buffer
-     * @return Whether the audio buffer is valid
-     */
-    private inline function bufferValid(buffer:AudioBuffer):Bool
+    @:noCompletion function get_waveformWidth():Int
     {
-        return buffer != null 
-            && buffer.data != null 
-            // on js ints can be null, but on static targets they can't.
-            && buffer.bitsPerSample != #if js null #else 0 #end
-            && buffer.channels != #if js null #else 0 #end
-            && buffer.sampleRate != #if js null #else 0 #end;
+        return this.frameWidth;
     }
 
-    @:noCompletion private function get_waveformWidth():Int
+    @:noCompletion function set_waveformWidth(value:Int):Int
     {
-        return _waveformWidth;
-    }
-
-    @:noCompletion private function set_waveformWidth(value:Int):Int
-    {
-        if (_waveformWidth != value)
+        if (waveformWidth != value)
         {
-            _waveformWidth = value;
-
-            setDrawRange(_curRangeEnd, _curRangeStart);
-            resize(_waveformWidth, _waveformHeight);
+            resize(waveformWidth, waveformHeight);
+            calcEffectiveWidth();
         }
 
-        return _waveformWidth;
+        return waveformWidth;
     }
 
-    @:noCompletion private function get_waveformHeight():Int
+    @:noCompletion function get_waveformHeight():Int
     {
-        return _waveformHeight;
+        return this.frameHeight;
     }
 
-    @:noCompletion private function set_waveformHeight(value:Int):Int 
+    @:noCompletion function set_waveformHeight(value:Int):Int 
     {
-        if (_waveformHeight != value)
-        {
-            _waveformHeight = value;
+        if (waveformHeight != value)
+            resize(waveformWidth, waveformHeight);
 
-            resize(_waveformWidth, _waveformHeight);
-        }
-
-        return _waveformHeight;
-    }
-
-    @:noCompletion function get_waveformBgColor():FlxColor
-    {
-        return _waveformBgColor;
+        return waveformHeight;
     }
 
     @:noCompletion function set_waveformBgColor(value:FlxColor):FlxColor
     {
-        if (_waveformBgColor != value)
+        if (waveformBgColor != value)
         {
-            _waveformBgColor = value;
+            waveformBgColor = value;
 
             if (autoUpdateBitmap)
-                generateWaveformBitmap();
+                _waveformDirty = true;
         }
 
-        return _waveformBgColor;
-    }
-
-    @:noCompletion function get_waveformColor():FlxColor
-    {
-        return _waveformColor;
+        return waveformBgColor;
     }
 
     @:noCompletion function set_waveformColor(value:FlxColor):FlxColor
     {
-        if (_waveformColor != value)
+        if (waveformColor != value)
         {
-            _waveformColor = value;
+            waveformColor = value;
 
             if (autoUpdateBitmap)
-                generateWaveformBitmap();
+                _waveformDirty = true;
         }
 
-        return _waveformColor;
+        return waveformColor;
     }
 
-    @:noCompletion function get_waveformDrawMode():WaveformDrawMode
+    @:noCompletion function set_waveformRMSColor(value:FlxColor):FlxColor 
     {
-        return _waveformDrawMode;
+        if (waveformRMSColor != value)
+        {
+            waveformRMSColor = value;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformRMSColor;
     }
 
     @:noCompletion function set_waveformDrawMode(value:WaveformDrawMode):WaveformDrawMode 
     {
-        if (_waveformDrawMode != value)
+        if (waveformDrawMode != value)
         {
-            _waveformDrawMode = value;
+            waveformDrawMode = value;
+
+            switch (waveformDrawMode)
+            {
+                case SINGLE_CHANNEL(channel):
+                    if (channel != 0 && channel != 1)
+                        FlxG.log.error('[FlxWaveform] Invalid SINGLE_CHANNEL argument: $channel (must be 0 or 1)');
+
+                default:
+            }
 
             if (autoUpdateBitmap)
-                generateWaveformBitmap();
+                _waveformDirty = true;
         }
 
-        return _waveformDrawMode;
+        return waveformDrawMode;
     }
+
+    @:noCompletion function set_waveformDrawBaseline(value:Bool):Bool 
+    {
+        if (waveformDrawBaseline != value)
+        {
+            waveformDrawBaseline = value;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformDrawBaseline;
+    }
+
+    @:noCompletion function set_autoUpdateBitmap(value:Bool):Bool
+    {
+        if (value)
+            _waveformDirty = true;
+
+        return autoUpdateBitmap = value;
+    }
+
+    @:noCompletion function set_waveformDrawRMS(value:Bool):Bool 
+    {
+        if (waveformDrawRMS != value)
+        {
+            waveformDrawRMS = value;
+            
+            _drawDataDirty = true;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformDrawRMS;
+    }
+    
+    @:noCompletion function set_waveformBarSize(value:Int):Int 
+    {
+        if (waveformBarSize != value)
+        {
+            if (value < 1)
+                FlxG.log.error('[FlxWaveform] waveformBarSize cannot be less than 1!');
+
+            waveformBarSize = value;
+
+            calcEffectiveWidth();
+            calcSamplesPerPixel();
+
+            _drawDataDirty = true;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformBarSize;
+    }
+    
+    @:noCompletion function set_waveformBarPadding(value:Int):Int 
+    {
+        if (waveformBarPadding != value)
+        {
+            waveformBarPadding = value;
+            if (value < 0)
+                FlxG.log.error('[FlxWaveform] waveformBarPadding cannot be less than 0!');
+
+            calcEffectiveWidth();
+            calcSamplesPerPixel();
+
+            _drawDataDirty = true;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformBarPadding;
+    }
+    
+    @:noCompletion function set_waveformTime(value:Float):Float 
+    {
+        if (waveformTime != value)
+        {
+            waveformTime = value;
+            if (value < 0)
+                FlxG.log.error('[FlxWaveform] waveformTime cannot be less than 0!');
+
+            _timeSamples = Std.int((value / 1000) * _buffer.sampleRate);
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformTime;
+    }
+    
+    @:noCompletion function set_waveformDuration(value:Float):Float
+    {
+        if (waveformDuration != value)
+        {
+            waveformDuration = value;
+            if (value < 0)
+                FlxG.log.error('[FlxWaveform] waveformDuration cannot be less than 0!');
+
+            _durationSamples = Std.int((value / 1000) * _buffer.sampleRate);
+
+            calcSamplesPerPixel();
+
+            _drawDataDirty = true;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+       return waveformDuration;
+    }
+    
 }
 
-// TODO: Should this be a class with structInit? Do typedefs negatively impact performance?
-typedef NormalizedSampleData =
-{
-    left:Array<Float>,
-    ?right:Array<Float>
-}
-
+/**
+ * An enum representing how the waveform will look visually.
+ * 
+ * `COMBINED` will draw both audio channels (if in stereo) onto the 
+ * full area of the graphic, causing an overlap between the two.
+ * It also may be slightly more expensive to compute.
+ * 
+ * `SPLIT_CHANNELS` will horizontally split the waveform into 
+ * top and bottom parts, for the two audio channels.
+ * The top part represents the left audio channel, 
+ * while the bottom part represents the right channel.
+ * 
+ * `SINGLE_CHANNEL` draws one audio channel across the full area of the graphic.
+ * The argument provided must be either 
+ * 0 (for the left channel) or 1 (for the right channel)
+ */
 enum WaveformDrawMode
 {
     COMBINED;
     SPLIT_CHANNELS;
+    SINGLE_CHANNEL(channel:Int);
 }
