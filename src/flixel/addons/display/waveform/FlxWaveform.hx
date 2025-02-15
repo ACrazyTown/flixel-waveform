@@ -262,17 +262,16 @@ class FlxWaveform extends FlxSprite
      * Creates a new `FlxWaveform` instance with the specified draw data.
      * The waveform is not ready to display anything yet.
      *
-     * In order to display anything you need to load audio buffer data
-     * from one of the available `loadDataFrom` functions & specify
-     * a draw range using `setDrawRange()`.
+     * Before setting any options you should first call a `loadDataFrom()` method
+     * to get data for the waveform to process.
      * 
-     * @param x The initial position of the sprite on the X axis.
-     * @param y The initial position of the sprite on the Y axis.
-     * @param width The initial width of the waveform graphic.
-     * @param height The initial height of the waveform graphic.
-     * @param color The color used for drawing the actual waveform.
-     * @param backgroundColor The background color of the waveform graphic.
-     * @param drawMode The visual appearance of the waveform. See `FlxWaveform.drawMode` for more info.
+     * @param x The initial X position of the waveform.
+     * @param y The initial Y position of the waveform.
+     * @param width The initial width of the waveform.
+     * @param height The initial height of the waveform.
+     * @param color The color used for drawing the waveform.
+     * @param backgroundColor The background color of the waveform.
+     * @param drawMode How the waveform data should be interpreted and rendered. See `FlxWaveform.waveformDrawMode` for more info.
      */
     public function new(x:Float, y:Float, ?width:Int, ?height:Int, ?color:FlxColor = 0xFFFFFFFF, ?backgroundColor:FlxColor = 0x00000000, ?drawMode:WaveformDrawMode = COMBINED)
     {
@@ -310,6 +309,7 @@ class FlxWaveform extends FlxSprite
         if (_waveformDirty)
         {
             generateWaveformBitmap();
+            dirty = true;
             _waveformDirty = false;
         }
 
@@ -383,40 +383,6 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Sets the time range that the waveform represents.
-     * 
-     * @param endTime The end of the range, in miliseconds. If not specified will be the length of the sound.
-     * @param startTime The start of the range, in miliseconds. If not specified will be the start of the sound.
-     */
-    // @:deprecated("Going to be nuked")
-    // public function setDrawRange(?endTime:Float = -1, ?startTime:Float = -1):Void
-    // {
-    //     if (startTime < 0)
-    //         startTime = 0.0;
-    //     if (endTime < 0)
-    //         endTime = (_buffer.getChannelData(0).length / _buffer.sampleRate) * 1000;
-
-    //     // TODO: Some kind of cache? If the range is not completely different but like only slightly
-    //     // TODO: Get rid of this, deprecate setDrawRange
-    //     waveformTime = startTime;
-    //     waveformDuration = endTime - startTime;
-    //     _timeSamples = Std.int((waveformTime / 1000) * _buffer.sampleRate);
-    //     _durationSamples = Std.int((waveformDuration / 1000) * _buffer.sampleRate);
-
-    //     _rangeStartMS = waveformTime;
-    //     _rangeEndMS = waveformDuration;
-    //     _rangeStartSample = _timeSamples;
-    //     _rangeEndSample = _durationSamples;
-
-    //     // samplesPerPixel = Std.int((_rangeEndSample - _rangeStartSample) / _effectiveWidth);
-    //     samplesPerPixel = Std.int(_durationSamples / _effectiveWidth);
-    //     _drawDataDirty = true;
-
-    //     if (autoUpdateBitmap)
-    //         _waveformDirty = true;
-    // }
-
-    /**
      * Draws the waveform onto this sprite's graphic.
      *
      * If you have `autoUpdateBitmap` enabled, you most likely
@@ -465,6 +431,9 @@ class FlxWaveform extends FlxSprite
         // waveformHeight = height;
 
         makeGraphic(width, height, waveformBgColor);
+
+        _drawDataDirty = true;
+
         if (autoUpdateBitmap)
             _waveformDirty = true;
     }
@@ -700,21 +669,12 @@ class FlxWaveform extends FlxSprite
 
         var samples:Null<Float32Array> = _buffer.getChannelData(channel);
 
-        // effectiveWidth takes in account barSize/padding only when samplesPerPixel > 1 (not graphing)
-        // TODO: Give this a different name, I keep confusing this with _effectiveWidth
-        var effectiveWidth:Int = samplesPerPixel > 1 ? _effectiveWidth : waveformWidth;
-
-        trace(_timeSamples);
-        trace(_durationSamples);
-
-        var _t1 = haxe.Timer.stamp();
-
         if (samplesPerPixel > 1)
         {
             var samplesGenerated:Int = 0;
             while (samplesGenerated < samples.length)
             {
-                for (i in 0...effectiveWidth)
+                for (i in 0..._effectiveWidth)
                 {
                     var startIndex:Int = samplesGenerated + i * samplesPerPixel;
                     var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
@@ -734,10 +694,6 @@ class FlxWaveform extends FlxSprite
             for (i in _timeSamples...endSamples)
                 drawPoints.push(samples[i]);
         }
-
-        trace('Postgen for channel $channel');
-        trace('DrawPoints: ${drawPoints.length}');
-        trace('${haxe.Timer.stamp()-_t1}s');
     }
 
     /**

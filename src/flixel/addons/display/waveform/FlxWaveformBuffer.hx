@@ -80,6 +80,9 @@ class FlxWaveformBuffer implements IFlxDestroyable
      */
     static function getLimeAudioBufferFromFlxSound(sound:FlxSound):Null<AudioBuffer>
     {
+        #if flash
+        return null;
+        #else
         @:privateAccess
         var buffer:AudioBuffer = sound?._channel?.__audioSource?.buffer;
 
@@ -90,6 +93,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
         }
         
         return buffer;
+        #end
     }
 
     /**
