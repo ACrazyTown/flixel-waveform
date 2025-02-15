@@ -794,7 +794,7 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformWidth != value)
         {
-            resize(waveformWidth, waveformHeight);
+            resize(value, waveformHeight);
             calcEffectiveWidth();
         }
 
@@ -809,7 +809,7 @@ class FlxWaveform extends FlxSprite
     @:noCompletion function set_waveformHeight(value:Int):Int 
     {
         if (waveformHeight != value)
-            resize(waveformWidth, waveformHeight);
+            resize(waveformWidth, value);
 
         return waveformHeight;
     }
