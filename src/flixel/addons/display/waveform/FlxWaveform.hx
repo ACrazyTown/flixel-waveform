@@ -147,7 +147,24 @@ class FlxWaveform extends FlxSprite
      * @since 2.0.0
      */
     public var waveformBarPadding(default, set):Int = 0;
+    /**
+     * The audio time, in miliseconds, this waveform will start at.
+     * 
+     * @since 2.0.0
+     */
+    public var waveformTime(default, set):Float;
 
+    /**
+     * The amount of time, in miliseconds, this waveform will represent.
+     * 
+     * Changing this value will trigger a data rebuild, which may induce a
+     * temporary freeze/stutter.
+     * Avoid changing it frequently.
+     * 
+     * @since 2.0.0
+     */
+    public var waveformDuration(default, set):Float;
+    
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -163,24 +180,14 @@ class FlxWaveform extends FlxSprite
     var _stereo:Bool = false;
 
     /**
-     * Internal variable holding the start of the draw range (in miliseconds)
+     * Internal helper that stores the value of `waveformTime` but in audio samples.
      */
-    var _rangeStartMS:Float;
+    var _timeSamples:Int;
 
     /**
-     * Internal variable holding the end of the draw range (in miliseconds)
+     * Internal helper that stores the value of `waveformDuration` but in audio samples.
      */
-    var _rangeEndMS:Float;
-
-    /**
-     * Internal variable holding the start of the draw range (in samples)
-     */
-    var _rangeStartSample:Int;
-
-    /**
-     * Internal variable holding the end of the draw range (in samples)
-     */
-    var _rangeEndSample:Int;
+    var _durationSamples:Int;
 
     /**
      * Internal array of Floats that either contain:
@@ -311,9 +318,9 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Loads the audio buffer data neccessary for processing the 
-     * waveform from a HaxeFlixel `FlxSound`.
+     * waveform from a `flixel.sound.FlxSound`
      * 
-     * @param sound The FlxSound to get data from.
+     * @param sound The `flixel.sound.FlxSound` to get data from.
      */
     public function loadDataFromFlxSound(sound:FlxSound):Void
     {
@@ -381,26 +388,33 @@ class FlxWaveform extends FlxSprite
      * @param endTime The end of the range, in miliseconds. If not specified will be the length of the sound.
      * @param startTime The start of the range, in miliseconds. If not specified will be the start of the sound.
      */
-    public function setDrawRange(?endTime:Float = -1, ?startTime:Float = -1):Void
-    {
-        if (startTime < 0)
-            startTime = 0.0;
-        if (endTime < 0)
-            endTime = (_buffer.getChannelData(0).length / _buffer.sampleRate) * 1000;
+    // @:deprecated("Going to be nuked")
+    // public function setDrawRange(?endTime:Float = -1, ?startTime:Float = -1):Void
+    // {
+    //     if (startTime < 0)
+    //         startTime = 0.0;
+    //     if (endTime < 0)
+    //         endTime = (_buffer.getChannelData(0).length / _buffer.sampleRate) * 1000;
 
-        // TODO: Some kind of cache? If the range is not completely different but like only slightly
-        // eg. startTime goes from 0 to 100 don't dump whole array but add to it?
-        _rangeStartMS = startTime;
-        _rangeEndMS = endTime;
-        _rangeStartSample = Std.int((_rangeStartMS / 1000) * _buffer.sampleRate);
-        _rangeEndSample = Std.int((_rangeEndMS / 1000) * _buffer.sampleRate);
+    //     // TODO: Some kind of cache? If the range is not completely different but like only slightly
+    //     // TODO: Get rid of this, deprecate setDrawRange
+    //     waveformTime = startTime;
+    //     waveformDuration = endTime - startTime;
+    //     _timeSamples = Std.int((waveformTime / 1000) * _buffer.sampleRate);
+    //     _durationSamples = Std.int((waveformDuration / 1000) * _buffer.sampleRate);
 
-        samplesPerPixel = Std.int((_rangeEndSample - _rangeStartSample) / _effectiveWidth);
-        _drawDataDirty = true;
+    //     _rangeStartMS = waveformTime;
+    //     _rangeEndMS = waveformDuration;
+    //     _rangeStartSample = _timeSamples;
+    //     _rangeEndSample = _durationSamples;
 
-        if (autoUpdateBitmap)
-            _waveformDirty = true;
-    }
+    //     // samplesPerPixel = Std.int((_rangeEndSample - _rangeStartSample) / _effectiveWidth);
+    //     samplesPerPixel = Std.int(_durationSamples / _effectiveWidth);
+    //     _drawDataDirty = true;
+
+    //     if (autoUpdateBitmap)
+    //         _waveformDirty = true;
+    // }
 
     /**
      * Draws the waveform onto this sprite's graphic.
@@ -442,8 +456,10 @@ class FlxWaveform extends FlxSprite
      */
     public function resize(width:Int, height:Int):Void
     {
-        if (waveformWidth != width)
-            setDrawRange(_rangeEndMS, _rangeStartMS);
+        // if (waveformWidth != width)
+        // {
+        //     setDrawRange(_rangeEndMS, _rangeStartMS)
+        // }
 
         // waveformWidth = width;
         // waveformHeight = height;
@@ -460,6 +476,7 @@ class FlxWaveform extends FlxSprite
     function drawPeaks():Void
     {
         var half:Float = waveformHeight / 2;
+        var timeOffset:Float = _timeSamples / samplesPerPixel;
 
         switch (waveformDrawMode)
         {
@@ -469,10 +486,12 @@ class FlxWaveform extends FlxSprite
 
                 for (i in 0..._effectiveWidth)
                 {
-                    var peakLeft:Float = _drawPointsLeft[i];
+                    var sampleIndex:Int = Math.round(timeOffset + i);
+
+                    var peakLeft:Float = _drawPointsLeft[sampleIndex];
                     var peakRight:Float = 0;
                     if (_stereo)
-                        peakRight = _drawPointsRight[i];
+                        peakRight = _drawPointsRight[sampleIndex];
 
                     if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
                         continue;
@@ -483,10 +502,10 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peakest), waveformColor);
                     if (waveformDrawRMS)
                     {
-                        var rmsLeft:Float = _drawRMSLeft[i];
+                        var rmsLeft:Float = _drawRMSLeft[sampleIndex];
                         var rmsRight:Float = 0;
                         if (_stereo)
-                            rmsRight = _drawRMSRight[i];
+                            rmsRight = _drawRMSRight[sampleIndex];
 
                         if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
                             continue;
@@ -507,10 +526,12 @@ class FlxWaveform extends FlxSprite
 
                 for (i in 0..._effectiveWidth)
                 {
-                    var peakLeft:Float = _drawPointsLeft[i];
+                    var sampleIndex:Int = Math.round(timeOffset + i);
+
+                    var peakLeft:Float = _drawPointsLeft[sampleIndex];
                     var peakRight:Float = 0;
                     if (_stereo)
-                        peakRight = _drawPointsRight[i];
+                        peakRight = _drawPointsRight[sampleIndex];
 
                     if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
                         continue;
@@ -522,10 +543,10 @@ class FlxWaveform extends FlxSprite
 
                     if (waveformDrawRMS)
                     {
-                        var rmsLeft:Float = _drawRMSLeft[i];
+                        var rmsLeft:Float = _drawRMSLeft[sampleIndex];
                         var rmsRight:Float = 0;
                         if (_stereo)
-                            rmsRight = _drawRMSRight[i];
+                            rmsRight = _drawRMSRight[sampleIndex];
 
                         if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
                             continue;
@@ -541,7 +562,9 @@ class FlxWaveform extends FlxSprite
 
                 for (i in 0..._effectiveWidth)
                 {
-                    var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
+                    var sampleIndex:Int = Math.round(timeOffset + i);
+
+                    var peak:Float = channel == 0 ? _drawPointsLeft[sampleIndex] : _drawPointsRight[sampleIndex];
 
                     if (peak == 0)
                         continue;
@@ -551,7 +574,7 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peak), waveformColor);
                     if (waveformDrawRMS)
                     {
-                        var rms:Float = channel == 0 ? _drawRMSLeft[i] : _drawRMSRight[i];
+                        var rms:Float = channel == 0 ? _drawRMSLeft[sampleIndex] : _drawRMSRight[sampleIndex];
                         if (rms == 0)
                             continue;
 
@@ -678,26 +701,43 @@ class FlxWaveform extends FlxSprite
         var samples:Null<Float32Array> = _buffer.getChannelData(channel);
 
         // effectiveWidth takes in account barSize/padding only when samplesPerPixel > 1 (not graphing)
+        // TODO: Give this a different name, I keep confusing this with _effectiveWidth
         var effectiveWidth:Int = samplesPerPixel > 1 ? _effectiveWidth : waveformWidth;
+
+        trace(_timeSamples);
+        trace(_durationSamples);
+
+        var _t1 = haxe.Timer.stamp();
 
         if (samplesPerPixel > 1)
         {
-            for (i in 0...effectiveWidth)
+            var samplesGenerated:Int = 0;
+            while (samplesGenerated < samples.length)
             {
-                var startIndex:Int = Math.floor(_rangeStartSample + i * samplesPerPixel);
-                var endIndex:Int = Std.int(Math.min(Math.ceil(_rangeStartSample + (i + 1) * samplesPerPixel), samples.length));
+                for (i in 0...effectiveWidth)
+                {
+                    var startIndex:Int = samplesGenerated + i * samplesPerPixel;
+                    var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
 
-                drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
+                    drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
 
-                // Avoid calculating RMS if we don't need to draw it
-                drawRMS.push(waveformDrawRMS ? _buffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
+                    // Avoid calculating RMS if we don't need to draw it
+                    drawRMS.push(waveformDrawRMS ? _buffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
+                }
+
+                samplesGenerated += _durationSamples;
             }
         }
         else
         {
-            for (i in _rangeStartSample..._rangeEndSample)
+            var endSamples:Int = _timeSamples + _durationSamples;
+            for (i in _timeSamples...endSamples)
                 drawPoints.push(samples[i]);
         }
+
+        trace('Postgen for channel $channel');
+        trace('DrawPoints: ${drawPoints.length}');
+        trace('${haxe.Timer.stamp()-_t1}s');
     }
 
     /**
@@ -708,9 +748,6 @@ class FlxWaveform extends FlxSprite
         switch (waveformDrawMode)
         {
             case SINGLE_CHANNEL(channel):
-                if (channel != 0 && channel != 1)
-                    FlxG.log.error('[FlxWaveform] Invalid SINGLE_CHANNEL argument: $channel (must be 0 or 1)');
-
                 prepareDrawData(channel);
 
             default:
@@ -748,6 +785,14 @@ class FlxWaveform extends FlxSprite
     inline function calcEffectiveWidth():Void
     {
         _effectiveWidth = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
+    }
+
+    /**
+     * Helper function to calculate the amount of samples per pixel.
+     */
+    inline function calcSamplesPerPixel():Void
+    {
+        samplesPerPixel = Std.int(_durationSamples / _effectiveWidth);
     }
 
     /**
@@ -857,6 +902,15 @@ class FlxWaveform extends FlxSprite
         {
             waveformDrawMode = value;
 
+            switch (waveformDrawMode)
+            {
+                case SINGLE_CHANNEL(channel):
+                    if (channel != 0 && channel != 1)
+                        FlxG.log.error('[FlxWaveform] Invalid SINGLE_CHANNEL argument: $channel (must be 0 or 1)');
+
+                default:
+            }
+
             if (autoUpdateBitmap)
                 _waveformDirty = true;
         }
@@ -910,16 +964,12 @@ class FlxWaveform extends FlxSprite
             waveformBarSize = value;
 
             calcEffectiveWidth();
+            calcSamplesPerPixel();
 
-            // we have to call setDrawRange to reset
-            // stuff like samplesPerPixel otherwise
-            // the rendering will be out of bounds
-            setDrawRange(_rangeEndMS, _rangeStartMS);
+            _drawDataDirty = true;
 
-            // _drawDataDirty = true;
-
-            // if (autoUpdateBitmap)
-            //     _waveformDirty = true;
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
         }
 
         return waveformBarSize;
@@ -934,19 +984,53 @@ class FlxWaveform extends FlxSprite
                 FlxG.log.error('[FlxWaveform] waveformBarPadding cannot be less than 0!');
 
             calcEffectiveWidth();
+            calcSamplesPerPixel();
 
-            // we have to call setDrawRange to reset
-            // stuff like samplesPerPixel otherwise
-            // the rendering will be out of bounds
-            setDrawRange(_rangeEndMS, _rangeStartMS);
+            _drawDataDirty = true;
 
-            // _drawDataDirty = true;
-
-            // if (autoUpdateBitmap)
-            //     _waveformDirty = true;
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
         }
 
         return waveformBarPadding;
+    }
+    
+    @:noCompletion function set_waveformTime(value:Float):Float 
+    {
+        if (waveformTime != value)
+        {
+            waveformTime = value;
+            if (value < 0)
+                FlxG.log.error('[FlxWaveform] waveformTime cannot be less than 0!');
+
+            _timeSamples = Std.int((value / 1000) * _buffer.sampleRate);
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformTime;
+    }
+    
+    @:noCompletion function set_waveformDuration(value:Float):Float
+    {
+        if (waveformDuration != value)
+        {
+            waveformDuration = value;
+            if (value < 0)
+                FlxG.log.error('[FlxWaveform] waveformDuration cannot be less than 0!');
+
+            _durationSamples = Std.int((value / 1000) * _buffer.sampleRate);
+
+            calcSamplesPerPixel();
+
+            _drawDataDirty = true;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+       return waveformDuration;
     }
     
 }

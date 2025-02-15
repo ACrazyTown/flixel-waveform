@@ -35,6 +35,11 @@ class FlxWaveformBuffer implements IFlxDestroyable
     public var numChannels(default, null):Null<Int>;
 
     /**
+     * The length of the audio data, in samples.
+     */
+    public var length(get, never):Null<Int>;
+
+    /**
      * Whether the buffer should be automatically destroyed when an associated
      * `FlxWaveform` instance is destroyed.
      * 
@@ -50,7 +55,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * Unless you have a reason to access this directly you
      * should probably use the `getChannelData()` function.
      */
-    var _channels(default, null):ChannelPair;
+    var _channels(default, null):Null<ChannelPair>;
 
     /**
      * Creates a `FlxWaveformBuffer` from a `flixel.sound.FlxSound`.
@@ -350,6 +355,9 @@ class FlxWaveformBuffer implements IFlxDestroyable
         var channel:Null<Float32Array> = getChannelData(channel);
         var peak:Float = 0.0;
 
+        if (startIndex > endIndex)
+            return 0;
+
         for (i in startIndex...endIndex)
         {
             var sample = Math.abs(channel[i]);
@@ -388,12 +396,19 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
         return Math.sqrt(squareSum / numSamples);
     }
+
+    @:noCompletion function get_length():Null<Int> 
+    {
+        // TODO: Is it safe to assume both channels are of equal length?
+        return _channels?._leftChannel?.length;
+    }
 }
 
 /**
  * A `ChannelPair` is a helper class containing
  * audio data for both audio channels.
  */
+@:allow(flixel.addons.display.waveform.FlxWaveformBuffer)
 class ChannelPair implements IFlxDestroyable
 {
     /**
