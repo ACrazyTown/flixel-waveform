@@ -13,29 +13,19 @@ import flixel.addons.display.waveform.FlxWaveform;
 
 class PlayState extends FlxUIState
 {
-    var ui:FlxUI;
-    var playPauseBtn:FlxButton;
-
     var waveform:FlxWaveform;
 
     override public function create():Void
     {
         super.create();
 
-        // Setup some stuff
-        #if debug
-        FlxG.console.registerEnum(WaveformDrawMode);
-        #end
         FlxG.autoPause = false;
-
         FlxG.sound.music = FlxG.sound.load("assets/beeper" + #if flash ".mp3" #else ".ogg" #end, 1.0, true);
 
-        // NOTE: Due to a limitation, on HTML5
-        // you have to play the audio source
+        // NOTE: Due to a limitation, on HTML5 you have to play the audio source
         // before trying to make a waveform from it.
         // See: https://github.com/ACrazyTown/flixel-waveform/issues/8
         FlxG.sound.music.play(true);
-
 
         // Create a new FlxWaveform instance.
         waveform = new FlxWaveform(0, 50, FlxG.width, FlxG.height - 50);
@@ -77,8 +67,10 @@ class PlayState extends FlxUIState
         waveform.waveformBarSize = 4;
         waveform.waveformBarPadding = 2;
 
+        // Add our waveform to the state.
         add(waveform);
 
+        // Sets up the UI for the sample. You can ignore this.
         setupUI();
     }
 
@@ -97,6 +89,8 @@ class PlayState extends FlxUIState
     }
 
     // --- Beyond this point is UI code you should not care about --
+    var ui:FlxUI;
+    var playPauseBtn:FlxButton;
 
     function setupUI():Void
     {

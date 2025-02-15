@@ -15,8 +15,7 @@ import flash.media.Sound;
 #end
 
 /**
- * A `FlxWaveform` is an `FlxSprite` extension that provides a simple yet 
- * powerful API for drawing waveforms from audio data.
+ * A simple yet powerful [HaxeFlixel](https://haxeflixel.com/) addon for drawing waveforms from sounds
  * 
  * @author ACrazyTown (https://github.com/acrazytown/)
  */

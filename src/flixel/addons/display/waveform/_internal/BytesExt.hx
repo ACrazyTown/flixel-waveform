@@ -8,6 +8,8 @@ import flixel.math.FlxMath;
  * the `haxe.io.Bytes` class.
  * 
  * Meant to be used as a [static extension](https://haxe.org/manual/lf-static-extension.html).
+ * 
+ * @author ACrazyTown (https://github.com/acrazytown/)
  */
 class BytesExt
 {

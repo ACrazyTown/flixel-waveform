@@ -16,6 +16,8 @@ using flixel.addons.display.waveform._internal.BytesExt;
  * A `FlxWaveformBuffer` holds various data related to an audio track
  * that is required for further processing.
  * @since 2.0.0
+ * 
+ * @author ACrazyTown (https://github.com/acrazytown/)
  */
 class FlxWaveformBuffer implements IFlxDestroyable
 {
