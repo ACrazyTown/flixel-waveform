@@ -6,6 +6,11 @@ Legend:
 - 🛠️ - Bugfix/Adjustment
 - ⚠️ - Breaking change
 
+## 2.1.0 (???)
+- ✨ **Added** support for making waveforms from streamed sounds
+    - Use the `FlxWaveformBuffer.fromVorbisFile()` method to load the audio buffer from a `VorbisFile`
+    - If you pass in a streamed sound to a `FlxWaveform.loadDataFrom()` method, the waveform will try to automatically detect and load it.
+
 ## 2.0.0 (February 15, 2025)
 - ✨ **Added** `waveformTime` and `waveformDuration`
     - Set `waveformDuration` to the length (in miliseconds) you want to visualize.

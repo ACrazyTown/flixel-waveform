@@ -1,5 +1,6 @@
 package flixel.addons.display.waveform;
 
+import haxe.Int64;
 import flixel.sound.FlxSound;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.FlxDestroyUtil;
@@ -8,6 +9,10 @@ import lime.media.AudioBuffer;
 import lime.utils.Float32Array;
 #if lime_howlerjs
 import lime.media.howlerjs.Howl;
+#end
+#if lime_vorbis
+import lime.media.vorbis.VorbisFile;
+import lime.media.vorbis.VorbisInfo;
 #end
 
 using flixel.addons.display.waveform._internal.BytesExt;
@@ -121,6 +126,12 @@ class FlxWaveformBuffer implements IFlxDestroyable
             return fromFlashSound(buffer.__srcSound);
         #end
 
+        #if lime_vorbis
+        @:privateAccess
+        if (!bufferValid && buffer.__srcVorbisFile != null)
+            return fromVorbisFile(buffer.__srcVorbisFile);
+        #end
+
         if (!bufferValid)
             return null;
 
@@ -170,6 +181,51 @@ class FlxWaveformBuffer implements IFlxDestroyable
         return null;
     }
     #end
+    #end
+
+    #if lime_vorbis
+    /**
+     * Creates a `FlxWaveformBuffer` from a `VorbisFile` instance.
+     * 
+     * @param vorbisFile The `VorbisFile` to be converted.
+     * @return A `FlxWaveformBuffer` or `null` if it wasn't 
+     * possible to get data from the `VorbisFile` instance.
+     */
+    public static function fromVorbisFile(vorbisFile:VorbisFile):Null<FlxWaveformBuffer>
+    {   
+        // referenced from Lime's native OGG/Vorbis decoder
+        // https://github.com/openfl/lime/blob/develop/project/src/media/containers/OGG.cpp
+
+        var info:VorbisInfo = vorbisFile.info();
+        if (info == null)
+            return null;
+
+        var previousPosition:Int64 = vorbisFile.pcmTell();
+        vorbisFile.pcmSeek(0);
+
+        // TODO: change 16 when I switch to readFloat()
+        var bitsPerSample:Int = 16;
+        var byteLength:Int = Std.int(Int64.toInt(vorbisFile.pcmTotal()) * info.channels * (bitsPerSample/8));
+        var buffer:Bytes = Bytes.alloc(byteLength);
+
+        var bytesReturned:Int = 0;
+        var position:Int = 0;
+
+        do
+        {
+            // vorbisFile has a readFloat() function but it's not implemented in Lime currently.
+            // TODO: Implement it in Lime :)
+            // TODO: Check for big endian?
+            bytesReturned = vorbisFile.read(buffer, position, 4096, false, 2, true);
+            position += bytesReturned;
+        } 
+        while (bytesReturned > 0);
+
+        vorbisFile.pcmSeek(previousPosition);
+
+        var _channels:ChannelPair = uninterleaveAndNormalize(buffer, bitsPerSample, info.channels == 2);
+        return new FlxWaveformBuffer(info.rate, bitsPerSample, info.channels, _channels);
+    }
     #end
 
     #if flash
