@@ -25,7 +25,7 @@ Legend:
 - 🛠️ A good chunk of code was refactored, so probably quite a few bug fixes?
 
 ## 1.2.1 (November 21, 2024)
-- 🛠️ Fix waveform not properly scaling when resizing
+- 🛠️ **Fix** waveform not properly scaling when resizing
 
 ## 1.2.0 (November 17, 2024)
 - ✨ **Added** Flash support
