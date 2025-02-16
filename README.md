@@ -1,4 +1,8 @@
-# flixel-waveform
+<p align="center">
+    <img src=".github/images/logo real 1.png" />
+</p>
+
+---
 
 A simple yet powerful [HaxeFlixel](https://haxeflixel.com/) addon for drawing waveforms from sounds.
 
