@@ -414,7 +414,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      */
     public function getPeakForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
     {
-        var channel:Null<Float32Array> = getChannelData(channel);
+        var data:Null<Float32Array> = getChannelData(channel);
         var peak:Float = 0.0;
 
         if (startIndex > endIndex)
@@ -422,9 +422,14 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
         for (i in startIndex...endIndex)
         {
-            var sample = Math.abs(channel[i]);
+            var sample = Math.abs(data[i]);
             if (sample > peak)
+            {
                 peak = sample;
+
+                if (peak >= 1.0)
+                    return 1.0;
+            }
         }
 
         return peak;
@@ -441,7 +446,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      */
     public function getRMSForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
     {
-        var channel:Null<Float32Array> = getChannelData(channel);
+        var data:Null<Float32Array> = getChannelData(channel);
         var numSamples:Int = endIndex - startIndex;
 
         // return now to avoid div by 0
@@ -452,7 +457,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
         for (i in startIndex...endIndex)
         {
-            var sample = channel[i];
+            var sample = data[i];
             squareSum += sample * sample;
         }
 
