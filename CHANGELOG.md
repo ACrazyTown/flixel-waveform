@@ -10,6 +10,8 @@ Legend:
 - ✨ **Added** support for making waveforms from streamed sounds
     - Use the `FlxWaveformBuffer.fromVorbisFile()` method to load the audio buffer from a `VorbisFile`
     - If you pass in a streamed sound to a `FlxWaveform.loadDataFrom()` method, the waveform will try to automatically detect and load it.
+- 🛠️ **Fixed** weirdly cropped showcase image... oops!
+- 🛠️ **Fixed** crash due to `FlxWaveformBuffer` trying to access a property on a null Lime audio buffer.
 
 ## 2.0.0 (February 15, 2025)
 - ✨ **Added** `waveformTime` and `waveformDuration`
