@@ -116,19 +116,19 @@ class FlxWaveformBuffer implements IFlxDestroyable
         // If the buffer isn't valid anyway we might as well
         // try to get something from Howler
         @:privateAccess
-        if (!bufferValid && buffer.__srcHowl != null)
+        if (!bufferValid && buffer?.__srcHowl != null)
             return fromHowl(cast buffer.src);
         #end
 
         #if flash
         @:privateAccess
-        if (!bufferValid && buffer.__srcSound != null)
+        if (!bufferValid && buffer?.__srcSound != null)
             return fromFlashSound(buffer.__srcSound);
         #end
 
         #if lime_vorbis
         @:privateAccess
-        if (!bufferValid && buffer.__srcVorbisFile != null)
+        if (!bufferValid && buffer?.__srcVorbisFile != null)
             return fromVorbisFile(buffer.__srcVorbisFile);
         #end
 
