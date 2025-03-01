@@ -159,13 +159,15 @@ class FlxWaveform extends FlxSprite
      */
     public var waveformDuration(default, set):Float;
     
-    /* ----------- INTERNALS ----------- */
-
     /**
-     * Internal variable holding a reference to a 
-     * `FlxWaveformBuffer` used for analyzing the audio data.
+     * A reference to the `FlxWaveformBuffer` that holds the raw audio data
+     * and other information needed for further processing.
+     * 
+     * @since 2.1.0
      */
-    var _buffer:Null<FlxWaveformBuffer> = null;
+    public var waveformBuffer:Null<FlxWaveformBuffer> = null;
+
+    /* ----------- INTERNALS ----------- */
 
     /**
      * Internal helper variable indicating whether the 
@@ -293,8 +295,8 @@ class FlxWaveform extends FlxSprite
         _drawRMSLeft = null;
         _drawRMSRight = null;
 
-        if (_buffer?.autoDestroy)
-            FlxDestroyUtil.destroy(_buffer);
+        if (waveformBuffer?.autoDestroy)
+            FlxDestroyUtil.destroy(waveformBuffer);
     }
 
     @:inheritDoc(FlxSprite.draw)
@@ -354,17 +356,17 @@ class FlxWaveform extends FlxSprite
      */
     public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
     {
-        if (_buffer?.autoDestroy)
-            FlxDestroyUtil.destroy(_buffer);
+        if (waveformBuffer?.autoDestroy)
+            FlxDestroyUtil.destroy(waveformBuffer);
         
-        _buffer = buffer;
-        if (_buffer == null)
+        waveformBuffer = buffer;
+        if (waveformBuffer == null)
         {
             FlxG.log.error("[FlxWaveform] Invalid buffer");
             return;
         }
 
-        _stereo = _buffer.numChannels == 2;
+        _stereo = waveformBuffer.numChannels == 2;
 
         _drawPointsLeft = recycleArray(_drawPointsLeft);
         _drawRMSLeft = recycleArray(_drawRMSLeft);
@@ -665,7 +667,7 @@ class FlxWaveform extends FlxSprite
         clearArray(drawPoints);
         clearArray(drawRMS);
 
-        var samples:Null<Float32Array> = _buffer.getChannelData(channel);
+        var samples:Null<Float32Array> = waveformBuffer.getChannelData(channel);
 
         // TODO: Enable graphed sample renderer!
         // if (samplesPerPixel > 1)
@@ -678,10 +680,10 @@ class FlxWaveform extends FlxSprite
                 var startIndex:Int = samplesGenerated + i * samplesPerPixel;
                 var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
 
-                drawPoints.push(_buffer.getPeakForSegment(channel, startIndex, endIndex));
+                drawPoints.push(waveformBuffer.getPeakForSegment(channel, startIndex, endIndex));
 
                 // Avoid calculating RMS if we don't need to draw it
-                drawRMS.push(waveformDrawRMS ? _buffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
+                drawRMS.push(waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
             }
 
             samplesGenerated += _durationSamples;
@@ -958,7 +960,7 @@ class FlxWaveform extends FlxSprite
             if (value < 0)
                 FlxG.log.error('[FlxWaveform] waveformTime cannot be less than 0!');
 
-            _timeSamples = Std.int((value / 1000) * _buffer.sampleRate);
+            _timeSamples = Std.int((value / 1000) * waveformBuffer.sampleRate);
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
@@ -975,7 +977,7 @@ class FlxWaveform extends FlxSprite
             if (value < 0)
                 FlxG.log.error('[FlxWaveform] waveformDuration cannot be less than 0!');
 
-            _durationSamples = Std.int((value / 1000) * _buffer.sampleRate);
+            _durationSamples = Std.int((value / 1000) * waveformBuffer.sampleRate);
 
             calcSamplesPerPixel();
 
