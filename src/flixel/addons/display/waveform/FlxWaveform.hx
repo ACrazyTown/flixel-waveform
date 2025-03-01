@@ -61,6 +61,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * The color used for drawing the waveform RMS.
+     * 
      * @since 2.0.0
      */
     public var waveformRMSColor(default, set):FlxColor;
@@ -98,6 +99,7 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Whether the waveform baseline should be drawn.
+     * 
      * @since 2.0.0
      */
     public var waveformDrawBaseline(default, set):Bool;
@@ -124,6 +126,7 @@ class FlxWaveform extends FlxSprite
      * This value must be more than or equal to 1. 
      * 
      * This value doesn't affect anything when the samples are graphed.
+     * 
      * @since 2.0.0
      */
     public var waveformBarSize(default, set):Int = 1;
@@ -137,6 +140,7 @@ class FlxWaveform extends FlxSprite
      * This value must be more than or equal to 0.
      * 
      * This value doesn't affect anything when the samples are graphed.
+     * 
      * @since 2.0.0
      */
     public var waveformBarPadding(default, set):Int = 0;
@@ -163,6 +167,12 @@ class FlxWaveform extends FlxSprite
      * A reference to the `FlxWaveformBuffer` that holds the raw audio data
      * and other information needed for further processing.
      * 
+     * In most cases, there is no need to set this property directly,
+     * use the `FlxWaveform.loadDataFrom...()` methods instead.
+     * 
+     * If the buffer's `autoDestroy` property is `false`, it will not be destroyed
+     * when this waveform gets destroyed. You have to destroy it manually.
+     * 
      * @since 2.1.0
      */
     public var waveformBuffer:Null<FlxWaveformBuffer> = null;
@@ -186,11 +196,9 @@ class FlxWaveform extends FlxSprite
     var _durationSamples:Int;
 
     /**
-     * Internal array of Floats that either contain:
-     * - Peaks in a range of 0.0 to 1.0 for a given time frame.
-     * - Audio samples in a range of -1.0 to 1.0 to be graphed
-     * 
-     * What the array will contain is dependant on `samplesPerPixel`
+     * Internal array of Floats that contains
+     * audio peaks of the left channel for the full length of the sound.
+     * The length depends on the number of audio bars.
      * 
      * This array does not update in real time. 
      * If the draw data needs to be rebuilt, it will be done on
@@ -199,11 +207,9 @@ class FlxWaveform extends FlxSprite
     var _drawPointsLeft:Array<Float> = null;
 
     /**
-     * Internal array of Floats that either contain:
-     * - Peaks in a range of 0.0 to 1.0 for a given time frame.
-     * - Audio samples in a range of -1.0 to 1.0 to be graphed
-     * 
-     * What the array will contain is dependant on `samplesPerPixel`
+     * Internal array of Floats that contains
+     * audio peaks of the right channel for the full length of the sound.
+     * The length depends on the number of audio bars.
      * 
      * This array does not update in real time. 
      * If the draw data needs to be rebuilt, it will be done on
@@ -213,7 +219,8 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Internal array of Floats that contains the RMS (root mean square) 
-     * values of the left channel for a given time frame.
+     * values of the left channel for the full length of the sound.
+     * The length depends on the number of audio bars.
      * 
      * This array does not update in real time. 
      * If the draw data needs to be rebuilt, it will be done on
@@ -223,7 +230,8 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Internal array of Floats that contains the RMS (root mean square) 
-     * values of the right channel for a given time frame.
+     * values of the right channel for the full length of the sound.
+     * The length depends on the number of audio bars.
      * 
      * This array does not update in real time. 
      * If the draw data needs to be rebuilt, it will be done on
@@ -237,8 +245,7 @@ class FlxWaveform extends FlxSprite
     var _waveformDirty:Bool = true;
 
     /**
-     * Internal helper that decides whether the waveform draw data 
-     * should be rebuilt.
+     * Internal helper that decides whether the waveform draw data should be rebuilt.
      */
     var _drawDataDirty:Bool = false;
 
@@ -255,19 +262,18 @@ class FlxWaveform extends FlxSprite
     var _effectiveWidth:Int;
 
     /**
-     * Creates a new `FlxWaveform` instance with the specified draw data.
-     * The waveform is not ready to display anything yet.
-     *
-     * Before setting any options you should first call a `loadDataFrom()` method
-     * to get data for the waveform to process.
+     * Creates a new `FlxWaveform` instance with the specified parameters.
      * 
-     * @param x The initial X position of the waveform.
-     * @param y The initial Y position of the waveform.
-     * @param width The initial width of the waveform.
-     * @param height The initial height of the waveform.
-     * @param color The color used for drawing the waveform.
-     * @param backgroundColor The background color of the waveform.
-     * @param drawMode How the waveform data should be interpreted and rendered. See `FlxWaveform.waveformDrawMode` for more info.
+     * The waveform is **NOT** ready to display anything yet.
+     * Use a `FlxWaveform.loadDataFrom...()` method to load audio data before adjusting any other options.
+     * 
+     * @param x The initial X position of the waveform
+     * @param y The initial Y position of the waveform
+     * @param width The initial width of the waveform
+     * @param height The initial height of the waveform
+     * @param color The color the waveform will be drawn with
+     * @param backgroundColor The background color of the wavefm.
+     * @param drawMode How the waveform should visually appear. See `FlxWaveform.waveformDrawMode` for more info.
      */
     public function new(x:Float, y:Float, ?width:Int, ?height:Int, ?color:FlxColor = 0xFFFFFFFF, ?backgroundColor:FlxColor = 0x00000000, ?drawMode:WaveformDrawMode = COMBINED)
     {
@@ -352,6 +358,7 @@ class FlxWaveform extends FlxSprite
      * waveform from a `FlxWaveformBuffer`.
      * 
      * @param buffer The `FlxWaveformBuffer` to get data from.
+     * 
      * @since 2.0.0
      */
     public function loadDataFromFlxWaveformBuffer(buffer:FlxWaveformBuffer):Void
