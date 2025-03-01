@@ -8,7 +8,7 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - uses: krdlab/setup-haxe@v1
+            - uses: krdlab/setup-haxe@master
               with:
                 haxe-version: 4.3.6
 
