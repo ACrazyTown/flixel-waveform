@@ -3,7 +3,53 @@ name: CI
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-    test-cpp:
+    test-cpp-mac:
+        runs-on: macos-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: krdlab/setup-haxe@v1
+              with:
+                haxe-version: 4.3.6
+
+            - name: Install dependencies
+              run: |
+                haxelib install lime --quiet
+                haxelib install openfl --quiet
+                haxelib install flixel --quiet
+                haxelib install flixel-ui --quiet
+                haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp --quiet
+
+            - name: Build sample
+              run: |
+                cd samples/basic
+                haxelib run lime build macos
+                cd ../..
+
+    test-cpp-windows:
+        runs-on: windows-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: krdlab/setup-haxe@v1
+              with:
+                haxe-version: 4.3.6
+
+            - name: Install dependencies
+              run: |
+                haxelib install lime --quiet
+                haxelib install openfl --quiet
+                haxelib install flixel --quiet
+                haxelib install flixel-ui --quiet
+                haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp --quiet
+
+            - name: Build sample
+              run: |
+                cd samples/basic
+                haxelib run lime build windows
+                cd ../..
+
+    test-cpp-linux:
         runs-on: ubuntu-latest
 
         steps:
