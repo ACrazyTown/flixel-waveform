@@ -6,6 +6,6 @@
     "contributors": ["ACrazyTown"],
     "classPath": "src",
     "license": "MIT",
-    "version": "2.0.0",
-    "releasenote": "Reworked API, more customization; See CHANGELOG.md"
+    "version": "2.1.0",
+    "releasenote": "TBD"
 }
