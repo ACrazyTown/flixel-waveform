@@ -694,76 +694,11 @@ class FlxWaveform extends FlxSprite
         // {
         if (rebuildDataAsync)
         {
-            // var timeOffset:Float = _timeSamples / samplesPerPixel;
-            // for (i in 0..._effectiveWidth)
-            // {
-            //     var startIndex:Int = _timeSamples + i * samplesPerPixel;
-            //     var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
-            //     var index:Int = Math.round(timeOffset + i);
-
-            //     drawPoints[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
-    
-            //     // Avoid calculating RMS if we don't need to draw it
-            //     drawRMS[index] = waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0;
-            // }    
-
             buildDrawData(channel, samples, drawPoints, drawRMS, false, true);
-
-            // var asyncLoader = new Future(() ->
-            // {
-            //     var samplesGenerated:Int = 0;
-            //     var iterations:Int = 0;
-            //     while (samplesGenerated < samples.length)
-            //     {
-            //         for (i in 0..._effectiveWidth)
-            //         {
-            //             var index:Int = iterations * _effectiveWidth + i;
-            //             if (drawPoints[index] > 0)
-            //                 continue;
-
-            //             var startIndex:Int = samplesGenerated + i * samplesPerPixel;
-            //             var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
-
-            //             drawPoints[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
-        
-            //             // Avoid calculating RMS if we don't need to draw it
-            //             drawRMS[index] = waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0;
-            //         }
-        
-            //         samplesGenerated += _durationSamples;
-            //         iterations++;
-            //     }
-
-            //     // trace("async done in " + (haxe.Timer.stamp() - stamp1) * 1000 + "ms");
-            // }, true);
             var asyncLoader = new Future(() -> buildDrawData(channel, samples, drawPoints, drawRMS, true, false), true);
-            asyncLoader.onComplete((_) ->
-            {
-                FlxG.log.add("async complete");
-            });
         }
         else // build data for the whole waveform
         {
-            // var samplesGenerated:Int = 0;
-            // var iterations:Int = 0;
-            // while (samplesGenerated < samples.length)
-            // {
-            //     for (i in 0..._effectiveWidth)
-            //     {
-            //         var startIndex:Int = samplesGenerated + i * samplesPerPixel;
-            //         var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
-            //         var index:Int = iterations * _effectiveWidth + i;
-
-            //         drawPoints[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
-    
-            //         // Avoid calculating RMS if we don't need to draw it
-            //         drawRMS[index] = waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0;
-            //     }
-    
-            //     samplesGenerated += _durationSamples;
-            //     iterations++;
-            // }
-
             buildDrawData(channel, samples, drawPoints, drawRMS, true, true);
         }
         // }
@@ -817,8 +752,6 @@ class FlxWaveform extends FlxSprite
      */
     function refreshDrawData():Void
     {
-        var stamp = haxe.Timer.stamp();
-
         switch (waveformDrawMode)
         {
             case SINGLE_CHANNEL(channel):
@@ -829,8 +762,6 @@ class FlxWaveform extends FlxSprite
                 if (_stereo)
                     prepareDrawData(1);
         }
-
-        FlxG.log.add('Refresh took ${(haxe.Timer.stamp() - stamp)*1000}ms');
     }
 
     /**
