@@ -12,7 +12,7 @@ Legend:
     - If you pass in a streamed sound to a `FlxWaveform.loadDataFrom()` method, the waveform will try to automatically detect and load it.
 - ✨ **Added** a public `waveformBuffer` property to `FlxWaveform`.
 - ✨ **Added** the `FlxWaveform.rebuildDataAsync` flag
-    - Enabling this flag will make data rebuilds only rebuild the currently visible portion. The rest of the waveform will be computed asychronously.
+    - Enabling this flag will make data rebuilds immediately rebuild only the currently visible portion. The rest of the waveform will be rebuilt asychronously.
     - This can significantly reduce data rebuild times.
 - 🛠️ **Fixed** weirdly cropped showcase image... oops!
 - 🛠️ **Fixed** crash due to `FlxWaveformBuffer` trying to access a property on a null Lime audio buffer.
