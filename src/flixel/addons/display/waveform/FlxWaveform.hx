@@ -167,15 +167,15 @@ class FlxWaveform extends FlxSprite
      * A reference to the `FlxWaveformBuffer` that holds the raw audio data
      * and other information needed for further processing.
      * 
-     * In most cases, there is no need to set this property directly,
-     * use the `FlxWaveform.loadDataFrom...()` methods instead.
-     * 
      * If the buffer's `autoDestroy` property is `false`, it will not be destroyed
      * when this waveform gets destroyed. You have to destroy it manually.
      * 
+     * You cannot set this property directly, use the `FlxWaveform.loadDataFrom...()`
+     * methods instead.
+     * 
      * @since 2.1.0
      */
-    public var waveformBuffer:Null<FlxWaveformBuffer> = null;
+    public var waveformBuffer(default, null):Null<FlxWaveformBuffer> = null;
 
     /* ----------- INTERNALS ----------- */
 
