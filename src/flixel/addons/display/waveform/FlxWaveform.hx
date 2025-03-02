@@ -676,25 +676,33 @@ class FlxWaveform extends FlxSprite
 
         var samples:Null<Float32Array> = waveformBuffer.getChannelData(channel);
 
+        var arrayLength:Int = Math.ceil(samples.length / _durationSamples) * _effectiveWidth;
+        drawPoints.resize(arrayLength);
+        drawRMS.resize(arrayLength);
+
         // TODO: Enable graphed sample renderer!
         // if (samplesPerPixel > 1)
         // {
         var samplesGenerated:Int = 0;
+        var iterations:Int = 0;
         while (samplesGenerated < samples.length)
         {
             for (i in 0..._effectiveWidth)
             {
                 var startIndex:Int = samplesGenerated + i * samplesPerPixel;
                 var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
+                var index:Int = iterations * _effectiveWidth + i;
 
-                drawPoints.push(waveformBuffer.getPeakForSegment(channel, startIndex, endIndex));
+                drawPoints[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
 
                 // Avoid calculating RMS if we don't need to draw it
-                drawRMS.push(waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
+                drawRMS[index] = waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0;
             }
 
             samplesGenerated += _durationSamples;
+            iterations++;
         }
+
         // }
         // else
         // {
