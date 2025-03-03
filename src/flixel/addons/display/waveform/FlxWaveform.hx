@@ -715,6 +715,11 @@ class FlxWaveform extends FlxSprite
                 _mutex.release();
                 #end
             }, true);
+            
+            asyncLoader.onComplete((_) ->
+            {
+                _waveformDirty = true;
+            });
         }
         else // build data for the whole waveform
         {
