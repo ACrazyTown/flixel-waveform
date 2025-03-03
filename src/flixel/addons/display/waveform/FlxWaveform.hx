@@ -274,7 +274,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Mutex used when rebuilding data asychronously
      */
-    var _mutex:sys.thread.Mutex = new Mutex();
+    var _mutex:sys.thread.Mutex = new sys.thread.Mutex();
     #end
 
     /**
