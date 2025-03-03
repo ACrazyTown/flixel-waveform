@@ -270,6 +270,13 @@ class FlxWaveform extends FlxSprite
      */
     var _effectiveWidth:Int;
 
+    #if (target.threaded)
+    /**
+     * Mutex used when rebuilding data asychronously
+     */
+    var _mutex:sys.thread.Mutex = new Mutex();
+    #end
+
     /**
      * Creates a new `FlxWaveform` instance with the specified parameters.
      * 
@@ -695,7 +702,19 @@ class FlxWaveform extends FlxSprite
         if (rebuildDataAsync)
         {
             buildDrawData(channel, samples, drawPoints, drawRMS, false, true);
-            var asyncLoader = new Future(() -> buildDrawData(channel, samples, drawPoints, drawRMS, true, false), true);
+
+            var asyncLoader:Future<Void> = new Future(() -> 
+            {
+                #if (target.threaded)
+                _mutex.acquire();
+                #end
+
+                buildDrawData(channel, samples, drawPoints, drawRMS, true, false);
+
+                #if (target.threaded)
+                _mutex.release();
+                #end
+            }, true);
         }
         else // build data for the whole waveform
         {
