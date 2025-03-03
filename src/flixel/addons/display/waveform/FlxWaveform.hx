@@ -730,6 +730,7 @@ class FlxWaveform extends FlxSprite
             for (i in 0..._effectiveWidth)
             {
                 var index:Int = full ? iterations * _effectiveWidth + i : Math.round(_timeSamples / samplesPerPixel + i);
+
                 if (!forceRefresh && points[index] > 0)
                     continue;
 
@@ -799,7 +800,7 @@ class FlxWaveform extends FlxSprite
      */
     inline function calcSamplesPerPixel():Void
     {
-        samplesPerPixel = Std.int(_durationSamples / _effectiveWidth);
+        samplesPerPixel = Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1);
     }
 
     /**
