@@ -800,7 +800,7 @@ class FlxWaveform extends FlxSprite
      */
     inline function calcSamplesPerPixel():Void
     {
-        samplesPerPixel = Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1);
+        samplesPerPixel = Std.int(Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1));
     }
 
     /**
