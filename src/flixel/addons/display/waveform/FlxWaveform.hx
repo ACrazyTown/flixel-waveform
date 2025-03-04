@@ -182,9 +182,13 @@ class FlxWaveform extends FlxSprite
      * If enabled, the draw data will be immediately rebuilt only for the
      * currently visible segment, while the rest will be built asychronously.
      * 
+     * This property is only supported on native threaded targets (C++, Hashlink, Neko).
+     * Attempting to set this to `true` on a nonsupported target (eg. HTML5 or Flash) will
+     * have no effect, and the property will always remain `false`.
+     * 
      * @since 2.1.0
      */
-    public var rebuildDataAsync:Bool = false;
+    public var rebuildDataAsync(default, set):Bool = false;
 
     /* ----------- INTERNALS ----------- */
 
@@ -1066,6 +1070,16 @@ class FlxWaveform extends FlxSprite
         }
 
        return waveformDuration;
+    }
+    
+    @:noCompletion function set_rebuildDataAsync(value:Bool):Bool 
+    {
+        #if (target.threaded)
+        return rebuildDataAsync = value;
+        #else
+        FlxG.log.warn("[FlxWaveform] FlxWaveform.rebuildDataAsync is not supported on this target!");
+        return false;
+        #end
     }
     
 }
