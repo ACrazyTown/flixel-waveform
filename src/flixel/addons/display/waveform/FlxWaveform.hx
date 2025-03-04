@@ -1,6 +1,7 @@
 
 package flixel.addons.display.waveform;
 
+import lime.app.Future;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.sound.FlxSound;
@@ -177,6 +178,18 @@ class FlxWaveform extends FlxSprite
      */
     public var waveformBuffer(default, null):Null<FlxWaveformBuffer> = null;
 
+    /**
+     * If enabled, the draw data will be immediately rebuilt only for the
+     * currently visible segment, while the rest will be built asychronously.
+     * 
+     * This property is only supported on native threaded targets (C++, Hashlink, Neko).
+     * Attempting to set this to `true` on a nonsupported target (eg. HTML5 or Flash) will
+     * have no effect, and the property will always remain `false`.
+     * 
+     * @since 2.1.0
+     */
+    public var rebuildDataAsync(default, set):Bool = false;
+
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -260,6 +273,13 @@ class FlxWaveform extends FlxSprite
      * needed to draw a waveform.
      */
     var _effectiveWidth:Int;
+
+    #if (target.threaded)
+    /**
+     * Mutex used when rebuilding data asychronously
+     */
+    var _mutex:sys.thread.Mutex = new sys.thread.Mutex();
+    #end
 
     /**
      * Creates a new `FlxWaveform` instance with the specified parameters.
@@ -676,24 +696,41 @@ class FlxWaveform extends FlxSprite
 
         var samples:Null<Float32Array> = waveformBuffer.getChannelData(channel);
 
+        var arrayLength:Int = Math.ceil(samples.length / _durationSamples) * _effectiveWidth;
+        drawPoints.resize(arrayLength);
+        drawRMS.resize(arrayLength);
+
         // TODO: Enable graphed sample renderer!
         // if (samplesPerPixel > 1)
         // {
-        var samplesGenerated:Int = 0;
-        while (samplesGenerated < samples.length)
+        if (rebuildDataAsync)
         {
-            for (i in 0..._effectiveWidth)
+            buildDrawData(channel, samples, drawPoints, drawRMS, false, true);
+
+            var asyncLoader:Future<Int> = new Future<Int>(() -> 
             {
-                var startIndex:Int = samplesGenerated + i * samplesPerPixel;
-                var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
+                #if (target.threaded)
+                _mutex.acquire();
+                #end
 
-                drawPoints.push(waveformBuffer.getPeakForSegment(channel, startIndex, endIndex));
+                buildDrawData(channel, samples, drawPoints, drawRMS, true, false);
 
-                // Avoid calculating RMS if we don't need to draw it
-                drawRMS.push(waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0);
-            }
+                #if (target.threaded)
+                _mutex.release();
+                #end
 
-            samplesGenerated += _durationSamples;
+                return 0;
+            }, true);
+            
+            asyncLoader.onComplete((_) -> _waveformDirty = true);
+            asyncLoader.onError((_) ->
+            {
+                FlxG.log.error('[FlxWaveform] Async rebuild failed: ${asyncLoader.error}');
+            });
+        }
+        else // build data for the whole waveform
+        {
+            buildDrawData(channel, samples, drawPoints, drawRMS, true, true);
         }
         // }
         // else
@@ -702,6 +739,44 @@ class FlxWaveform extends FlxSprite
         //     for (i in _timeSamples...endSamples)
         //         drawPoints.push(samples[i]);
         // }
+    }
+
+    /**
+     * Internal function that builds the data neccessary to render the waveform.
+     * @param channel What channel to build the data for
+     * @param samples The input array of samples
+     * @param points The output array of draw points
+     * @param rms The output array of draw RMS points
+     * @param full Whether the data should be built for the entire waveform, or just the current segment.
+     * @param forceRefresh Whether the data should be updated even if there's a non-zero value in the array.
+     */
+    function buildDrawData(channel:Int, samples:Float32Array, points:Array<Float>, rms:Array<Float>, full:Bool = true, forceRefresh:Bool = true):Void
+    {
+        var samplesGenerated:Int = 0;
+        var toGenerate:Int = full ? samples.length : _durationSamples;
+
+        var iterations:Int = 0;
+        while (samplesGenerated < toGenerate)
+        {
+            for (i in 0..._effectiveWidth)
+            {
+                var index:Int = full ? iterations * _effectiveWidth + i : Math.round(_timeSamples / samplesPerPixel + i);
+
+                if (!forceRefresh && points[index] > 0)
+                    continue;
+
+                var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * samplesPerPixel;
+                var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
+
+                points[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
+
+                // Avoid calculating RMS if we don't need to draw it
+                rms[index] = waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0;
+            }
+
+            samplesGenerated += _durationSamples;
+            iterations++;
+        }
     }
 
     /**
@@ -756,7 +831,7 @@ class FlxWaveform extends FlxSprite
      */
     inline function calcSamplesPerPixel():Void
     {
-        samplesPerPixel = Std.int(_durationSamples / _effectiveWidth);
+        samplesPerPixel = Std.int(Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1));
     }
 
     /**
@@ -995,6 +1070,16 @@ class FlxWaveform extends FlxSprite
         }
 
        return waveformDuration;
+    }
+    
+    @:noCompletion function set_rebuildDataAsync(value:Bool):Bool 
+    {
+        #if (target.threaded)
+        return rebuildDataAsync = value;
+        #else
+        FlxG.log.warn("[FlxWaveform] FlxWaveform.rebuildDataAsync is not supported on this target!");
+        return false;
+        #end
     }
     
 }

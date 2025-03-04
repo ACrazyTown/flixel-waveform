@@ -33,6 +33,9 @@ class PlayState extends FlxUIState
         // Load data from the FlxSound so the waveform renderer can process it.
         waveform.loadDataFromFlxSound(FlxG.sound.music);
 
+        // Asychronously rebuild the waveform's data
+        waveform.rebuildDataAsync = true;
+
         // Set our waveform's starting time at 0ms.
         waveform.waveformTime = 0;
 
