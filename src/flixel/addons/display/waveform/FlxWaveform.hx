@@ -703,7 +703,7 @@ class FlxWaveform extends FlxSprite
         {
             buildDrawData(channel, samples, drawPoints, drawRMS, false, true);
 
-            var asyncLoader:Future<Void> = new Future(() -> 
+            var asyncLoader:Future<Int> = new Future<Int>(() -> 
             {
                 #if (target.threaded)
                 _mutex.acquire();
@@ -714,11 +714,14 @@ class FlxWaveform extends FlxSprite
                 #if (target.threaded)
                 _mutex.release();
                 #end
+
+                return 0;
             }, true);
             
-            asyncLoader.onComplete((_) ->
+            asyncLoader.onComplete((_) -> _waveformDirty = true);
+            asyncLoader.onError((_) ->
             {
-                _waveformDirty = true;
+                FlxG.log.error('[FlxWaveform] Async rebuild failed: ${asyncLoader.error}');
             });
         }
         else // build data for the whole waveform
