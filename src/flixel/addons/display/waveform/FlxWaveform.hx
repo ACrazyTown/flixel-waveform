@@ -295,7 +295,7 @@ class FlxWaveform extends FlxSprite
      * @param backgroundColor The background color of the wavefm.
      * @param drawMode How the waveform should visually appear. See `FlxWaveform.waveformDrawMode` for more info.
      */
-    public function new(x:Float, y:Float, ?width:Int, ?height:Int, ?color:FlxColor = 0xFFFFFFFF, ?backgroundColor:FlxColor = 0x00000000, ?drawMode:WaveformDrawMode = COMBINED)
+    public function new(?x:Float = 0, ?y:Float = 0, width:Int, height:Int, ?color:FlxColor = 0xFFFFFFFF, ?backgroundColor:FlxColor = 0x00000000, ?drawMode:WaveformDrawMode = COMBINED)
     {
         super(x, y);
 
