@@ -698,7 +698,9 @@ class FlxWaveform extends FlxSprite
 
         var arrayLength:Int = Math.ceil(samples.length / _durationSamples) * _effectiveWidth;
         drawPoints.resize(arrayLength);
-        drawRMS.resize(arrayLength);
+
+        if (waveformDrawRMS)
+            drawRMS.resize(arrayLength);
 
         // TODO: Enable graphed sample renderer!
         // if (samplesPerPixel > 1)
@@ -771,7 +773,8 @@ class FlxWaveform extends FlxSprite
                 points[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
 
                 // Avoid calculating RMS if we don't need to draw it
-                rms[index] = waveformDrawRMS ? waveformBuffer.getRMSForSegment(channel, startIndex, endIndex) : 0.0;
+                if (waveformDrawRMS)
+                    rms[index] = waveformBuffer.getRMSForSegment(channel, startIndex, endIndex);
             }
 
             samplesGenerated += _durationSamples;
