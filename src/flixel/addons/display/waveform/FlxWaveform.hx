@@ -760,7 +760,6 @@ class FlxWaveform extends FlxSprite
         var step:Int = Math.round(_durationSamples / _effectiveWidth);
 
         // FIXME: This will either overshoot or undershoot due to decimals
-        var iterations:Int = 0;
         while (samplesGenerated < toGenerate)
         {
             for (i in 0..._effectiveWidth)
@@ -781,7 +780,6 @@ class FlxWaveform extends FlxSprite
             }
 
             samplesGenerated += _durationSamples;
-            iterations++;
         }
     }
 
