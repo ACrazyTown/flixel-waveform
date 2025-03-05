@@ -757,18 +757,28 @@ class FlxWaveform extends FlxSprite
         var samplesGenerated:Int = 0;
         var toGenerate:Int = full ? samples.length : _durationSamples;
 
+        var widthInSamples:Int = _effectiveWidth * samplesPerPixel;
+        var step:Int = Math.round(_durationSamples / _effectiveWidth);
+
+        // FIXME: This will either overshoot or undershoot due to decimals
         var iterations:Int = 0;
         while (samplesGenerated < toGenerate)
         {
             for (i in 0..._effectiveWidth)
             {
-                var index:Int = full ? iterations * _effectiveWidth + i : Math.round(_timeSamples / samplesPerPixel + i);
+                // var index:Int = full ? iterations * _effectiveWidth + i : Math.round(_timeSamples / samplesPerPixel + i);
+                var index:Int = Math.round((full ? samplesGenerated : _timeSamples) / samplesPerPixel) + i;
 
                 if (!forceRefresh && points[index] > 0)
                     continue;
 
-                var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * samplesPerPixel;
-                var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
+                // var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * samplesPerPixel;
+                // var endIndex:Int = Std.int(Math.min(startIndex + samplesPerPixel, samples.length));
+
+                var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * step;
+                var endIndex:Int = Std.int(Math.min(startIndex + step, samples.length));
+
+                // trace('$startIndex-$endIndex');
 
                 points[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
 
