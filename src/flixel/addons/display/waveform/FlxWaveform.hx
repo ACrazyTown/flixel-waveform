@@ -269,10 +269,10 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Internal helper that includes `waveformBarSize` and `waveformBarPadding`
-     * into the waveform width to calculate how much data is actually
+     * into the waveform size to calculate how much data is actually
      * needed to draw a waveform.
      */
-    var _effectiveWidth:Int;
+    var _effectiveSize:Int;
 
     #if (target.threaded)
     /**
@@ -480,7 +480,7 @@ class FlxWaveform extends FlxSprite
                 if (waveformDrawBaseline)
                     pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
 
-                for (i in 0..._effectiveWidth)
+                for (i in 0..._effectiveSize)
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
@@ -520,7 +520,7 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(new Rectangle(0, half + centerY, waveformWidth, 1), waveformColor);
                 }
 
-                for (i in 0..._effectiveWidth)
+                for (i in 0..._effectiveSize)
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
@@ -556,7 +556,7 @@ class FlxWaveform extends FlxSprite
                 if (waveformDrawBaseline)
                     pixels.fillRect(new Rectangle(0, half, waveformWidth, 1), waveformColor);
 
-                for (i in 0..._effectiveWidth)
+                for (i in 0..._effectiveSize)
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
@@ -696,7 +696,7 @@ class FlxWaveform extends FlxSprite
 
         var samples:Null<Float32Array> = waveformBuffer.getChannelData(channel);
 
-        var arrayLength:Int = Math.ceil(samples.length / _durationSamples) * _effectiveWidth;
+        var arrayLength:Int = Math.ceil(samples.length / _durationSamples) * _effectiveSize;
         drawPoints.resize(arrayLength);
 
         if (waveformDrawRMS)
@@ -757,12 +757,12 @@ class FlxWaveform extends FlxSprite
         var samplesGenerated:Int = 0;
         var toGenerate:Int = full ? samples.length : _durationSamples;
 
-        var step:Int = Math.round(_durationSamples / _effectiveWidth);
+        var step:Int = Math.round(_durationSamples / _effectiveSize);
 
         // FIXME: This will either overshoot or undershoot due to decimals
         while (samplesGenerated < toGenerate)
         {
-            for (i in 0..._effectiveWidth)
+            for (i in 0..._effectiveSize)
             {
                 var index:Int = Math.round((full ? samplesGenerated : _timeSamples) / samplesPerPixel) + i;
 
@@ -827,7 +827,7 @@ class FlxWaveform extends FlxSprite
      */
     inline function calcEffectiveWidth():Void
     {
-        _effectiveWidth = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
+        _effectiveSize = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
     }
 
     /**
@@ -835,7 +835,7 @@ class FlxWaveform extends FlxSprite
      */
     inline function calcSamplesPerPixel():Void
     {
-        samplesPerPixel = Std.int(Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1));
+        samplesPerPixel = Std.int(Math.max(Math.ceil(_durationSamples / _effectiveSize), 1));
     }
 
     /**
