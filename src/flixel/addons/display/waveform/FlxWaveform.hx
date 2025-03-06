@@ -1156,6 +1156,12 @@ enum WaveformDrawMode
     SINGLE_CHANNEL(channel:Int);
 }
 
+/**
+ * An enum representing whether the waveform should be 
+ * drawn horizontally or vertically.
+ * 
+ * @since 2.1.0
+ */
 enum WaveformOrientation
 {
     HORIZONTAL;
