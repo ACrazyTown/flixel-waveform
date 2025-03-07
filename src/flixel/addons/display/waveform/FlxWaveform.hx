@@ -9,7 +9,7 @@ import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import lime.media.AudioBuffer;
 import lime.utils.Float32Array;
-import openfl.display.Shape;
+// import openfl.display.Shape;
 import openfl.geom.Rectangle;
 #if flash
 import flash.media.Sound;
@@ -265,7 +265,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Internal helper used for drawing lines.
      */
-    var _shape:Shape;
+    // var _shape:Shape;
 
     /**
      * Internal helper that includes `waveformBarSize` and `waveformBarPadding`
@@ -307,7 +307,7 @@ class FlxWaveform extends FlxSprite
         makeGraphic(width, height, waveformBgColor);
         calcEffectiveWidth();
 
-        _shape = new Shape();
+        // _shape = new Shape();
     }
 
     @:inheritDoc(FlxSprite.destroy)
@@ -315,7 +315,7 @@ class FlxWaveform extends FlxSprite
     {
         super.destroy();
 
-        _shape = null;
+        // _shape = null;
         _drawPointsLeft = null;
         _drawPointsRight = null;
         _drawRMSLeft = null;
@@ -584,92 +584,92 @@ class FlxWaveform extends FlxSprite
      * Internal method which graphs audio samples.
      * Used when `samplesPerPixel` is equal to 1.
      */
-    function drawGraphedSamples():Void
-    {
-        _shape.graphics.clear();
-        _shape.graphics.lineStyle(1, waveformColor);
+    // function drawGraphedSamples():Void
+    // {
+    //     // _shape.graphics.clear();
+    //     // _shape.graphics.lineStyle(1, waveformColor);
 
-        var centerY:Float = waveformHeight / 2;
-        var halfCenter:Float = centerY / 2;
+    //     var centerY:Float = waveformHeight / 2;
+    //     var halfCenter:Float = centerY / 2;
 
-        switch (waveformDrawMode)
-        {
-            case COMBINED:
-                var prevX:Float = 0;
-                var prevY:Float = centerY;
+    //     switch (waveformDrawMode)
+    //     {
+    //         case COMBINED:
+    //             var prevX:Float = 0;
+    //             var prevY:Float = centerY;
 
-                _shape.graphics.moveTo(prevX, prevY);
+    //             _shape.graphics.moveTo(prevX, prevY);
 
-                for (i in 0...waveformWidth)
-                {
-                    var peak:Float = _drawPointsLeft[i];
-                    if (_stereo)
-                    {
-                        // Can't graph both so let's get average?
-                        peak += _drawPointsRight[i];
-                        peak /= 2;
-                    }
+    //             for (i in 0...waveformWidth)
+    //             {
+    //                 var peak:Float = _drawPointsLeft[i];
+    //                 if (_stereo)
+    //                 {
+    //                     // Can't graph both so let's get average?
+    //                     peak += _drawPointsRight[i];
+    //                     peak /= 2;
+    //                 }
 
-                    var curX:Float = i;
-                    var curY:Float = centerY - peak * centerY;
+    //                 var curX:Float = i;
+    //                 var curY:Float = centerY - peak * centerY;
 
-                    _shape.graphics.lineTo(curX, curY);
+    //                 _shape.graphics.lineTo(curX, curY);
 
-                    prevX = curX;
-                    prevY = curY;
-                }
+    //                 prevX = curX;
+    //                 prevY = curY;
+    //             }
 
-            case SPLIT_CHANNELS:
-                var prevX:Float = 0;
-                var prevYL:Float = halfCenter;
-                var prevYR:Float = centerY + halfCenter;
+    //         case SPLIT_CHANNELS:
+    //             var prevX:Float = 0;
+    //             var prevYL:Float = halfCenter;
+    //             var prevYR:Float = centerY + halfCenter;
 
-                for (i in 0...waveformWidth)
-                {
-                    var peakLeft:Float = _drawPointsLeft[i];
-                    var peakRight:Float = 0;
-                    if (_stereo)
-                        peakRight = _drawPointsRight[i];
+    //             for (i in 0...waveformWidth)
+    //             {
+    //                 var peakLeft:Float = _drawPointsLeft[i];
+    //                 var peakRight:Float = 0;
+    //                 if (_stereo)
+    //                     peakRight = _drawPointsRight[i];
 
-                    var curX:Float = i;
-                    var curYL:Float = halfCenter - peakLeft * halfCenter;
-                    var curYR:Float = (centerY + halfCenter) - peakRight * halfCenter;
+    //                 var curX:Float = i;
+    //                 var curYL:Float = halfCenter - peakLeft * halfCenter;
+    //                 var curYR:Float = (centerY + halfCenter) - peakRight * halfCenter;
 
-                    // left
-                    _shape.graphics.moveTo(prevX, prevYL);
-                    _shape.graphics.lineTo(curX, curYL);
+    //                 // left
+    //                 _shape.graphics.moveTo(prevX, prevYL);
+    //                 _shape.graphics.lineTo(curX, curYL);
 
-                    // right
-                    _shape.graphics.moveTo(prevX, prevYR);
-                    _shape.graphics.lineTo(curX, curYR);
+    //                 // right
+    //                 _shape.graphics.moveTo(prevX, prevYR);
+    //                 _shape.graphics.lineTo(curX, curYR);
 
-                    prevX = curX;
-                    prevYL = curYL;
-                    prevYR = curYR;
-                }
+    //                 prevX = curX;
+    //                 prevYL = curYL;
+    //                 prevYR = curYR;
+    //             }
 
-            case SINGLE_CHANNEL(channel):
-                var prevX:Float = 0;
-                var prevY:Float = centerY;
+    //         case SINGLE_CHANNEL(channel):
+    //             var prevX:Float = 0;
+    //             var prevY:Float = centerY;
 
-                _shape.graphics.moveTo(prevX, prevY);
+    //             _shape.graphics.moveTo(prevX, prevY);
 
-                for (i in 0...waveformWidth)
-                {
-                    var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
+    //             for (i in 0...waveformWidth)
+    //             {
+    //                 var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
 
-                    var curX:Float = i;
-                    var curY:Float = centerY - peak * centerY;
+    //                 var curX:Float = i;
+    //                 var curY:Float = centerY - peak * centerY;
 
-                    _shape.graphics.lineTo(curX, curY);
+    //                 _shape.graphics.lineTo(curX, curY);
 
-                    prevX = curX;
-                    prevY = curY;
-                }
-        }
+    //                 prevX = curX;
+    //                 prevY = curY;
+    //             }
+    //     }
 
-        pixels.draw(_shape);
-    }
+    //     pixels.draw(_shape);
+    // }
 
     /**
      * Prepares data neccessary for the waveform to be drawn. 
