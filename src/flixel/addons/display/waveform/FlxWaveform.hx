@@ -694,9 +694,7 @@ class FlxWaveform extends FlxSprite
         clearArray(drawPoints);
         clearArray(drawRMS);
 
-        var samples:Null<Float32Array> = waveformBuffer.getChannelData(channel);
-
-        var arrayLength:Int = Math.ceil(samples.length / _durationSamples) * _effectiveWidth;
+        var arrayLength:Int = Math.ceil(waveformBuffer.length / _durationSamples) * _effectiveWidth;
         drawPoints.resize(arrayLength);
 
         if (waveformDrawRMS)
@@ -707,7 +705,7 @@ class FlxWaveform extends FlxSprite
         // {
         if (rebuildDataAsync)
         {
-            buildDrawData(channel, samples, drawPoints, drawRMS, false, true);
+            buildDrawData(channel, drawPoints, drawRMS, false, true);
 
             var asyncLoader:Future<Int> = new Future<Int>(() -> 
             {
@@ -715,7 +713,7 @@ class FlxWaveform extends FlxSprite
                 _mutex.acquire();
                 #end
 
-                buildDrawData(channel, samples, drawPoints, drawRMS, true, false);
+                buildDrawData(channel, drawPoints, drawRMS, true, false);
 
                 #if (target.threaded)
                 _mutex.release();
@@ -732,7 +730,7 @@ class FlxWaveform extends FlxSprite
         }
         else // build data for the whole waveform
         {
-            buildDrawData(channel, samples, drawPoints, drawRMS, true, true);
+            buildDrawData(channel, drawPoints, drawRMS, true, true);
         }
         // }
         // else
@@ -752,10 +750,10 @@ class FlxWaveform extends FlxSprite
      * @param full Whether the data should be built for the entire waveform, or just the current segment.
      * @param forceRefresh Whether the data should be updated even if there's a non-zero value in the array.
      */
-    function buildDrawData(channel:Int, samples:Float32Array, points:Array<Float>, rms:Array<Float>, full:Bool = true, forceRefresh:Bool = true):Void
+    function buildDrawData(channel:Int, points:Array<Float>, rms:Array<Float>, full:Bool = true, forceRefresh:Bool = true):Void
     {
         var samplesGenerated:Int = 0;
-        var toGenerate:Int = full ? samples.length : _durationSamples;
+        var toGenerate:Int = full ? waveformBuffer.length : _durationSamples;
 
         var step:Int = Math.round(_durationSamples / _effectiveWidth);
 
@@ -772,7 +770,7 @@ class FlxWaveform extends FlxSprite
                     continue;
 
                 var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * step;
-                var endIndex:Int = Std.int(Math.min(startIndex + step, samples.length));
+                var endIndex:Int = Std.int(Math.min(startIndex + step, waveformBuffer.length));
 
                 points[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
 
