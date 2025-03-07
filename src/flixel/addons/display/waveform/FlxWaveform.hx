@@ -765,6 +765,8 @@ class FlxWaveform extends FlxSprite
             for (i in 0..._effectiveWidth)
             {
                 var index:Int = Math.round((full ? samplesGenerated : _timeSamples) / samplesPerPixel) + i;
+                if (index < 0)
+                    continue;
 
                 if (!forceRefresh && points[index] > 0)
                     continue;
