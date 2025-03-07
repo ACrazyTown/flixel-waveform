@@ -395,13 +395,13 @@ class FlxWaveform extends FlxSprite
 
         _stereo = waveformBuffer.numChannels == 2;
 
-        _drawPointsLeft = recycleArray(_drawPointsLeft);
-        _drawRMSLeft = recycleArray(_drawRMSLeft);
+        _drawPointsLeft = [];
+        _drawRMSLeft = [];
 
         if (_stereo)
         {
-            _drawPointsRight = recycleArray(_drawPointsRight);
-            _drawRMSRight = recycleArray(_drawRMSRight);
+            _drawPointsRight = [];
+            _drawRMSRight = [];
         }
     }
 
@@ -691,14 +691,15 @@ class FlxWaveform extends FlxSprite
                 drawRMS = _drawRMSRight;
         }
 
-        clearArray(drawPoints);
-        clearArray(drawRMS);
-
         var arrayLength:Int = Math.ceil(waveformBuffer.length / _durationSamples) * _effectiveWidth;
         drawPoints.resize(arrayLength);
+        clearArray(drawPoints);
 
         if (waveformDrawRMS)
+        {
             drawRMS.resize(arrayLength);
+            clearArray(drawRMS);
+        }
 
         // TODO: Enable graphed sample renderer!
         // if (samplesPerPixel > 1)
@@ -838,37 +839,11 @@ class FlxWaveform extends FlxSprite
         samplesPerPixel = Std.int(Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1));
     }
 
-    /**
-     * Clears an array in the fastest possible way.
-     * 
-     * @param array The array to be cleared.
-     */
-    function clearArray<T>(array:Array<T>):Void
+    // todo
+    inline function clearArray(array:Array<Float>):Void
     {
-        // TODO: untyped array.length = 0;
-        // seems to be the fastest method, but it doesn't seem to work
-        // on either C++ or HL, presumably because of Array<T>?
-        #if js
-        untyped array.length = 0;
-        #else
-        array.splice(0, array.length);
-        #end
-    }
-
-    /**
-     * If `array` is `null` creates a new array instance, otherwise 
-     * clears the old reference and returns it
-     * 
-     * @param array Input array
-     * @return Array<T> Output array
-     */
-    function recycleArray<T>(array:Array<T>):Array<T>
-    {
-        if (array == null)
-            return [];
-
-        clearArray(array);
-        return array;
+        for (i in 0...array.length) 
+            array[i] = 0.0;
     }
 
     @:noCompletion function get_waveformWidth():Int
