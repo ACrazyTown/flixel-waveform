@@ -672,6 +672,23 @@ class FlxWaveform extends FlxSprite
     // }
 
     /**
+     * Helper function that calls `prepareDrawData()` for both audio channels.
+     */
+    function refreshDrawData():Void
+    {
+        switch (waveformDrawMode)
+        {
+            case SINGLE_CHANNEL(channel):
+                prepareDrawData(channel);
+
+            default:
+                prepareDrawData(0);
+                if (_stereo)
+                    prepareDrawData(1);
+        }
+    }
+
+    /**
      * Prepares data neccessary for the waveform to be drawn. 
      * @param channel The channel to prepare the data for
      */
@@ -745,7 +762,6 @@ class FlxWaveform extends FlxSprite
     /**
      * Internal function that builds the data neccessary to render the waveform.
      * @param channel What channel to build the data for
-     * @param samples The input array of samples
      * @param points The output array of draw points
      * @param rms The output array of draw RMS points
      * @param full Whether the data should be built for the entire waveform, or just the current segment.
@@ -781,23 +797,6 @@ class FlxWaveform extends FlxSprite
             }
 
             samplesGenerated += _durationSamples;
-        }
-    }
-
-    /**
-     * Helper function that calls `prepareDrawData` for both audio channels.
-     */
-    function refreshDrawData():Void
-    {
-        switch (waveformDrawMode)
-        {
-            case SINGLE_CHANNEL(channel):
-                prepareDrawData(channel);
-
-            default:
-                prepareDrawData(0);
-                if (_stereo)
-                    prepareDrawData(1);
         }
     }
 
