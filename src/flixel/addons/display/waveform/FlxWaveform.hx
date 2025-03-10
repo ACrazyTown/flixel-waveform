@@ -512,7 +512,8 @@ class FlxWaveform extends FlxSprite
                     var peakest:Float = Math.max(peakLeft, peakRight);
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peakest), waveformColor);
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, peakest), waveformColor);
+
                     if (waveformDrawRMS)
                     {
                         var rmsLeft:Float = _drawRMSLeft[sampleIndex];
@@ -524,7 +525,7 @@ class FlxWaveform extends FlxSprite
                             continue;
 
                         var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
-                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, combinedRMS), waveformRMSColor);
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, combinedRMS), waveformRMSColor);
                     }
                 }
 
@@ -563,8 +564,8 @@ class FlxWaveform extends FlxSprite
 
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, halfHeight, peakLeft), waveformColor);
-                    pixels.fillRect(getPeakRect(x, halfHeight, waveformBarSize, halfHeight, peakRight), waveformColor);
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, peakLeft), waveformColor);
+                    pixels.fillRect(getPeakRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, peakRight), waveformColor);
 
                     if (waveformDrawRMS)
                     {
@@ -576,8 +577,8 @@ class FlxWaveform extends FlxSprite
                         if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
                             continue;
 
-                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, halfHeight, rmsLeft), waveformRMSColor);
-                        pixels.fillRect(getPeakRect(x, halfHeight, waveformBarSize, halfHeight, rmsRight), waveformRMSColor);
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, rmsLeft), waveformRMSColor);
+                        pixels.fillRect(getPeakRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, rmsRight), waveformRMSColor);
                     }
                 }
 
@@ -602,14 +603,14 @@ class FlxWaveform extends FlxSprite
 
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peak), waveformColor);
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, peak), waveformColor);
                     if (waveformDrawRMS)
                     {
                         var rms:Float = channel == 0 ? _drawRMSLeft[sampleIndex] : _drawRMSRight[sampleIndex];
                         if (rms == 0)
                             continue;
 
-                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, rms), waveformRMSColor);
+                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, rms), waveformRMSColor);
                     }
                 }
         }
