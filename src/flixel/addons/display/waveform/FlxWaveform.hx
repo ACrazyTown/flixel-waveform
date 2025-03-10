@@ -490,10 +490,11 @@ class FlxWaveform extends FlxSprite
             case COMBINED:
                 if (waveformDrawBaseline)
                 {
-                    if (waveformOrientation == HORIZONTAL)
-                        pixels.fillRect(new Rectangle(0, halfHeight, waveformWidth, 1), waveformColor);
-                    else
-                        pixels.fillRect(new Rectangle(halfWidth, 0, 1, waveformHeight), waveformColor);
+                    var rect:Rectangle = new Rectangle(0, halfHeight, waveformWidth, 1);
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(halfWidth, 0, 1, waveformHeight);
+
+                    pixels.fillRect(rect, waveformColor);
                 }
 
                 for (i in 0..._effectiveSize)
@@ -533,15 +534,19 @@ class FlxWaveform extends FlxSprite
 
                 if (waveformDrawBaseline) 
                 {
-                    if (waveformOrientation == HORIZONTAL)
-                        pixels.fillRect(new Rectangle(0, centerY, waveformWidth, 1), waveformColor);
-                    else
-                        pixels.fillRect(new Rectangle(centerX, 0, 1, waveformHeight), waveformColor);
+                    var rect:Rectangle = new Rectangle(0, centerY, waveformWidth, 1);
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(centerX, 0, 1, waveformHeight);
 
+                    pixels.fillRect(rect, waveformColor);
+
+                    // Reuse same rect for other line
                     if (waveformOrientation == HORIZONTAL)
-                        pixels.fillRect(new Rectangle(0, halfHeight + centerY, waveformWidth, 1), waveformColor);
+                        rect.setTo(0, halfHeight + centerY, waveformWidth, 1);
                     else
-                        pixels.fillRect(new Rectangle(halfWidth + centerX, 0, 1, waveformHeight), waveformColor);
+                        rect.setTo(halfWidth + centerX, 0, 1, waveformHeight);
+
+                    pixels.fillRect(rect, waveformColor);
                 }
 
                 for (i in 0..._effectiveSize)
@@ -579,10 +584,11 @@ class FlxWaveform extends FlxSprite
             case SINGLE_CHANNEL(channel):
                 if (waveformDrawBaseline)
                 {
-                    if (waveformOrientation == HORIZONTAL)
-                        pixels.fillRect(new Rectangle(0, halfHeight, waveformWidth, 1), waveformColor);
-                    else
-                        pixels.fillRect(new Rectangle(halfWidth, 0, 1, waveformHeight), waveformColor);
+                   var rect:Rectangle = new Rectangle(0, halfHeight, waveformWidth, 1);
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(halfWidth, 0, 1, waveformHeight);
+
+                    pixels.fillRect(rect, waveformColor);
                 }
 
                 for (i in 0..._effectiveSize)
