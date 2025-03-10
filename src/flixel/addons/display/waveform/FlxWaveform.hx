@@ -191,7 +191,8 @@ class FlxWaveform extends FlxSprite
     public var rebuildDataAsync(default, set):Bool = false;
 
     /**
-     * Controls whether the waveform should be drawn horizontally or vertically.
+     * An enum representing whether the waveform should be 
+     * drawn horizontally (left to right) or vertically (top to bottom).
      * 
      * Default value is `HORIZONTAL`.
      * 
@@ -832,6 +833,8 @@ class FlxWaveform extends FlxSprite
      * Returns an `openfl.geom.Rectangle` representing the rectangle
      * of the audio peak.
      * 
+     * This function takes `waveformOrientation` in account.
+     * 
      * @param x The rectangle's position on the X axis
      * @param y Y offset
      * @param width The width of the peak rectangle
@@ -1158,7 +1161,7 @@ enum WaveformDrawMode
 
 /**
  * An enum representing whether the waveform should be 
- * drawn horizontally or vertically.
+ * drawn horizontally (left to right) or vertically (top to bottom).
  * 
  * @since 2.1.0
  */
