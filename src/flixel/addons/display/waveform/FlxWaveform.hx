@@ -806,30 +806,37 @@ class FlxWaveform extends FlxSprite
 
     /**
      * Returns an `openfl.geom.Rectangle` representing the rectangle
-     * of the audio peak.
+     * of a waveform segment.
      * 
-     * @param x The rectangle's position on the X axis
-     * @param y Y offset
-     * @param width The width of the peak rectangle
-     * @param height The height of the peak rectangle
-     * @param sample The audio sample in the range of -1.0 to 1.0
-     * @return A `openfl.geom.Rectangle` instance
+     * @param x The rectangle's position on the X axis.
+     * @param y Y offset.
+     * @param width The width of the peak rectangle.
+     * @param height The height of the peak rectangle.
+     * @param segment A `WaveformSegment` to visualize.
+     * @return A `openfl.geom.Rectangle` instance.
      */
     function getPeakRect(x:Float, y:Float, width:Float, height:Float, segment:WaveformSegment):Rectangle
     {
-        // !!! HELP !!!
-        // FIXME
         var half:Float = height / 2;
 
         var top:Float = segment.max * half;
         var bottom:Float = segment.min * half;
         var segmentHeight:Float = top + Math.abs(bottom);
 
-        // trace('$top $bottom $segmentHeight');
-
         return new Rectangle(x, y + (half - top), width, segmentHeight);
     }
 
+     /**
+     * Returns an `openfl.geom.Rectangle` representing the rectangle
+     * of a waveform segment's RMS.
+     * 
+     * @param x The rectangle's position on the X axis.
+     * @param y Y offset.
+     * @param width The width of the peak rectangle.
+     * @param height The height of the peak rectangle.
+     * @param rms The RMS value of the waveform segment.
+     * @return A `openfl.geom.Rectangle` instance.
+     */
     function getRMSRect(x:Float, y:Float, width:Float, height:Float, rms:Float):Rectangle
     {
         var half:Float = height / 2;
@@ -857,12 +864,20 @@ class FlxWaveform extends FlxSprite
         samplesPerPixel = Std.int(Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1));
     }
 
+    /**
+     * Sets all array members to `0`
+     * @param array The array to be reset.
+     */
     inline overload extern function resetDrawArray(array:Array<Float>):Void
     {
         for (i in 0...array.length) 
             array[i] = 0.0;
     }
 
+    /**
+     * Sets all array members to `null`
+     * @param array The array to be reset.
+     */
     inline overload extern function resetDrawArray(array:Array<WaveformSegment>):Void
     {
         for (i in 0...array.length) 
