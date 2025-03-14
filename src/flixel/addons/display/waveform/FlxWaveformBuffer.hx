@@ -15,6 +15,8 @@ import lime.media.vorbis.VorbisFile;
 import lime.media.vorbis.VorbisInfo;
 #end
 
+import flixel.addons.display.waveform._internal.WaveformSegment;
+
 using flixel.addons.display.waveform._internal.BytesExt;
 
 /**
@@ -406,34 +408,33 @@ class FlxWaveformBuffer implements IFlxDestroyable
     }
 
     /**
-     * Returns the highest sample (peak) of the audio for a specified segment.
+     * Returns the minimum and maximum sample value for a segment of the audio data.
      * 
      * @param channel The channel to get data from
      * @param startIndex The start index of the segment
      * @param endIndex The end index of the segment
-     * @return The highest segment (peak) for the audio segment
+     * @return a `WaveformSegment` with the minimum and maximum sample value for this segment.
      */
-    public function getPeakForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
+    public function getSegment(channel:Int, startIndex:Int, endIndex:Int):WaveformSegment
     {
         var data:Null<Float32Array> = getChannelData(channel);
-        var peak:Float = 0.0;
 
-        if (startIndex > endIndex)
-            return 0;
+        var max:Float = 0.0;
+        var min:Float = 0.0;
 
         for (i in startIndex...endIndex)
         {
-            var sample = Math.abs(data[i]);
-            if (sample > peak)
-            {
-                peak = sample;
+            var sample:Float = data[i];
 
-                if (peak >= 1.0)
-                    return 1.0;
-            }
+            if (sample > max)
+                max = sample;
+            
+            if (sample < min)
+                min = sample;
         }
 
-        return peak;
+        var segment:WaveformSegment = {max: max, min: min};
+        return segment;
     }
 
     /**

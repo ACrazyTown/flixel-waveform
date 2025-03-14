@@ -1,16 +1,19 @@
 
 package flixel.addons.display.waveform;
 
+import lime.media.AudioBuffer;
+import lime.utils.Float32Array;
 import lime.app.Future;
+import openfl.geom.Rectangle;
+// import openfl.display.Shape;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.sound.FlxSound;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
-import lime.media.AudioBuffer;
-import lime.utils.Float32Array;
-// import openfl.display.Shape;
-import openfl.geom.Rectangle;
+import flixel.addons.display.waveform.FlxWaveformBuffer;
+import flixel.addons.display.waveform._internal.WaveformSegment;
+
 #if flash
 import flash.media.Sound;
 #end
@@ -217,7 +220,7 @@ class FlxWaveform extends FlxSprite
      * If the draw data needs to be rebuilt, it will be done on
      * the first draw call after setting the `_drawDataDirty` flag.
      */
-    var _drawPointsLeft:Array<Float> = null;
+    var _drawPointsLeft:Array<WaveformSegment> = null;
 
     /**
      * Internal array of Floats that contains
@@ -228,7 +231,7 @@ class FlxWaveform extends FlxSprite
      * If the draw data needs to be rebuilt, it will be done on
      * the first draw call after setting the `_drawDataDirty` flag.
      */
-    var _drawPointsRight:Array<Float> = null;
+    var _drawPointsRight:Array<WaveformSegment> = null;
 
     /**
      * Internal array of Floats that contains the RMS (root mean square) 
@@ -484,15 +487,16 @@ class FlxWaveform extends FlxSprite
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
-                    var peakLeft:Float = _drawPointsLeft[sampleIndex];
-                    var peakRight:Float = 0;
+                    var segmentLeft:WaveformSegment = _drawPointsLeft[sampleIndex];
+                    var segmentRight:WaveformSegment = null;
                     if (_stereo)
-                        peakRight = _drawPointsRight[sampleIndex];
+                        segmentRight = _drawPointsRight[sampleIndex];
 
-                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                    if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
-                    var peakest:Float = Math.max(peakLeft, peakRight);
+                    // merge only if we have both
+                    var peakest:WaveformSegment = segmentRight != null ? WaveformSegment.merge(segmentLeft, segmentRight) : segmentLeft;
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
                     pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peakest), waveformColor);
@@ -507,7 +511,7 @@ class FlxWaveform extends FlxSprite
                             continue;
 
                         var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
-                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, combinedRMS), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformHeight, combinedRMS), waveformRMSColor);
                     }
                 }
 
@@ -524,18 +528,18 @@ class FlxWaveform extends FlxSprite
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
-                    var peakLeft:Float = _drawPointsLeft[sampleIndex];
-                    var peakRight:Float = 0;
+                    var segmentLeft:WaveformSegment = _drawPointsLeft[sampleIndex];
+                    var segmentRight:WaveformSegment = null;
                     if (_stereo)
-                        peakRight = _drawPointsRight[sampleIndex];
+                        segmentRight = _drawPointsRight[sampleIndex];
 
-                    if ((!_stereo && peakLeft == 0) || (_stereo && peakLeft == 0 && peakRight == 0))
+                    if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, peakLeft), waveformColor);
-                    pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, peakRight), waveformColor);
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, segmentLeft), waveformColor);
+                    pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, segmentRight), waveformColor);
 
                     if (waveformDrawRMS)
                     {
@@ -547,8 +551,8 @@ class FlxWaveform extends FlxSprite
                         if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
                             continue;
 
-                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, half, rmsLeft), waveformRMSColor);
-                        pixels.fillRect(getPeakRect(x, half, waveformBarSize, half, rmsRight), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, half, rmsLeft), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, half, waveformBarSize, half, rmsRight), waveformRMSColor);
                     }
                 }
 
@@ -560,21 +564,21 @@ class FlxWaveform extends FlxSprite
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
-                    var peak:Float = channel == 0 ? _drawPointsLeft[sampleIndex] : _drawPointsRight[sampleIndex];
+                    var segment:WaveformSegment = channel == 0 ? _drawPointsLeft[sampleIndex] : _drawPointsRight[sampleIndex];
 
-                    if (peak == 0)
+                    if (segment.silent)
                         continue;
 
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, peak), waveformColor);
+                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, segment), waveformColor);
                     if (waveformDrawRMS)
                     {
                         var rms:Float = channel == 0 ? _drawRMSLeft[sampleIndex] : _drawRMSRight[sampleIndex];
                         if (rms == 0)
                             continue;
 
-                        pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformHeight, rms), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformHeight, rms), waveformRMSColor);
                     }
                 }
         }
@@ -694,7 +698,7 @@ class FlxWaveform extends FlxSprite
      */
     function prepareDrawData(channel:Int):Void
     {
-        var drawPoints:Array<Float> = null;
+        var drawPoints:Array<WaveformSegment> = null;
         var drawRMS:Array<Float> = null;
 
         switch (channel)
@@ -710,12 +714,12 @@ class FlxWaveform extends FlxSprite
 
         var arrayLength:Int = Math.ceil(waveformBuffer.length / _durationSamples) * _effectiveWidth;
         drawPoints.resize(arrayLength);
-        clearArray(drawPoints);
+        resetDrawArray(drawPoints);
 
         if (waveformDrawRMS)
         {
             drawRMS.resize(arrayLength);
-            clearArray(drawRMS);
+            resetDrawArray(drawRMS);
         }
 
         // TODO: Enable graphed sample renderer!
@@ -767,7 +771,7 @@ class FlxWaveform extends FlxSprite
      * @param full Whether the data should be built for the entire waveform, or just the current segment.
      * @param forceRefresh Whether the data should be updated even if there's a non-zero value in the array.
      */
-    function buildDrawData(channel:Int, points:Array<Float>, rms:Array<Float>, full:Bool = true, forceRefresh:Bool = true):Void
+    function buildDrawData(channel:Int, points:Array<WaveformSegment>, rms:Array<Float>, full:Bool = true, forceRefresh:Bool = true):Void
     {
         var samplesGenerated:Int = 0;
         var toGenerate:Int = full ? waveformBuffer.length : _durationSamples;
@@ -783,13 +787,13 @@ class FlxWaveform extends FlxSprite
                 if (index < 0)
                     continue;
 
-                if (!forceRefresh && points[index] > 0)
+                if (!forceRefresh && !points[index].silent)
                     continue;
 
                 var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * step;
                 var endIndex:Int = Std.int(Math.min(startIndex + step, waveformBuffer.length));
 
-                points[index] = waveformBuffer.getPeakForSegment(channel, startIndex, endIndex);
+                points[index] = waveformBuffer.getSegment(channel, startIndex, endIndex);
 
                 // Avoid calculating RMS if we don't need to draw it
                 if (waveformDrawRMS)
@@ -811,10 +815,25 @@ class FlxWaveform extends FlxSprite
      * @param sample The audio sample in the range of -1.0 to 1.0
      * @return A `openfl.geom.Rectangle` instance
      */
-    function getPeakRect(x:Float, y:Float, width:Float, height:Float, sample:Float):Rectangle
+    function getPeakRect(x:Float, y:Float, width:Float, height:Float, segment:WaveformSegment):Rectangle
+    {
+        // !!! HELP !!!
+        // FIXME
+        var half:Float = height / 2;
+
+        var top:Float = segment.max * half;
+        var bottom:Float = segment.min * half;
+        var segmentHeight:Float = top + Math.abs(bottom);
+
+        // trace('$top $bottom $segmentHeight');
+
+        return new Rectangle(x, y + (half - top), width, segmentHeight);
+    }
+
+    function getRMSRect(x:Float, y:Float, width:Float, height:Float, rms:Float):Rectangle
     {
         var half:Float = height / 2;
-        var segmentHeight:Float = sample * half;
+        var segmentHeight:Float = rms * half;
 
         var y1:Float = half - segmentHeight;
         var y2:Float = half + segmentHeight;
@@ -838,11 +857,16 @@ class FlxWaveform extends FlxSprite
         samplesPerPixel = Std.int(Math.max(Math.ceil(_durationSamples / _effectiveWidth), 1));
     }
 
-    // todo
-    inline function clearArray(array:Array<Float>):Void
+    inline overload extern function resetDrawArray(array:Array<Float>):Void
     {
         for (i in 0...array.length) 
             array[i] = 0.0;
+    }
+
+    inline overload extern function resetDrawArray(array:Array<WaveformSegment>):Void
+    {
+        for (i in 0...array.length) 
+            array[i] = null;
     }
 
     @:noCompletion function get_waveformWidth():Int
