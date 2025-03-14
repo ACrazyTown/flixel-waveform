@@ -748,7 +748,7 @@ class FlxWaveform extends FlxSprite
                 drawRMS = _drawRMSRight;
         }
 
-        var arrayLength:Int = Math.ceil(waveformBuffer.length / _durationSamples) * _effectiveWidth;
+        var arrayLength:Int = Math.ceil(waveformBuffer.length / _durationSamples) * _effectiveSize;
         drawPoints.resize(arrayLength);
         resetDrawArray(drawPoints);
 
@@ -812,12 +812,12 @@ class FlxWaveform extends FlxSprite
         var samplesGenerated:Int = 0;
         var toGenerate:Int = full ? waveformBuffer.length : _durationSamples;
 
-        var step:Int = Math.round(_durationSamples / _effectiveWidth);
+        var step:Int = Math.round(_durationSamples / _effectiveSize);
 
         // FIXME: This will either overshoot or undershoot due to decimals
         while (samplesGenerated < toGenerate)
         {
-            for (i in 0..._effectiveWidth)
+            for (i in 0..._effectiveSize)
             {
                 var index:Int = Math.round((full ? samplesGenerated : _timeSamples) / samplesPerPixel) + i;
                 if (index < 0)
@@ -844,6 +844,8 @@ class FlxWaveform extends FlxSprite
      * Returns an `openfl.geom.Rectangle` representing the rectangle
      * of a waveform segment.
      * 
+     * This function takes `waveformOrientation` in account.
+     * 
      * @param x The rectangle's position on the X axis.
      * @param y Y offset.
      * @param width The width of the peak rectangle.
@@ -857,14 +859,20 @@ class FlxWaveform extends FlxSprite
 
         var top:Float = segment.max * half;
         var bottom:Float = segment.min * half;
-        var segmentHeight:Float = top + Math.abs(bottom);
+        var segmentHeight:Float = Math.abs(top) + Math.abs(bottom);
 
+        if (waveformOrientation == VERTICAL)
+            return new Rectangle(y + (half - top), x, segmentHeight, width);
+
+        // horizontal
         return new Rectangle(x, y + (half - top), width, segmentHeight);
     }
 
      /**
      * Returns an `openfl.geom.Rectangle` representing the rectangle
      * of a waveform segment's RMS.
+     * 
+     * This function takes `waveformOrientation` in account.
      * 
      * @param x The rectangle's position on the X axis.
      * @param y Y offset.
