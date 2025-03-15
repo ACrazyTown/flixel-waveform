@@ -408,6 +408,21 @@ class FlxWaveformBuffer implements IFlxDestroyable
     }
 
     /**
+     * Returns the highest sample (peak) of the audio for a specified segment.
+     * 
+     * @param channel The channel to get data from
+     * @param startIndex The start index of the segment
+     * @param endIndex The end index of the segment
+     * @return The highest segment (peak) for the audio segment
+     */
+    @:deprecated("getPeakForSegment is deprecated, use getSegment instead.")
+    public function getPeakForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
+    {
+        var segment = getSegment(channel, startIndex, endIndex);
+        return segment.max;
+    }
+
+    /**
      * Returns the minimum and maximum sample value for a segment of the audio data.
      * 
      * @param channel The channel to get data from
