@@ -33,8 +33,8 @@ abstract WaveformSegment(WaveformSegmentRaw) from WaveformSegmentRaw to Waveform
     
     @:noCompletion function get_silent():Bool
     {
-        // TODO: Don't check this here but rather ensure it's never null in our generated data?
-        if (this == null) return true;
+        // // TODO: Don't check this here but rather ensure it's never null in our generated data?
+        // if (this == null) return true;
 
         return this.min == 0 && this.max == 0;
     }
