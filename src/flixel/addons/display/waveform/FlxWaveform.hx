@@ -182,18 +182,6 @@ class FlxWaveform extends FlxSprite
     public var waveformBuffer(default, null):Null<FlxWaveformBuffer> = null;
 
     /**
-     * If enabled, the draw data will be immediately rebuilt only for the
-     * currently visible segment, while the rest will be built asychronously.
-     * 
-     * This property is only supported on native threaded targets (C++, Hashlink, Neko).
-     * Attempting to set this to `true` on a nonsupported target (eg. HTML5 or Flash) will
-     * have no effect, and the property will always remain `false`.
-     * 
-     * @since 2.1.0
-     */
-    public var rebuildDataAsync(default, set):Bool = false;
-
-    /**
      * An enum representing whether the waveform should be 
      * drawn horizontally (left to right) or vertically (top to bottom).
      * 
@@ -761,35 +749,7 @@ class FlxWaveform extends FlxSprite
         // TODO: Enable graphed sample renderer!
         // if (samplesPerPixel > 1)
         // {
-        if (rebuildDataAsync)
-        {
-            buildDrawData(channel, drawPoints, drawRMS, false, true);
-
-            var asyncLoader:Future<Int> = new Future<Int>(() -> 
-            {
-                #if (target.threaded)
-                _mutex.acquire();
-                #end
-
-                buildDrawData(channel, drawPoints, drawRMS, true, false);
-
-                #if (target.threaded)
-                _mutex.release();
-                #end
-
-                return 0;
-            }, true);
-            
-            asyncLoader.onComplete((_) -> _waveformDirty = true);
-            asyncLoader.onError((_) ->
-            {
-                FlxG.log.error('[FlxWaveform] Async rebuild failed: ${asyncLoader.error}');
-            });
-        }
-        else // build data for the whole waveform
-        {
-            buildDrawData(channel, drawPoints, drawRMS, true, true);
-        }
+        buildDrawData(channel, drawPoints, drawRMS, true, true);
         // }
         // else
         // {
@@ -1135,16 +1095,6 @@ class FlxWaveform extends FlxSprite
         }
 
        return waveformDuration;
-    }
-    
-    @:noCompletion function set_rebuildDataAsync(value:Bool):Bool 
-    {
-        #if (target.threaded)
-        return rebuildDataAsync = value;
-        #else
-        FlxG.log.warn("[FlxWaveform] FlxWaveform.rebuildDataAsync is not supported on this target!");
-        return false;
-        #end
     }
     
     @:noCompletion function set_waveformOrientation(value:WaveformOrientation):WaveformOrientation 
