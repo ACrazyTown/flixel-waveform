@@ -18,9 +18,15 @@ abstract WaveformSegment(WaveformSegmentRaw) from WaveformSegmentRaw to Waveform
      */
     public static function merge(segment1:WaveformSegment, segment2:WaveformSegment):WaveformSegment
     {
+        var rms:Float = 0.0;
+        if (segment1.rms != 0 && segment2.rms != 0)
+            rms = Math.sqrt((segment1.numSamples * segment1.rms * segment1.rms + segment2.numSamples * segment2.rms * segment2.rms) / (segment1.numSamples + segment2.numSamples));
+
         var segment:WaveformSegment = {
+            numSamples: segment1.numSamples + segment2.numSamples,
             max: Math.max(segment1.max, segment2.max),
-            min: Math.min(segment1.min, segment2.min)
+            min: Math.min(segment1.min, segment2.min),
+            rms: rms
         }
 
         return segment;
@@ -42,6 +48,8 @@ abstract WaveformSegment(WaveformSegmentRaw) from WaveformSegmentRaw to Waveform
 
 private typedef WaveformSegmentRaw =
 {
+    numSamples:Int,
     min:Float,
-    max:Float
+    max:Float,
+    rms:Float
 }

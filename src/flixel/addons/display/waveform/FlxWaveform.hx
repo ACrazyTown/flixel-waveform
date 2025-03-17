@@ -231,28 +231,6 @@ class FlxWaveform extends FlxSprite
     var _drawPointsRight:Array<WaveformSegment> = null;
 
     /**
-     * Internal array of Floats that contains the RMS (root mean square) 
-     * values of the left channel for the full length of the sound.
-     * The length depends on the number of audio bars.
-     * 
-     * This array does not update in real time. 
-     * If the draw data needs to be rebuilt, it will be done on
-     * the first draw call after setting the `_drawDataDirty` flag.
-     */
-    var _drawRMSLeft:Array<Float> = null;
-
-    /**
-     * Internal array of Floats that contains the RMS (root mean square) 
-     * values of the right channel for the full length of the sound.
-     * The length depends on the number of audio bars.
-     * 
-     * This array does not update in real time. 
-     * If the draw data needs to be rebuilt, it will be done on
-     * the first draw call after setting the `_drawDataDirty` flag.
-     */
-    var _drawRMSRight:Array<Float> = null;
-
-    /**
      * Internal helper that decides whether the waveform should be redrawn.
      */
     var _waveformDirty:Bool = true;
@@ -311,8 +289,6 @@ class FlxWaveform extends FlxSprite
         // _shape = null;
         _drawPointsLeft = null;
         _drawPointsRight = null;
-        _drawRMSLeft = null;
-        _drawRMSRight = null;
 
         if (waveformBuffer?.autoDestroy)
             FlxDestroyUtil.destroy(waveformBuffer);
@@ -389,13 +365,9 @@ class FlxWaveform extends FlxSprite
         _stereo = waveformBuffer.numChannels == 2;
 
         _drawPointsLeft = [];
-        _drawRMSLeft = [];
 
         if (_stereo)
-        {
             _drawPointsRight = [];
-            _drawRMSRight = [];
-        }
     }
 
     /**
@@ -501,18 +473,7 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, peakest), waveformColor);
 
                     if (waveformDrawRMS)
-                    {
-                        var rmsLeft:Float = _drawRMSLeft[sampleIndex];
-                        var rmsRight:Float = 0;
-                        if (_stereo)
-                            rmsRight = _drawRMSRight[sampleIndex];
-
-                        if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
-                            continue;
-
-                        var combinedRMS:Float = Math.sqrt((rmsLeft * rmsLeft + rmsRight * rmsRight) / 2);
-                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, combinedRMS), waveformRMSColor);
-                    }
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, peakest.rms), waveformRMSColor);
                 }
 
             case SPLIT_CHANNELS:
@@ -557,16 +518,8 @@ class FlxWaveform extends FlxSprite
 
                     if (waveformDrawRMS)
                     {
-                        var rmsLeft:Float = _drawRMSLeft[sampleIndex];
-                        var rmsRight:Float = 0;
-                        if (_stereo)
-                            rmsRight = _drawRMSRight[sampleIndex];
-
-                        if ((!_stereo && rmsLeft == 0) || (_stereo && rmsLeft == 0 && rmsRight == 0))
-                            continue;
-
-                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, rmsLeft), waveformRMSColor);
-                        pixels.fillRect(getRMSRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, rmsRight), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentLeft.rms), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentRight.rms), waveformRMSColor);
                     }
                 }
 
@@ -596,11 +549,7 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, segment), waveformColor);
                     if (waveformDrawRMS)
                     {
-                        var rms:Float = channel == 0 ? _drawRMSLeft[sampleIndex] : _drawRMSRight[sampleIndex];
-                        if (rms == 0)
-                            continue;
-
-                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, rms), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, segment.rms), waveformRMSColor);
                     }
                 }
         }
@@ -721,33 +670,21 @@ class FlxWaveform extends FlxSprite
     function prepareDrawData(channel:Int):Void
     {
         var drawPoints:Array<WaveformSegment> = null;
-        var drawRMS:Array<Float> = null;
 
-        switch (channel)
-        {
-            case 0:
-                drawPoints = _drawPointsLeft;
-                drawRMS = _drawRMSLeft;
-
-            case 1:
-                drawPoints = _drawPointsRight;
-                drawRMS = _drawRMSRight;
-        }
+        // todo: put in a function?
+        if (channel == 0)
+            drawPoints = _drawPointsLeft;
+        else if (channel == 1)
+            drawPoints = _drawPointsRight;
 
         var arrayLength:Int = Math.ceil(waveformBuffer.length / _durationSamples) * _effectiveSize;
         drawPoints.resize(arrayLength);
         resetDrawArray(drawPoints);
 
-        if (waveformDrawRMS)
-        {
-            drawRMS.resize(arrayLength);
-            resetDrawArray(drawRMS);
-        }
-
         // TODO: Enable graphed sample renderer!
         // if (samplesPerPixel > 1)
         // {
-        buildDrawData(channel, drawPoints, drawRMS, true, true);
+        buildDrawData(channel, drawPoints, true, true);
         // }
         // else
         // {
@@ -765,7 +702,7 @@ class FlxWaveform extends FlxSprite
      * @param full Whether the data should be built for the entire waveform, or just the current segment.
      * @param forceRefresh Whether the data should be updated even if there's a non-zero value in the array.
      */
-    function buildDrawData(channel:Int, points:Array<WaveformSegment>, rms:Array<Float>, full:Bool = true, forceRefresh:Bool = true):Void
+    function buildDrawData(channel:Int, points:Array<WaveformSegment>, full:Bool = true, forceRefresh:Bool = true):Void
     {
         var samplesGenerated:Int = 0;
         var toGenerate:Int = full ? waveformBuffer.length : _durationSamples;
@@ -787,11 +724,7 @@ class FlxWaveform extends FlxSprite
                 var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * step;
                 var endIndex:Int = Std.int(Math.min(startIndex + step, waveformBuffer.length));
 
-                points[index] = waveformBuffer.getSegment(channel, startIndex, endIndex);
-
-                // Avoid calculating RMS if we don't need to draw it
-                if (waveformDrawRMS)
-                    rms[index] = waveformBuffer.getRMSForSegment(channel, startIndex, endIndex);
+                points[index] = waveformBuffer.getSegment(channel, startIndex, endIndex, waveformDrawRMS);
             }
 
             samplesGenerated += _durationSamples;
@@ -887,7 +820,7 @@ class FlxWaveform extends FlxSprite
     inline overload extern function resetDrawArray(array:Array<WaveformSegment>):Void
     {
         for (i in 0...array.length) 
-            array[i] = {max: 0, min: 0};
+            array[i] = {numSamples: 0, max: 0, min: 0, rms: 0};
     }
 
     @:noCompletion function get_waveformWidth():Int

@@ -429,12 +429,16 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param endIndex The end index of the segment
      * @return a `WaveformSegment` with the minimum and maximum sample value for this segment.
      */
-    public function getSegment(channel:Int, startIndex:Int, endIndex:Int):WaveformSegment
+    public function getSegment(channel:Int, startIndex:Int, endIndex:Int, calculateRMS:Bool = false):WaveformSegment
     {
         var data:Null<Float32Array> = getChannelData(channel);
 
         var max:Float = 0.0;
         var min:Float = 0.0;
+
+        var numSamples:Int = endIndex - startIndex;
+        var sampleSquareSum:Float = 0.0;
+        var rms:Float = 0.0;
 
         for (i in startIndex...endIndex)
         {
@@ -445,40 +449,51 @@ class FlxWaveformBuffer implements IFlxDestroyable
             
             if (sample < min)
                 min = sample;
+
+            if (calculateRMS)
+                sampleSquareSum += sample * sample;
         }
 
-        var segment:WaveformSegment = {max: max, min: min};
+        if (calculateRMS)
+            rms = Math.sqrt(sampleSquareSum / numSamples);
+
+        var segment:WaveformSegment = {
+            numSamples: numSamples,
+            max: max, 
+            min: min, 
+            rms: rms
+        };
         return segment;
     }
 
-    /**
-     * Returns the root mean square (RMS) of the audio for a specified segment.
-     * The RMS represents the average/effective loudness of audio.
-     * 
-     * @param channel The channel to get data from
-     * @param startIndex The start index of the segment
-     * @param endIndex The end index of the segment
-     * @return The RMS for the audio segment
-     */
-    public function getRMSForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
-    {
-        var data:Null<Float32Array> = getChannelData(channel);
-        var numSamples:Int = endIndex - startIndex;
+    // /**
+    //  * Returns the root mean square (RMS) of the audio for a specified segment.
+    //  * The RMS represents the average/effective loudness of audio.
+    //  * 
+    //  * @param channel The channel to get data from
+    //  * @param startIndex The start index of the segment
+    //  * @param endIndex The end index of the segment
+    //  * @return The RMS for the audio segment
+    //  */
+    // public function getRMSForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
+    // {
+    //     var data:Null<Float32Array> = getChannelData(channel);
+    //     var numSamples:Int = endIndex - startIndex;
 
-        // return now to avoid div by 0
-        if (numSamples <= 0)
-            return 0.0;
+    //     // return now to avoid div by 0
+    //     if (numSamples <= 0)
+    //         return 0.0;
 
-        var squareSum:Float = 0.0;
+    //     var squareSum:Float = 0.0;
 
-        for (i in startIndex...endIndex)
-        {
-            var sample = data[i];
-            squareSum += sample * sample;
-        }
+    //     for (i in startIndex...endIndex)
+    //     {
+    //         var sample = data[i];
+    //         squareSum += sample * sample;
+    //     }
 
-        return Math.sqrt(squareSum / numSamples);
-    }
+    //     return Math.sqrt(squareSum / numSamples);
+    // }
 
     @:noCompletion function get_length():Null<Int> 
     {
