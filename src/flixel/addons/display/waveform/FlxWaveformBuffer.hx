@@ -72,7 +72,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param sound The `flixel.sound.FlxSound` to be converted
      * @return A `FlxWaveformBuffer` or `null` if the sound is invalid.
      */
-    inline public static function fromFlxSound(sound:FlxSound):Null<FlxWaveformBuffer>
+    public static function fromFlxSound(sound:FlxSound):Null<FlxWaveformBuffer>
     {
         #if flash
         @:privateAccess
@@ -332,7 +332,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param buffer The `lime.media.AudioBuffer` to check
      * @return Bool Whether the buffer is valid
      */
-    inline static function isLimeAudioBufferValid(buffer:AudioBuffer):Bool
+    static function isLimeAudioBufferValid(buffer:AudioBuffer):Bool
     {
         return buffer != null 
             && buffer.data != null 
@@ -350,7 +350,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param buffer The `js.html.audio.AudioBuffer` to check
      * @return Bool Whether the buffer is valid
      */
-    inline static function isJSAudioBufferValid(buffer:js.html.audio.AudioBuffer):Bool
+    static function isJSAudioBufferValid(buffer:js.html.audio.AudioBuffer):Bool
     {
         return buffer != null
             && buffer.numberOfChannels > 0
@@ -527,7 +527,7 @@ class ChannelPair implements IFlxDestroyable
      * @return A `Float32Array` or `null` if there's no 
      * audio data for the specified channel.
      */
-    inline public function getChannelData(channel:Int):Null<Float32Array>
+    public function getChannelData(channel:Int):Null<Float32Array>
     {
         return switch (channel)
         {

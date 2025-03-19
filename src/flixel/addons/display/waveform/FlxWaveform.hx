@@ -3,7 +3,6 @@ package flixel.addons.display.waveform;
 
 import lime.media.AudioBuffer;
 import lime.utils.Float32Array;
-import lime.app.Future;
 import openfl.geom.Rectangle;
 // import openfl.display.Shape;
 import flixel.FlxG;
@@ -275,13 +274,6 @@ class FlxWaveform extends FlxSprite
      */
     var _effectiveSize:Int;
 
-    #if (target.threaded)
-    /**
-     * Mutex used when rebuilding data asychronously
-     */
-    var _mutex:sys.thread.Mutex = new sys.thread.Mutex();
-    #end
-
     /**
      * Creates a new `FlxWaveform` instance with the specified parameters.
      * 
@@ -369,7 +361,7 @@ class FlxWaveform extends FlxSprite
      * 
      * @param buffer The `lime.media.AudioBuffer` to get data from.
      */
-    inline public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
+    public function loadDataFromAudioBuffer(buffer:AudioBuffer):Void
     {
         loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromLimeAudioBuffer(buffer));
     }
