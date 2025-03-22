@@ -849,7 +849,7 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Helper function to calculate the effective width.
+     * Helper function to calculate the effective size.
      */
     inline function calcEffectiveSize():Void
     {
