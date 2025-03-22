@@ -298,7 +298,7 @@ class FlxWaveform extends FlxSprite
         // _waveformHeight = height;
         waveformDrawMode = drawMode;
         makeGraphic(width, height, waveformBgColor);
-        calcEffectiveWidth();
+        calcEffectiveSize();
 
         // _shape = new Shape();
     }
@@ -449,7 +449,7 @@ class FlxWaveform extends FlxSprite
         // waveformHeight = height;
 
         makeGraphic(width, height, waveformBgColor);
-        calcEffectiveWidth();
+        calcEffectiveSize();
         calcSamplesPerPixel();
 
         _drawDataDirty = true;
@@ -851,7 +851,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Helper function to calculate the effective width.
      */
-    inline function calcEffectiveWidth():Void
+    inline function calcEffectiveSize():Void
     {
         _effectiveSize = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
     }
@@ -894,7 +894,7 @@ class FlxWaveform extends FlxSprite
         if (waveformWidth != value)
         {
             resize(value, waveformHeight);
-            calcEffectiveWidth();
+            calcEffectiveSize();
         }
 
         return waveformWidth;
@@ -1019,7 +1019,7 @@ class FlxWaveform extends FlxSprite
 
             waveformBarSize = value;
 
-            calcEffectiveWidth();
+            calcEffectiveSize();
             calcSamplesPerPixel();
 
             _drawDataDirty = true;
@@ -1039,7 +1039,7 @@ class FlxWaveform extends FlxSprite
             if (value < 0)
                 FlxG.log.error('[FlxWaveform] waveformBarPadding cannot be less than 0!');
 
-            calcEffectiveWidth();
+            calcEffectiveSize();
             calcSamplesPerPixel();
 
             _drawDataDirty = true;
