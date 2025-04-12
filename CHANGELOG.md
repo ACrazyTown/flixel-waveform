@@ -11,9 +11,6 @@ Legend:
     - No additional work on the user side needs to be done. If you pass a streamed sound to a `FlxWaveform.loadDataFrom...()` method, it will automatically detect and load it.
     - Use the `FlxWaveformBuffer.fromVorbisFile()` method to create an audio buffer from a `lime.media.vorbis.VorbisFile`.
 - ✨ **Added** a public `waveformBuffer` property to `FlxWaveform`.
-- ✨ **Added** the *experimental* `FlxWaveform.rebuildDataAsync` flag.
-    - Enabling this flag will make data rebuilds immediately rebuild only the currently visible portion. The rest of the waveform will be rebuilt asychronously. This can significantly reduce data rebuild times
-    - This is an experimental feature and may not be completely stable. If you encounter any bugs, please [report them on GitHub](https://github.com/ACrazyTown/flixel-waveform/issues/new)
 - ✨ **Added** the `FlxWaveform.waveformOrientation` property that controls whether the waveform should be drawn horizontally (left to right) or vertically (top to bottom).
 - 🛠️ **Fixed** waveform being desynced when `FlxWaveform.rebuildDataAsync` is `false`.
 - 🛠️ **Fixed** weirdly cropped showcase image... oops!

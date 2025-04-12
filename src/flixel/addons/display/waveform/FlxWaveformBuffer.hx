@@ -15,6 +15,8 @@ import lime.media.vorbis.VorbisFile;
 import lime.media.vorbis.VorbisInfo;
 #end
 
+import flixel.addons.display.waveform._internal.WaveformSegment;
+
 using flixel.addons.display.waveform._internal.BytesExt;
 
 /**
@@ -70,7 +72,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param sound The `flixel.sound.FlxSound` to be converted
      * @return A `FlxWaveformBuffer` or `null` if the sound is invalid.
      */
-    inline public static function fromFlxSound(sound:FlxSound):Null<FlxWaveformBuffer>
+    public static function fromFlxSound(sound:FlxSound):Null<FlxWaveformBuffer>
     {
         #if flash
         @:privateAccess
@@ -330,7 +332,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param buffer The `lime.media.AudioBuffer` to check
      * @return Bool Whether the buffer is valid
      */
-    inline static function isLimeAudioBufferValid(buffer:AudioBuffer):Bool
+    static function isLimeAudioBufferValid(buffer:AudioBuffer):Bool
     {
         return buffer != null 
             && buffer.data != null 
@@ -348,7 +350,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param buffer The `js.html.audio.AudioBuffer` to check
      * @return Bool Whether the buffer is valid
      */
-    inline static function isJSAudioBufferValid(buffer:js.html.audio.AudioBuffer):Bool
+    static function isJSAudioBufferValid(buffer:js.html.audio.AudioBuffer):Bool
     {
         return buffer != null
             && buffer.numberOfChannels > 0
@@ -413,27 +415,41 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param endIndex The end index of the segment
      * @return The highest segment (peak) for the audio segment
      */
+    @:deprecated("getPeakForSegment is deprecated, use getSegment instead.")
     public function getPeakForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
     {
-        var data:Null<Float32Array> = getChannelData(channel);
-        var peak:Float = 0.0;
+        var segment = getSegment(channel, startIndex, endIndex);
+        return segment.max;
+    }
 
-        if (startIndex > endIndex)
-            return 0;
+    /**
+     * Returns the minimum and maximum sample value for a segment of the audio data.
+     * 
+     * @param channel The channel to get data from
+     * @param startIndex The start index of the segment
+     * @param endIndex The end index of the segment
+     * @return a `WaveformSegment` with the minimum and maximum sample value for this segment.
+     */
+    public function getSegment(channel:Int, startIndex:Int, endIndex:Int):WaveformSegment
+    {
+        var data:Null<Float32Array> = getChannelData(channel);
+
+        var max:Float = 0.0;
+        var min:Float = 0.0;
 
         for (i in startIndex...endIndex)
         {
-            var sample = Math.abs(data[i]);
-            if (sample > peak)
-            {
-                peak = sample;
+            var sample:Float = data[i];
 
-                if (peak >= 1.0)
-                    return 1.0;
-            }
+            if (sample > max)
+                max = sample;
+            
+            if (sample < min)
+                min = sample;
         }
 
-        return peak;
+        var segment:WaveformSegment = {max: max, min: min};
+        return segment;
     }
 
     /**
@@ -511,7 +527,7 @@ class ChannelPair implements IFlxDestroyable
      * @return A `Float32Array` or `null` if there's no 
      * audio data for the specified channel.
      */
-    inline public function getChannelData(channel:Int):Null<Float32Array>
+    public function getChannelData(channel:Int):Null<Float32Array>
     {
         return switch (channel)
         {
