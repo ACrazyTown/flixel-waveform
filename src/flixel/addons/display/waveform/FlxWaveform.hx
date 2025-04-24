@@ -489,6 +489,8 @@ class FlxWaveform extends FlxSprite
                     if (_stereo)
                         segmentRight = _drawPointsRight[sampleIndex];
 
+                    if ((!_stereo && segmentLeft == null) || (_stereo && segmentLeft == null && segmentRight == null))
+                        continue;
                     if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
@@ -543,6 +545,8 @@ class FlxWaveform extends FlxSprite
                     if (_stereo)
                         segmentRight = _drawPointsRight[sampleIndex];
 
+                    if ((!_stereo && segmentLeft == null) || (_stereo && segmentLeft == null && segmentRight == null))
+                        continue;
                     if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
@@ -582,6 +586,8 @@ class FlxWaveform extends FlxSprite
 
                     var segment:WaveformSegment = channel == 0 ? _drawPointsLeft[sampleIndex] : _drawPointsRight[sampleIndex];
 
+                    if (segment == null)
+                        continue;
                     if (segment.silent)
                         continue;
 
