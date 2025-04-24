@@ -859,7 +859,7 @@ class FlxWaveform extends FlxSprite
      */
     inline function calcEffectiveSize():Void
     {
-        _effectiveSize = Math.ceil(waveformWidth / (waveformBarSize + waveformBarPadding));
+        _effectiveSize = Math.ceil((waveformOrientation == HORIZONTAL ? waveformWidth : waveformHeight) / (waveformBarSize + waveformBarPadding));
     }
 
     /**
@@ -972,6 +972,8 @@ class FlxWaveform extends FlxSprite
 
                 default:
             }
+
+            _drawDataDirty = true;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
@@ -1100,6 +1102,11 @@ class FlxWaveform extends FlxSprite
         if (waveformOrientation != value)
         {
             waveformOrientation = value;
+
+            calcEffectiveSize();
+            calcSamplesPerPixel();
+
+            _drawDataDirty = true;
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
