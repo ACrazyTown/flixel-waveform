@@ -1,4 +1,4 @@
-package flixel.addons.display.waveform._internal;
+package flixel.addons.display.waveform.data;
 
 /**
  * Represents the minimum and maximum sample value in

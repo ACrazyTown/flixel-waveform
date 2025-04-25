@@ -1,12 +1,14 @@
 package flixel.addons.display.waveform;
 
-import haxe.Int64;
+import flixel.addons.display.waveform.data.WaveformSegment;
 import flixel.sound.FlxSound;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.FlxDestroyUtil;
+import haxe.Int64;
 import haxe.io.Bytes;
 import lime.media.AudioBuffer;
 import lime.utils.Float32Array;
+using flixel.addons.display.waveform._internal.BytesExt;
 #if lime_howlerjs
 import lime.media.howlerjs.Howl;
 #end
@@ -15,9 +17,6 @@ import lime.media.vorbis.VorbisFile;
 import lime.media.vorbis.VorbisInfo;
 #end
 
-import flixel.addons.display.waveform._internal.WaveformSegment;
-
-using flixel.addons.display.waveform._internal.BytesExt;
 
 /**
  * A `FlxWaveformBuffer` holds various data related to an audio track

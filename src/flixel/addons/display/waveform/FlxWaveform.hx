@@ -1,17 +1,17 @@
 
 package flixel.addons.display.waveform;
 
-import lime.media.AudioBuffer;
-import lime.utils.Float32Array;
-import openfl.geom.Rectangle;
-// import openfl.display.Shape;
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.addons.display.waveform.FlxWaveformBuffer;
+import flixel.addons.display.waveform.data.WaveformSegment;
 import flixel.sound.FlxSound;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
-import flixel.addons.display.waveform.FlxWaveformBuffer;
-import flixel.addons.display.waveform._internal.WaveformSegment;
+import lime.media.AudioBuffer;
+import lime.utils.Float32Array;
+// import openfl.display.Shape;
+import openfl.geom.Rectangle;
 
 #if flash
 import flash.media.Sound;
