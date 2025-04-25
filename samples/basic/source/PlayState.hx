@@ -1,5 +1,6 @@
 package;
 
+import flixel.util.FlxStringUtil;
 import flixel.addons.ui.FlxUIDropDownMenu;
 import flixel.addons.ui.FlxUINumericStepper;
 import flixel.addons.ui.FlxUICheckBox;
@@ -82,6 +83,7 @@ class PlayState extends FlxUIState
         {
             // Set our waveform's time to the music's time, keeping them in sync.
             waveform.waveformTime = FlxG.sound.music.time;
+            time.text = '${FlxStringUtil.formatTime(waveform.waveformTime / 1000, true)} - ${FlxStringUtil.formatTime((waveform.waveformTime + waveform.waveformDuration) / 1000, true)}';
         }
 
         if (FlxG.keys.justPressed.SPACE)
@@ -91,17 +93,18 @@ class PlayState extends FlxUIState
     // --- Beyond this point is UI code you should not care about --
     var ui:FlxUI;
     var playPauseBtn:FlxButton;
+    var time:FlxText;
 
     function setupUI():Void
     {
         ui = new FlxUI();
         add(ui);
 
-        playPauseBtn = new FlxButton(3, 0, "Pause Music", playPause);
+        playPauseBtn = new FlxButton(5, 0, "Pause Music", playPause);
         playPauseBtn.y = 5;
         ui.add(playPauseBtn);
 
-        var drawRMSCheckbox:FlxUICheckBox = new FlxUICheckBox(3, 0, null, null, "Draw RMS");
+        var drawRMSCheckbox:FlxUICheckBox = new FlxUICheckBox(5, 0, null, null, "Draw RMS", 70);
         drawRMSCheckbox.y = 30;
         drawRMSCheckbox.checked = true;
         drawRMSCheckbox.callback = () ->
@@ -110,7 +113,7 @@ class PlayState extends FlxUIState
         };
         ui.add(drawRMSCheckbox);
 
-        var paddingStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 35, 0, 1, 0, 0, 100, 0);
+        var paddingStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 5, 0, 1, 0, 0, 100, 0);
         paddingStepper.y = 10;
         paddingStepper.value = waveform.waveformBarPadding;
         paddingStepper.name = "s_padding";
@@ -120,7 +123,7 @@ class PlayState extends FlxUIState
         paddingLabel.y = paddingStepper.y;
         ui.add(paddingLabel);
 
-        var sizeStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 35, 0, 1, 1, 1, 100, 0);
+        var sizeStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 5, 0, 1, 1, 1, 100, 0);
         sizeStepper.y = paddingStepper.y + 20;
         sizeStepper.value = waveform.waveformBarSize;
         sizeStepper.name = "s_size";
@@ -130,7 +133,7 @@ class PlayState extends FlxUIState
         sizeLabel.y = sizeStepper.y;
         ui.add(sizeLabel);
 
-        var drawModeLabel:FlxText = new FlxText(paddingLabel.x + 65, 5, 0, "Waveform Draw Mode");
+        var drawModeLabel:FlxText = new FlxText(paddingLabel.x + 70, 5, 0, "Waveform Draw Mode");
         ui.add(drawModeLabel);
         var drawModeDropdown:FlxUIDropDownMenu = new FlxUIDropDownMenu(drawModeLabel.x, 20, FlxUIDropDownMenu.makeStrIdLabelArray(["Combined", "Split Channels", "Single Channel (Left)", "Single Channel (Right)"]), (select) ->
         {
@@ -145,13 +148,30 @@ class PlayState extends FlxUIState
         drawModeDropdown.selectedLabel = "Split Channels";
         ui.add(drawModeDropdown);
 
-        var orientationCheckbox:FlxUICheckBox = new FlxUICheckBox(drawModeDropdown.x + drawModeDropdown.width + 2, 0, null, null, "Vertical?");
+        // i hate flixel-ui
+        var orientationCheckbox:FlxUICheckBox = new FlxUICheckBox(drawModeDropdown.x + drawModeDropdown.width + 5, 0, null, null, "", 0);
         orientationCheckbox.y = 15;
         orientationCheckbox.callback = () ->
         {
             waveform.waveformOrientation = orientationCheckbox.checked ? VERTICAL : HORIZONTAL;
         };
         ui.add(orientationCheckbox);
+
+        var orientationCheckboxLabel:FlxText = new FlxText(orientationCheckbox.x + orientationCheckbox.width, orientationCheckbox.y, 0, "Vertical?");
+        ui.add(orientationCheckboxLabel);
+
+        var durationStepper:FlxUINumericStepper = new FlxUINumericStepper(orientationCheckboxLabel.x + orientationCheckboxLabel.width + 5, 1, 1, 5, 1, Math.round(FlxG.sound.music.length / 1000), 1);
+        durationStepper.y = 10;
+        durationStepper.value = Std.int(waveform.waveformDuration / 1000);
+        durationStepper.name = "s_duration";
+        ui.add(durationStepper);
+        var durationLabel:FlxText = new FlxText(0, 0, 0, "Duration (s)");
+        durationLabel.x = durationStepper.x + durationStepper.width;
+        durationLabel.y = durationStepper.y;
+        ui.add(durationLabel);
+
+        time = new FlxText(5, waveform.y, 0, "0");
+        ui.add(time);
     }
 
     function playPause():Void
@@ -171,6 +191,8 @@ class PlayState extends FlxUIState
                 waveform.waveformBarPadding = Std.int(stepper.value);
             else if (stepper.name == "s_size")
                 waveform.waveformBarSize = Std.int(stepper.value);
+            else if (stepper.name == "s_duration")
+                waveform.waveformDuration = stepper.value * 1000;
         }
     }
 }
