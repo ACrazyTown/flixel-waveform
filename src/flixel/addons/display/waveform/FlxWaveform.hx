@@ -1103,10 +1103,14 @@ class FlxWaveform extends FlxSprite
         {
             waveformOrientation = value;
 
-            calcEffectiveSize();
-            calcSamplesPerPixel();
+            // if width and height is the same we dont need to rebuild
+            if (pixels.width != pixels.height)
+            {
+                calcEffectiveSize();
+                calcSamplesPerPixel();
 
-            _drawDataDirty = true;
+                _drawDataDirty = true;
+            }
 
             if (autoUpdateBitmap)
                 _waveformDirty = true;
