@@ -18,6 +18,8 @@ Legend:
 - 🛠️ **Adjusted** `FlxWaveform`'s constructor arguments.
     - `x` and `y` are now optional.
     - `width` and `height` are now mandatory.
+- 🛠️ **Updated** the example project to include new features from this release.
+- 🛠️ `waveformDuration` now defaults to 1 second (1000ms) instead of 0.
 - 🛠️ Some documentation adjustments.
 
 ## 2.0.0 (February 15, 2025)
