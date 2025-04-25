@@ -153,7 +153,7 @@ class FlxWaveform extends FlxSprite
      * 
      * @since 2.0.0
      */
-    public var waveformTime(default, set):Float;
+    public var waveformTime(default, set):Float = 0;
 
     /**
      * The amount of time, in miliseconds, this waveform will represent.
@@ -164,7 +164,7 @@ class FlxWaveform extends FlxSprite
      * 
      * @since 2.0.0
      */
-    public var waveformDuration(default, set):Float;
+    public var waveformDuration(default, set):Float = 1000;
     
     /**
      * A reference to the `FlxWaveformBuffer` that holds the raw audio data
