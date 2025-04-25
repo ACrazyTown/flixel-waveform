@@ -27,7 +27,7 @@ class PlayState extends FlxUIState
         // before trying to make a waveform from it.
         // See: https://github.com/ACrazyTown/flixel-waveform/issues/8
         FlxG.sound.music.play(true);
-
+        
         // Create a new FlxWaveform instance.
         waveform = new FlxWaveform(0, 50, FlxG.width, FlxG.height - 50);
 

@@ -428,6 +428,8 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param startIndex The start index of the segment
      * @param endIndex The end index of the segment
      * @return a `WaveformSegment` with the minimum and maximum sample value for this segment.
+     * 
+     * @since 2.1.0
      */
     public function getSegment(channel:Int, startIndex:Int, endIndex:Int, calculateRMS:Bool = false):WaveformSegment
     {
@@ -466,34 +468,21 @@ class FlxWaveformBuffer implements IFlxDestroyable
         return segment;
     }
 
-    // /**
-    //  * Returns the root mean square (RMS) of the audio for a specified segment.
-    //  * The RMS represents the average/effective loudness of audio.
-    //  * 
-    //  * @param channel The channel to get data from
-    //  * @param startIndex The start index of the segment
-    //  * @param endIndex The end index of the segment
-    //  * @return The RMS for the audio segment
-    //  */
-    // public function getRMSForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
-    // {
-    //     var data:Null<Float32Array> = getChannelData(channel);
-    //     var numSamples:Int = endIndex - startIndex;
-
-    //     // return now to avoid div by 0
-    //     if (numSamples <= 0)
-    //         return 0.0;
-
-    //     var squareSum:Float = 0.0;
-
-    //     for (i in startIndex...endIndex)
-    //     {
-    //         var sample = data[i];
-    //         squareSum += sample * sample;
-    //     }
-
-    //     return Math.sqrt(squareSum / numSamples);
-    // }
+    /**
+     * Returns the root mean square (RMS) of the audio for a specified segment.
+     * The RMS represents the average/effective loudness of audio.
+     * 
+     * @param channel The channel to get data from
+     * @param startIndex The start index of the segment
+     * @param endIndex The end index of the segment
+     * @return The RMS for the audio segment
+     */
+    @:deprecated("getRMSForSegment is deprecated, use getSegment() instead.")
+    public function getRMSForSegment(channel:Int, startIndex:Int, endIndex:Int):Float
+    {
+        var segment = getSegment(channel, startIndex, endIndex);
+        return segment.rms;
+    }
 
     @:noCompletion function get_length():Null<Int> 
     {
