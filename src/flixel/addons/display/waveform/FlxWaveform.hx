@@ -123,8 +123,6 @@ class FlxWaveform extends FlxSprite
     /**
      * The size (in pixels) of one waveform peak bar.
      * Default value is 1px.
-     * Increasing this value will make the waveform less detailed,
-     * which by extension will also make it less expensive to compute.
      * 
      * This value must be more than or equal to 1. 
      * 
@@ -137,8 +135,6 @@ class FlxWaveform extends FlxSprite
     /**
      * The space (in pixels) between waveform peak bars.
      * Default value is 0px.
-     * Increasing this value will make the waveform less detailed,
-     * which by extension will also make it less expensive to compute.
      * 
      * This value must be more than or equal to 0.
      * 
@@ -158,8 +154,7 @@ class FlxWaveform extends FlxSprite
     /**
      * The amount of time, in miliseconds, this waveform will represent.
      * 
-     * Changing this value will trigger a data rebuild, which may induce a
-     * temporary freeze/stutter.
+     * Changing this value will trigger a data rebuild, which may induce a temporary freeze/stutter.
      * Avoid changing it frequently.
      * 
      * @since 2.0.0
