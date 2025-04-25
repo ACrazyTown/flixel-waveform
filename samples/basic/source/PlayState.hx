@@ -160,7 +160,7 @@ class PlayState extends FlxUIState
         var orientationCheckboxLabel:FlxText = new FlxText(orientationCheckbox.x + orientationCheckbox.width, orientationCheckbox.y, 0, "Vertical?");
         ui.add(orientationCheckboxLabel);
 
-        var durationStepper:FlxUINumericStepper = new FlxUINumericStepper(orientationCheckboxLabel.x + orientationCheckboxLabel.width + 5, 1, 1, 5, 1, Math.round(FlxG.sound.music.length / 1000), 1);
+        var durationStepper:FlxUINumericStepper = new FlxUINumericStepper(orientationCheckboxLabel.x + orientationCheckboxLabel.width + 5, 1, 0.5, 5, 0.1, Math.round(FlxG.sound.music.length / 1000), 1);
         durationStepper.y = 10;
         durationStepper.value = Std.int(waveform.waveformDuration / 1000);
         durationStepper.name = "s_duration";
