@@ -97,11 +97,11 @@ class PlayState extends FlxUIState
         ui = new FlxUI();
         add(ui);
 
-        playPauseBtn = new FlxButton(5, 0, "Pause Music", playPause);
+        playPauseBtn = new FlxButton(3, 0, "Pause Music", playPause);
         playPauseBtn.y = 5;
         ui.add(playPauseBtn);
 
-        var drawRMSCheckbox:FlxUICheckBox = new FlxUICheckBox(10, 0, null, null, "Draw RMS");
+        var drawRMSCheckbox:FlxUICheckBox = new FlxUICheckBox(3, 0, null, null, "Draw RMS");
         drawRMSCheckbox.y = 30;
         drawRMSCheckbox.checked = true;
         drawRMSCheckbox.callback = () ->
@@ -110,7 +110,7 @@ class PlayState extends FlxUIState
         };
         ui.add(drawRMSCheckbox);
 
-        var paddingStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 10, 0, 1, 0, 0, 100, 0);
+        var paddingStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 35, 0, 1, 0, 0, 100, 0);
         paddingStepper.y = 10;
         paddingStepper.value = waveform.waveformBarPadding;
         paddingStepper.name = "s_padding";
@@ -120,7 +120,7 @@ class PlayState extends FlxUIState
         paddingLabel.y = paddingStepper.y;
         ui.add(paddingLabel);
 
-        var sizeStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 10, 0, 1, 1, 1, 100, 0);
+        var sizeStepper:FlxUINumericStepper = new FlxUINumericStepper(drawRMSCheckbox.x + drawRMSCheckbox.width - 35, 0, 1, 1, 1, 100, 0);
         sizeStepper.y = paddingStepper.y + 20;
         sizeStepper.value = waveform.waveformBarSize;
         sizeStepper.name = "s_size";
@@ -130,7 +130,7 @@ class PlayState extends FlxUIState
         sizeLabel.y = sizeStepper.y;
         ui.add(sizeLabel);
 
-        var drawModeLabel:FlxText = new FlxText(paddingLabel.x + 80, 5, 0, "Waveform Draw Mode");
+        var drawModeLabel:FlxText = new FlxText(paddingLabel.x + 65, 5, 0, "Waveform Draw Mode");
         ui.add(drawModeLabel);
         var drawModeDropdown:FlxUIDropDownMenu = new FlxUIDropDownMenu(drawModeLabel.x, 20, FlxUIDropDownMenu.makeStrIdLabelArray(["Combined", "Split Channels", "Single Channel (Left)", "Single Channel (Right)"]), (select) ->
         {
@@ -144,6 +144,14 @@ class PlayState extends FlxUIState
         });
         drawModeDropdown.selectedLabel = "Split Channels";
         ui.add(drawModeDropdown);
+
+        var orientationCheckbox:FlxUICheckBox = new FlxUICheckBox(drawModeDropdown.x + drawModeDropdown.width + 2, 0, null, null, "Vertical?");
+        orientationCheckbox.y = 15;
+        orientationCheckbox.callback = () ->
+        {
+            waveform.waveformOrientation = orientationCheckbox.checked ? VERTICAL : HORIZONTAL;
+        };
+        ui.add(orientationCheckbox);
     }
 
     function playPause():Void
