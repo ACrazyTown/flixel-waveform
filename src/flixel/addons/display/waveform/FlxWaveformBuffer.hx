@@ -242,7 +242,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
         if (sound == null)
             return null;
 
-        // These values are always hardcoded:
+        // These values are always constant:
         // Sample rate: 44100hz
         // Channels: 2
         // Bits per sample: 32

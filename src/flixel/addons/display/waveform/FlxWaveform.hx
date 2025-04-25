@@ -473,7 +473,7 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, peakest), waveformColor);
 
                     if (waveformDrawRMS)
-                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, peakest.rms), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, peakest), waveformRMSColor);
                 }
 
             case SPLIT_CHANNELS:
@@ -518,8 +518,8 @@ class FlxWaveform extends FlxSprite
 
                     if (waveformDrawRMS)
                     {
-                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentLeft.rms), waveformRMSColor);
-                        pixels.fillRect(getRMSRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentRight.rms), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentLeft), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentRight), waveformRMSColor);
                     }
                 }
 
@@ -549,7 +549,7 @@ class FlxWaveform extends FlxSprite
                     pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, segment), waveformColor);
                     if (waveformDrawRMS)
                     {
-                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, segment.rms), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, segment), waveformRMSColor);
                     }
                 }
         }
@@ -769,22 +769,21 @@ class FlxWaveform extends FlxSprite
      * @param y Y offset.
      * @param width The width of the peak rectangle.
      * @param height The height of the peak rectangle.
-     * @param rms The RMS value of the waveform segment.
+     * @param segment A `WaveformSegment` with the RMS data.
      * @return A `openfl.geom.Rectangle` instance.
      */
-    function getRMSRect(x:Float, y:Float, width:Float, height:Float, rms:Float):Rectangle
+    function getRMSRect(x:Float, y:Float, width:Float, height:Float, segment:WaveformSegment):Rectangle
     {
         var half:Float = height / 2;
-        var segmentHeight:Float = rms * half;
 
-        var y1:Float = half - segmentHeight;
-        var y2:Float = half + segmentHeight;
+        var top:Float = segment.max > 0 ? segment.rms * half : 0;
+        var segmentHeight:Float = (segment.max > 0 && segment.min < 0) ? segment.rms * height : segment.rms * half;
 
         if (waveformOrientation == VERTICAL)
-            return new Rectangle(y + y1, x, y2 - y1, width);
+            return new Rectangle(y + (half - top), x, segmentHeight, width);
 
         // horizontal
-        return new Rectangle(x, y + y1, width, y2 - y1);
+        return new Rectangle(x, y + (half - top), width, segmentHeight);
     }
 
     /**
