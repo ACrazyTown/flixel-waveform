@@ -23,7 +23,8 @@ abstract WaveformSegment(WaveformSegmentRaw) from WaveformSegmentRaw to Waveform
             rms = Math.sqrt((segment1.numSamples * segment1.rms * segment1.rms + segment2.numSamples * segment2.rms * segment2.rms) / (segment1.numSamples + segment2.numSamples));
 
         var segment:WaveformSegment = {
-            numSamples: segment1.numSamples + segment2.numSamples,
+            startIndex: Std.int(Math.min(segment1.startIndex, segment2.startIndex)),
+            endIndex: Std.int(Math.max(segment1.max, segment2.max)),
             max: Math.max(segment1.max, segment2.max),
             min: Math.min(segment1.min, segment2.min),
             rms: rms
@@ -44,11 +45,24 @@ abstract WaveformSegment(WaveformSegmentRaw) from WaveformSegmentRaw to Waveform
 
         return this.min == 0 && this.max == 0;
     }
+
+    /**
+     * The number of audio samples this segment covers.
+     * 
+     * This is merely a shortcut for `segment.endIndex - segment.startIndex`.
+     */
+    public var numSamples(get, never):Int;
+
+    @:noCompletion function get_numSamples():Int
+    {
+        return this.endIndex - this.startIndex;
+    }
 }
 
 private typedef WaveformSegmentRaw =
 {
-    numSamples:Int,
+    startIndex:Int,
+    endIndex:Int,
     min:Float,
     max:Float,
     rms:Float

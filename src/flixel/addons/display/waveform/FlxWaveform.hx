@@ -727,7 +727,7 @@ class FlxWaveform extends FlxSprite
     inline overload extern function resetDrawArray(array:Array<WaveformSegment>):Void
     {
         for (i in 0...array.length) 
-            array[i] = {numSamples: 0, max: 0, min: 0, rms: 0};
+            array[i] = {startIndex: 0, endIndex: 0, max: 0, min: 0, rms: 0};
     }
 
     @:noCompletion function get_waveformWidth():Int
