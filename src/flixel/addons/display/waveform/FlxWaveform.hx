@@ -182,7 +182,7 @@ class FlxWaveform extends FlxSprite
     public var waveformOrientation(default, set):WaveformOrientation = HORIZONTAL;
 
     /**
-     * Represents vertical padding, in pixels, between the waveform channel and the edge of the graphic.
+     * Represents padding, in pixels, between the waveform channel and the edge of the graphic.
      * Default value is 1px.
      * 
      * Used only when `waveformDrawMode` is `SPLIT_CHANNELS`.
