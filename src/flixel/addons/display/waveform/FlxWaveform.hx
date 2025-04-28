@@ -126,8 +126,6 @@ class FlxWaveform extends FlxSprite
      * 
      * This value must be more than or equal to 1. 
      * 
-     * This value doesn't affect anything when the samples are graphed.
-     * 
      * @since 2.0.0
      */
     public var waveformBarSize(default, set):Int = 1;
@@ -137,8 +135,6 @@ class FlxWaveform extends FlxSprite
      * Default value is 0px.
      * 
      * This value must be more than or equal to 0.
-     * 
-     * This value doesn't affect anything when the samples are graphed.
      * 
      * @since 2.0.0
      */
@@ -396,12 +392,6 @@ class FlxWaveform extends FlxSprite
         // clear previous draw
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
-
-        // TODO: Enable graphed sample renderer!
-        // if (samplesPerPixel > 1)
-        //     drawPeaks();
-        // else
-        //     drawGraphedSamples();
         drawPeaks();
     }
 
@@ -569,97 +559,6 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Internal method which graphs audio samples.
-     * Used when `samplesPerPixel` is equal to 1.
-     */
-    // function drawGraphedSamples():Void
-    // {
-    //     // _shape.graphics.clear();
-    //     // _shape.graphics.lineStyle(1, waveformColor);
-
-    //     var centerY:Float = waveformHeight / 2;
-    //     var halfCenter:Float = centerY / 2;
-
-    //     switch (waveformDrawMode)
-    //     {
-    //         case COMBINED:
-    //             var prevX:Float = 0;
-    //             var prevY:Float = centerY;
-
-    //             _shape.graphics.moveTo(prevX, prevY);
-
-    //             for (i in 0...waveformWidth)
-    //             {
-    //                 var peak:Float = _drawPointsLeft[i];
-    //                 if (_stereo)
-    //                 {
-    //                     // Can't graph both so let's get average?
-    //                     peak += _drawPointsRight[i];
-    //                     peak /= 2;
-    //                 }
-
-    //                 var curX:Float = i;
-    //                 var curY:Float = centerY - peak * centerY;
-
-    //                 _shape.graphics.lineTo(curX, curY);
-
-    //                 prevX = curX;
-    //                 prevY = curY;
-    //             }
-
-    //         case SPLIT_CHANNELS:
-    //             var prevX:Float = 0;
-    //             var prevYL:Float = halfCenter;
-    //             var prevYR:Float = centerY + halfCenter;
-
-    //             for (i in 0...waveformWidth)
-    //             {
-    //                 var peakLeft:Float = _drawPointsLeft[i];
-    //                 var peakRight:Float = 0;
-    //                 if (_stereo)
-    //                     peakRight = _drawPointsRight[i];
-
-    //                 var curX:Float = i;
-    //                 var curYL:Float = halfCenter - peakLeft * halfCenter;
-    //                 var curYR:Float = (centerY + halfCenter) - peakRight * halfCenter;
-
-    //                 // left
-    //                 _shape.graphics.moveTo(prevX, prevYL);
-    //                 _shape.graphics.lineTo(curX, curYL);
-
-    //                 // right
-    //                 _shape.graphics.moveTo(prevX, prevYR);
-    //                 _shape.graphics.lineTo(curX, curYR);
-
-    //                 prevX = curX;
-    //                 prevYL = curYL;
-    //                 prevYR = curYR;
-    //             }
-
-    //         case SINGLE_CHANNEL(channel):
-    //             var prevX:Float = 0;
-    //             var prevY:Float = centerY;
-
-    //             _shape.graphics.moveTo(prevX, prevY);
-
-    //             for (i in 0...waveformWidth)
-    //             {
-    //                 var peak:Float = channel == 0 ? _drawPointsLeft[i] : _drawPointsRight[i];
-
-    //                 var curX:Float = i;
-    //                 var curY:Float = centerY - peak * centerY;
-
-    //                 _shape.graphics.lineTo(curX, curY);
-
-    //                 prevX = curX;
-    //                 prevY = curY;
-    //             }
-    //     }
-
-    //     pixels.draw(_shape);
-    // }
-
-    /**
      * Helper function that calls `prepareDrawData()` for both audio channels.
      */
     function refreshDrawData():Void
@@ -694,17 +593,7 @@ class FlxWaveform extends FlxSprite
         drawPoints.resize(arrayLength);
         resetDrawArray(drawPoints);
 
-        // TODO: Enable graphed sample renderer!
-        // if (samplesPerPixel > 1)
-        // {
         buildDrawData(channel, drawPoints, true, true);
-        // }
-        // else
-        // {
-        //     var endSamples:Int = _timeSamples + _durationSamples;
-        //     for (i in _timeSamples...endSamples)
-        //         drawPoints.push(samples[i]);
-        // }
     }
 
     /**
