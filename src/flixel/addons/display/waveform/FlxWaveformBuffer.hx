@@ -19,8 +19,14 @@ import lime.media.vorbis.VorbisInfo;
 
 
 /**
- * A `FlxWaveformBuffer` holds various data related to an audio track
- * that is required for further processing.
+ * A `FlxWaveformBuffer` provides an universal audio buffer interface
+ * for easier handling of audio data on different targets.
+ * 
+ * Since different platforms have different ways of storing audio data in different formats
+ * (JavaScript has a native AudioBuffer class, Flash requires us to call a function, etc.)
+ * 
+ * This class provides a simple cross-platform API for accessing audio data.
+ * Use any of the `FlxWaveformBuffer.from...()` methods to create an audio buffer from different sources.
  * 
  * @since 2.0.0
  * 
