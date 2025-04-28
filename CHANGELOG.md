@@ -12,6 +12,7 @@ Legend:
     - Use the `FlxWaveformBuffer.fromVorbisFile()` method to create an audio buffer from a `lime.media.vorbis.VorbisFile`.
 - ✨ **Added** a public `waveformBuffer` property to `FlxWaveform`.
 - ✨ **Added** the `FlxWaveform.waveformOrientation` property that controls whether the waveform should be drawn horizontally (left to right) or vertically (top to bottom).
+- ✨ **Added** the `FlxWaveform.waveformChannelPadding` property that controls the vertical padding between waveform channels when the `FlxWaveform.waveformDrawMode` is set to `SPLIT_CHANNELS`.
 - 🛠️ **Fixed** waveform desync.
 - 🛠️ **Fixed** weirdly cropped showcase image... oops!
 - 🛠️ **Fixed** crash due to `FlxWaveformBuffer` trying to access a property on a null Lime audio buffer.
