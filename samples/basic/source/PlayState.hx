@@ -68,6 +68,9 @@ class PlayState extends FlxUIState
         waveform.waveformBarSize = 4;
         waveform.waveformBarPadding = 2;
 
+        // Set the padding between channels to be 2px.
+        waveform.waveformChannelPadding = 2;
+
         // Add our waveform to the state.
         add(waveform);
 
@@ -170,6 +173,15 @@ class PlayState extends FlxUIState
         durationLabel.y = durationStepper.y;
         ui.add(durationLabel);
 
+        var channelPaddingStepper:FlxUINumericStepper = new FlxUINumericStepper(durationStepper.x, durationStepper.y + durationStepper.height + 5, 1, 0, 0, 100);
+        channelPaddingStepper.value = waveform.waveformChannelPadding;
+        channelPaddingStepper.name = "s_channelPadding";
+        ui.add(channelPaddingStepper);
+        var channelPaddingLabel:FlxText = new FlxText(0, 0, 0, "Channel padding (px)");
+        channelPaddingLabel.x = channelPaddingStepper.x + channelPaddingStepper.width;
+        channelPaddingLabel.y = channelPaddingStepper.y;
+        ui.add(channelPaddingLabel);
+
         time = new FlxText(5, waveform.y, 0, "0");
         ui.add(time);
     }
@@ -193,6 +205,8 @@ class PlayState extends FlxUIState
                 waveform.waveformBarSize = Std.int(stepper.value);
             else if (stepper.name == "s_duration")
                 waveform.waveformDuration = stepper.value * 1000;
+            else if (stepper.name == "s_channelPadding")
+                waveform.waveformChannelPadding = Std.int(stepper.value);
         }
     }
 }
