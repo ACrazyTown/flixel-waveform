@@ -1,16 +1,16 @@
 package;
 
-import flixel.util.FlxStringUtil;
-import flixel.addons.ui.FlxUIDropDownMenu;
-import flixel.addons.ui.FlxUINumericStepper;
-import flixel.addons.ui.FlxUICheckBox;
-import flixel.text.FlxText;
-import flixel.addons.ui.FlxUI;
-import flixel.addons.ui.FlxUIState;
-import flixel.ui.FlxButton;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.addons.display.waveform.FlxWaveform;
+import flixel.addons.ui.FlxUI;
+import flixel.addons.ui.FlxUICheckBox;
+import flixel.addons.ui.FlxUIDropDownMenu;
+import flixel.addons.ui.FlxUINumericStepper;
+import flixel.addons.ui.FlxUIState;
+import flixel.text.FlxText;
+import flixel.ui.FlxButton;
+import flixel.util.FlxStringUtil;
 
 class PlayState extends FlxUIState
 {
@@ -153,7 +153,7 @@ class PlayState extends FlxUIState
 
         // i hate flixel-ui
         var orientationCheckbox:FlxUICheckBox = new FlxUICheckBox(drawModeDropdown.x + drawModeDropdown.width + 5, 0, null, null, "", 0);
-        orientationCheckbox.y = 15;
+		orientationCheckbox.y = 5;
         orientationCheckbox.callback = () ->
         {
             waveform.waveformOrientation = orientationCheckbox.checked ? VERTICAL : HORIZONTAL;
@@ -162,6 +162,14 @@ class PlayState extends FlxUIState
 
         var orientationCheckboxLabel:FlxText = new FlxText(orientationCheckbox.x + orientationCheckbox.width, orientationCheckbox.y, 0, "Vertical?");
         ui.add(orientationCheckboxLabel);
+
+		var baselineCheckbox:FlxUICheckBox = new FlxUICheckBox(orientationCheckbox.x, orientationCheckbox.y + orientationCheckbox.width + 5, null, null, "Baseline", 70);
+        baselineCheckbox.checked = waveform.waveformDrawBaseline;
+        baselineCheckbox.callback = () ->
+        {
+            waveform.waveformDrawBaseline = baselineCheckbox.checked;
+        };
+        ui.add(baselineCheckbox);
 
         var durationStepper:FlxUINumericStepper = new FlxUINumericStepper(orientationCheckboxLabel.x + orientationCheckboxLabel.width + 5, 1, 0.5, 5, 0.1, Math.round(FlxG.sound.music.length / 1000), 1);
         durationStepper.y = 10;
