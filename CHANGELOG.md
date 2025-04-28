@@ -10,18 +10,20 @@ Legend:
 - ✨ **Added** support for making waveforms from streamed sounds.
     - No additional work on the user side needs to be done. If you pass a streamed sound to a `FlxWaveform.loadDataFrom...()` method, it will automatically detect and load it.
     - Use the `FlxWaveformBuffer.fromVorbisFile()` method to create an audio buffer from a `lime.media.vorbis.VorbisFile`.
-- ✨ **Added** a public `waveformBuffer` property to `FlxWaveform`.
+- ✨ **Added** the `FlxWaveform.waveformBuffer` property that exposes the waveform's audio buffer.
 - ✨ **Added** the `FlxWaveform.waveformOrientation` property that controls whether the waveform should be drawn horizontally (left to right) or vertically (top to bottom).
 - ✨ **Added** the `FlxWaveform.waveformChannelPadding` property that controls the vertical padding between waveform channels when the `FlxWaveform.waveformDrawMode` is set to `SPLIT_CHANNELS`.
+- 🛠️ **Fixed** waveform appearance.
+    - Previously the waveform would only store the peak value of an audio segment. This caused the waveform to always appear symmetrical. As part of the internal data rework, this has now been corrected and the waveform now keeps track of both the minimum and maximum values of a segment. As a side effect, this also makes the waveform accurate when visualizing very small durations.
 - 🛠️ **Fixed** waveform desync.
-- 🛠️ **Fixed** weirdly cropped showcase image... oops!
 - 🛠️ **Fixed** crash due to `FlxWaveformBuffer` trying to access a property on a null Lime audio buffer.
 - 🛠️ **Adjusted** `FlxWaveform`'s constructor arguments.
     - `x` and `y` are now optional.
     - `width` and `height` are now mandatory.
 - 🛠️ **Updated** the example project to include new features from this release.
-- 🛠️ `waveformDuration` now defaults to 1 second (1000ms) instead of 0.
-- 🛠️ Some documentation adjustments.
+- 🛠️ `FlxWaveform.waveformDuration` now defaults to 1 second (1000ms) instead of 0.
+- 🛠️ Various documentation adjustments.
+- 🛠️ **Fixed** weird crop on the showcase image.
 
 ## 2.0.0 (February 15, 2025)
 - ✨ **Added** `waveformTime` and `waveformDuration`.
