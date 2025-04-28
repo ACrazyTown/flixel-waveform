@@ -185,6 +185,16 @@ class FlxWaveform extends FlxSprite
      */
     public var waveformOrientation(default, set):WaveformOrientation = HORIZONTAL;
 
+    /**
+     * Represents vertical padding, in pixels, between the waveform channel and the edge of the graphic.
+     * Default value is 1px.
+     * 
+     * Used only when `waveformDrawMode` is `SPLIT_CHANNELS`.
+     * 
+     * @since 2.1.0
+     */
+    public var waveformChannelPadding(default, set):Int = 1;
+
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -508,13 +518,21 @@ class FlxWaveform extends FlxSprite
 
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
-                    pixels.fillRect(getPeakRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentLeft), waveformColor);
-                    pixels.fillRect(getPeakRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentRight), waveformColor);
+                    var y1:Float = waveformChannelPadding;
+                    var w1:Float = waveformBarSize;
+                    var h1:Float = (waveformOrientation == HORIZONTAL ? halfHeight : halfWidth) - waveformChannelPadding * 2;
+                    
+                    var y2:Float = (waveformOrientation == HORIZONTAL ? halfHeight : halfWidth) + waveformChannelPadding;
+                    var w2:Float = waveformBarSize;
+                    var h2:Float = (waveformOrientation == HORIZONTAL ? halfHeight : halfWidth) - waveformChannelPadding * 2;
+
+                    pixels.fillRect(getPeakRect(x, y1, w1, h1, segmentLeft), waveformColor);
+                    pixels.fillRect(getPeakRect(x, y2, w2, h2, segmentRight), waveformColor);
 
                     if (waveformDrawRMS)
                     {
-                        pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentLeft), waveformRMSColor);
-                        pixels.fillRect(getRMSRect(x, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, waveformBarSize, waveformOrientation == HORIZONTAL ? halfHeight : halfWidth, segmentRight), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, y1, w1, h1, segmentLeft), waveformRMSColor);
+                        pixels.fillRect(getRMSRect(x, y2, w2, h2, segmentRight), waveformRMSColor);
                     }
                 }
 
@@ -1044,6 +1062,19 @@ class FlxWaveform extends FlxSprite
         }
 
         return waveformOrientation;
+    }
+
+    @:noCompletion function set_waveformChannelPadding(value:Int):Int
+    {
+        if (waveformChannelPadding != value)
+        {
+            waveformChannelPadding = value;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformChannelPadding;
     }
     
 }
