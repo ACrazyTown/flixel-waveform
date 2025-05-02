@@ -12,7 +12,7 @@ Legend:
     - Use the `FlxWaveformBuffer.fromVorbisFile()` method to create an audio buffer from a `lime.media.vorbis.VorbisFile`.
 - ✨ **Added** the `FlxWaveform.waveformBuffer` property that exposes the waveform's audio buffer.
 - ✨ **Added** the `FlxWaveform.waveformOrientation` property that controls whether the waveform should be drawn horizontally (left to right) or vertically (top to bottom).
-- ✨ **Added** the `FlxWaveform.waveformChannelPadding` property that controls the vertical padding between waveform channels when the `FlxWaveform.waveformDrawMode` is set to `SPLIT_CHANNELS`.
+- ✨ **Added** the `FlxWaveform.waveformChannelPadding` property that controls the padding between waveform channels when the `FlxWaveform.waveformDrawMode` is set to `SPLIT_CHANNELS`.
 - ✨ **Added** new features to the playground sample.
 - 🛠️ **Fixed** waveform appearance.
     - Previously the waveform would only store the peak value of an audio segment. This caused the waveform to always appear symmetrical. As part of the internal data rework, this has now been corrected and the waveform now keeps track of both the minimum and maximum values of a segment. As a side effect, this also makes the waveform accurate when visualizing very small durations.
