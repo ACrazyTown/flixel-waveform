@@ -1,5 +1,5 @@
 <p align="center">
-    <img src=".github/images/logo.png" />
+    <img src="images/logo.png" />
 </p>
 
 ---
@@ -7,7 +7,7 @@
 A simple yet powerful [HaxeFlixel](https://haxeflixel.com/) addon for drawing waveforms from sounds.
 
 <p align="center">
-    <img src=".github/images/flxwaveform-showcase.png" />
+    <img src="images/flxwaveform-showcase.png" />
 </p>
 
 Take a look at [the example project](https://github.com/ACrazyTown/flixel-waveform/tree/main/samples/basic) for a showcase and explanation of how to use the library.

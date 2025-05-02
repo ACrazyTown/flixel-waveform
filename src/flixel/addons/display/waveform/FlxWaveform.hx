@@ -152,9 +152,11 @@ class FlxWaveform extends FlxSprite
      * Changing this value will trigger a data rebuild, which may induce a temporary freeze/stutter.
      * Avoid changing it frequently.
      * 
+     * Default value is 5 seconds (5000 miliseconds).
+     * 
      * @since 2.0.0
      */
-    public var waveformDuration(default, set):Float = 1000;
+	public var waveformDuration(default, set):Float;
     
     /**
      * A reference to the `FlxWaveformBuffer` that holds the raw audio data
@@ -360,6 +362,10 @@ class FlxWaveform extends FlxSprite
 
         if (_stereo)
             _drawPointsRight = [];
+
+		// todo : this feels really jank.
+		if (waveformDuration <= 0)
+			waveformDuration = 5000;
     }
 
     /**

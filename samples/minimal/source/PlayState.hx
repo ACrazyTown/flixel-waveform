@@ -21,7 +21,7 @@ class PlayState extends FlxState
         // See: https://github.com/ACrazyTown/flixel-waveform/issues/8
         FlxG.sound.music.play(true);
 
-        waveform = new FlxWaveform(0, 0, FlxG.width, FlxG.height, FlxColor.GRAY, FlxColor.WHITE, SPLIT_CHANNELS);
+		waveform = new FlxWaveform(0, 0, FlxG.width, FlxG.height, FlxColor.WHITE, FlxColor.GRAY, SPLIT_CHANNELS);
         waveform.loadDataFromFlxSound(FlxG.sound.music);
         add(waveform);
     }
@@ -35,7 +35,7 @@ class PlayState extends FlxState
 
         if (FlxG.keys.justPressed.SPACE)
         {
-            FlxG.sound.music?.playing ? FlxG.sound.music?.resume() : FlxG.sound.music?.pause();
+			FlxG.sound.music?.playing ? FlxG.sound.music?.pause() : FlxG.sound.music?.resume();
         }
     }
 }

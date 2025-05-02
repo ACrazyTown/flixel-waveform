@@ -21,10 +21,16 @@ jobs:
                 curl --output ../hxcpp.zip --location https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.73/hxcpp-4.3.73.zip
                 haxelib install ../hxcpp.zip --quiet
 
-            - name: Build sample
+            - name: Build sample (minimal)
               run: |
-                cd samples/basic
-                haxelib run lime build macos
+                cd samples/minimal
+                haxelib run lime build mac
+                cd ../..
+
+            - name: Build sample (playground)
+              run: |
+                cd samples/playground
+                haxelib run lime build mac
                 cd ../..
 
     test-cpp-windows:
@@ -47,7 +53,15 @@ jobs:
 
             - name: Build sample
               run: |
-                cd samples/basic
+                - name: Build sample (minimal)
+              run: |
+                cd samples/minimal
+                haxelib run lime build windows
+                cd ../..
+
+            - name: Build sample (playground)
+              run: |
+                cd samples/playground
                 haxelib run lime build windows
                 cd ../..
 
@@ -69,9 +83,15 @@ jobs:
                 curl --output ../hxcpp.zip --location https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.73/hxcpp-4.3.73.zip
                 haxelib install ../hxcpp.zip --quiet
 
-            - name: Build sample
+            - name: Build sample (minimal)
               run: |
-                cd samples/basic
+                cd samples/minimal
+                haxelib run lime build linux
+                cd ../..
+
+            - name: Build sample (playground)
+              run: |
+                cd samples/playground
                 haxelib run lime build linux
                 cd ../..
 
@@ -91,9 +111,15 @@ jobs:
                 haxelib install flixel --quiet
                 haxelib install flixel-ui --quiet
 
-            - name: Build sample
+            - name: Build sample (minimal)
               run: |
-                cd samples/basic
+                cd samples/minimal
+                haxelib run lime build hl
+                cd ../..
+
+            - name: Build sample (playground)
+              run: |
+                cd samples/playground
                 haxelib run lime build hl
                 cd ../..
 
@@ -113,9 +139,15 @@ jobs:
                 haxelib install flixel --quiet
                 haxelib install flixel-ui --quiet
 
-            - name: Build sample
+            - name: Build sample (minimal)
               run: |
-                cd samples/basic
+                cd samples/minimal
+                haxelib run lime build html5
+                cd ../..
+
+            - name: Build sample (playground)
+              run: |
+                cd samples/playground
                 haxelib run lime build html5
                 cd ../..
 
@@ -135,9 +167,15 @@ jobs:
                 haxelib install flixel --quiet
                 haxelib install flixel-ui --quiet
 
-            - name: Build sample
+            - name: Build sample (minimal)
               run: |
-                cd samples/basic
+                cd samples/minimal
+                haxelib run lime build flash
+                cd ../..
+
+            - name: Build sample (playground)
+              run: |
+                cd samples/playground
                 haxelib run lime build flash
                 cd ../..
                 
