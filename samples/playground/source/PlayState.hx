@@ -153,7 +153,7 @@ class PlayState extends FlxUIState
 
         // i hate flixel-ui
         var orientationCheckbox:FlxUICheckBox = new FlxUICheckBox(drawModeDropdown.x + drawModeDropdown.width + 5, 0, null, null, "", 0);
-		orientationCheckbox.y = 5;
+        orientationCheckbox.y = 5;
         orientationCheckbox.callback = () ->
         {
             waveform.waveformOrientation = orientationCheckbox.checked ? VERTICAL : HORIZONTAL;
@@ -163,7 +163,7 @@ class PlayState extends FlxUIState
         var orientationCheckboxLabel:FlxText = new FlxText(orientationCheckbox.x + orientationCheckbox.width, orientationCheckbox.y, 0, "Vertical?");
         ui.add(orientationCheckboxLabel);
 
-		var baselineCheckbox:FlxUICheckBox = new FlxUICheckBox(orientationCheckbox.x, orientationCheckbox.y + orientationCheckbox.width + 5, null, null, "Baseline", 70);
+        var baselineCheckbox:FlxUICheckBox = new FlxUICheckBox(orientationCheckbox.x, orientationCheckbox.y + orientationCheckbox.width + 5, null, null, "Baseline", 70);
         baselineCheckbox.checked = waveform.waveformDrawBaseline;
         baselineCheckbox.callback = () ->
         {
