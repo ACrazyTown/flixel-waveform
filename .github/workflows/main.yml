@@ -51,9 +51,7 @@ jobs:
                 curl --output ../hxcpp.zip --location https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.73/hxcpp-4.3.73.zip
                 haxelib install ../hxcpp.zip --quiet
 
-            - name: Build sample
-              run: |
-                - name: Build sample (minimal)
+            - name: Build sample (minimal)
               run: |
                 cd samples/minimal
                 haxelib run lime build windows
