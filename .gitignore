@@ -1,6 +1,5 @@
 samples/**/export
 samples/**/dump
-samples/test
 .DS_Store
 ignored/
 flixel-waveform.zip

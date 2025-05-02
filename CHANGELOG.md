@@ -21,7 +21,7 @@ Legend:
     - `x` and `y` are now optional.
     - `width` and `height` are now mandatory.
 - 🛠️ **Updated** the example project to include new features from this release.
-- 🛠️ `FlxWaveform.waveformDuration` now defaults to 1 second (1000ms) instead of 0.
+- 🛠️ `FlxWaveform.waveformDuration` now defaults to 5 seconds (5000ms) instead of 0.
 - 🛠️ Various documentation adjustments.
 - 🛠️ **Fixed** weird crop on the showcase image.
 

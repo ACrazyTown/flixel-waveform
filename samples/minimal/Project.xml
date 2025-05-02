@@ -4,7 +4,7 @@
 
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="flixel-waveform-sample" file="flixel-waveform-sample" main="Main" version="2.1.0" company="ACrazyTown" />
+	<app title="FlxWaveform Minimal Sample" file="sample-minimal" main="Main" version="2.1.0" company="ACrazyTown" />
 
 	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
 		or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"-->
