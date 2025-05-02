@@ -7,5 +7,5 @@
     "classPath": "src",
     "license": "MIT",
     "version": "2.1.0",
-    "releasenote": "TBD"
+    "releasenote": "Add orientation, channel padding, support for streamed sounds; See CHANGELOG.md"
 }

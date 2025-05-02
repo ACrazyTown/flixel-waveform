@@ -6,13 +6,14 @@ Legend:
 - 🛠️ - Bugfix/Adjustment
 - ⚠️ - Breaking change
 
-## 2.1.0 (???)
+## 2.1.0 (May 3, 2025)
 - ✨ **Added** support for making waveforms from streamed sounds.
     - No additional work on the user side needs to be done. If you pass a streamed sound to a `FlxWaveform.loadDataFrom...()` method, it will automatically detect and load it.
     - Use the `FlxWaveformBuffer.fromVorbisFile()` method to create an audio buffer from a `lime.media.vorbis.VorbisFile`.
 - ✨ **Added** the `FlxWaveform.waveformBuffer` property that exposes the waveform's audio buffer.
 - ✨ **Added** the `FlxWaveform.waveformOrientation` property that controls whether the waveform should be drawn horizontally (left to right) or vertically (top to bottom).
 - ✨ **Added** the `FlxWaveform.waveformChannelPadding` property that controls the vertical padding between waveform channels when the `FlxWaveform.waveformDrawMode` is set to `SPLIT_CHANNELS`.
+- ✨ **Added** new features to the playground sample.
 - 🛠️ **Fixed** waveform appearance.
     - Previously the waveform would only store the peak value of an audio segment. This caused the waveform to always appear symmetrical. As part of the internal data rework, this has now been corrected and the waveform now keeps track of both the minimum and maximum values of a segment. As a side effect, this also makes the waveform accurate when visualizing very small durations.
 - 🛠️ **Fixed** waveform desync.
