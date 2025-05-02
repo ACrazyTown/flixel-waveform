@@ -10,7 +10,6 @@ import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import lime.media.AudioBuffer;
 import lime.utils.Float32Array;
-// import openfl.display.Shape;
 import openfl.geom.Rectangle;
 
 #if flash
@@ -242,11 +241,6 @@ class FlxWaveform extends FlxSprite
     var _drawDataDirty:Bool = false;
 
     /**
-     * Internal helper used for drawing lines.
-     */
-    // var _shape:Shape;
-
-    /**
      * Internal helper that includes `waveformBarSize` and `waveformBarPadding`
      * into the waveform size to calculate how much data is actually
      * needed to draw a waveform.
@@ -278,8 +272,6 @@ class FlxWaveform extends FlxSprite
         waveformDrawMode = drawMode;
         makeGraphic(width, height, waveformBgColor);
         calcEffectiveSize();
-
-        // _shape = new Shape();
     }
 
     @:inheritDoc(FlxSprite.destroy)
@@ -287,7 +279,6 @@ class FlxWaveform extends FlxSprite
     {
         super.destroy();
 
-        // _shape = null;
         _drawPointsLeft = null;
         _drawPointsRight = null;
 
