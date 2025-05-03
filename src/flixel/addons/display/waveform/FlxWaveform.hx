@@ -466,9 +466,6 @@ class FlxWaveform extends FlxSprite
                     if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
-                    segmentLeft.applyScale(waveformGainMultiplier);
-                    segmentRight?.applyScale(waveformGainMultiplier);
-
                     // merge only if we have both
                     var peakest:WaveformSegment = segmentRight != null ? WaveformSegment.merge(segmentLeft, segmentRight) : segmentLeft;
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
@@ -514,9 +511,6 @@ class FlxWaveform extends FlxSprite
                     if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
-                    segmentLeft.applyScale(waveformGainMultiplier);
-                    segmentRight?.applyScale(waveformGainMultiplier);
-
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
                     var y1:Float = waveformChannelPadding;
@@ -557,8 +551,6 @@ class FlxWaveform extends FlxSprite
                         continue;
                     if (segment.silent)
                         continue;
-
-                    segment.applyScale(waveformGainMultiplier);
 
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
@@ -663,8 +655,8 @@ class FlxWaveform extends FlxSprite
     {
         var half:Float = height / 2;
 
-        var top:Float = segment.max * half;
-        var bottom:Float = segment.min * half;
+        var top:Float = (segment.max * waveformGainMultiplier) * half;
+        var bottom:Float = (segment.min * waveformGainMultiplier) * half;
         var segmentHeight:Float = Math.abs(top) + Math.abs(bottom);
 
         if (waveformOrientation == VERTICAL)
@@ -691,8 +683,9 @@ class FlxWaveform extends FlxSprite
     {
         var half:Float = height / 2;
 
-        var top:Float = segment.max > 0 ? segment.rms * half : 0;
-        var segmentHeight:Float = (segment.max > 0 && segment.min < 0) ? segment.rms * height : segment.rms * half;
+        var rms:Float = segment.rms * waveformGainMultiplier;
+        var top:Float = segment.max > 0 ? rms * half : 0;
+        var segmentHeight:Float = (segment.max > 0 && segment.min < 0) ? rms * height : rms * half;
 
         if (waveformOrientation == VERTICAL)
             return new Rectangle(y + (half - top), x, segmentHeight, width);

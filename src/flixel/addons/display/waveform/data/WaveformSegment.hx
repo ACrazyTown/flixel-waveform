@@ -44,13 +44,6 @@ abstract WaveformSegment(WaveformSegmentRaw) from WaveformSegmentRaw to Waveform
 
         return this.min == 0 && this.max == 0;
     }
-
-    public function applyScale(scale:Float):Void
-    {
-        this.min *= scale;
-        this.max *= scale;
-        this.rms *= scale;
-    }
 }
 
 private typedef WaveformSegmentRaw =
