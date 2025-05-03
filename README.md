@@ -10,7 +10,7 @@ A simple yet powerful [HaxeFlixel](https://haxeflixel.com/) addon for drawing wa
     <img src="images/flxwaveform-showcase.png" />
 </p>
 
-Take a look at [the example project](https://github.com/ACrazyTown/flixel-waveform/tree/main/samples/basic) for a showcase and explanation of how to use the library.
+Take a look at [the playground example project](https://github.com/ACrazyTown/flixel-waveform/tree/main/samples/playground) for a showcase and explanation of how to use the library.
 
 If you have any questions/issues/ideas, do not hesitate to [open an issue on GitHub](https://github.com/ACrazyTown/flixel-waveform/issues/new) or ask away in [the thread on the Haxe discord server](https://discord.com/channels/162395145352904705/1340696952748376075).
 
