@@ -192,6 +192,14 @@ class FlxWaveform extends FlxSprite
      */
     public var waveformChannelPadding(default, set):Int = 1;
 
+    /**
+     * A multiplier that's applied on the sample value to make the waveform larger vertically 
+     * (or horizontally, if the waveform's orientation is vertical.)
+     * 
+     * @since 2.2.0
+     */
+    public var waveformGainMultiplier(default, set):Float = 1;
+
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -458,6 +466,9 @@ class FlxWaveform extends FlxSprite
                     if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
+                    segmentLeft.applyScale(waveformGainMultiplier);
+                    segmentRight?.applyScale(waveformGainMultiplier);
+
                     // merge only if we have both
                     var peakest:WaveformSegment = segmentRight != null ? WaveformSegment.merge(segmentLeft, segmentRight) : segmentLeft;
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
@@ -503,6 +514,9 @@ class FlxWaveform extends FlxSprite
                     if ((!_stereo && segmentLeft.silent) || (_stereo && segmentLeft.silent && segmentRight.silent))
                         continue;
 
+                    segmentLeft.applyScale(waveformGainMultiplier);
+                    segmentRight?.applyScale(waveformGainMultiplier);
+
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
                     var y1:Float = waveformChannelPadding;
@@ -543,6 +557,8 @@ class FlxWaveform extends FlxSprite
                         continue;
                     if (segment.silent)
                         continue;
+
+                    segment.applyScale(waveformGainMultiplier);
 
                     var x:Float = i * (waveformBarSize + waveformBarPadding);
 
@@ -961,6 +977,19 @@ class FlxWaveform extends FlxSprite
         }
 
         return waveformChannelPadding;
+    }
+    
+    function set_waveformGainMultiplier(value:Float):Float 
+    {
+        if (waveformGainMultiplier != value)
+        {
+            waveformGainMultiplier = value;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformGainMultiplier;
     }
     
 }
