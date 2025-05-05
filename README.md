@@ -18,7 +18,9 @@ If you have any questions/issues/ideas, do not hesitate to [open an issue on Git
 
 1. To install the library, run the following command in your terminal:
     - For the latest stable release, run `haxelib install flixel-waveform`
-    - For the latest development and possibly unstable version, install from git: `haxelib git flixel-waveform https://github.com/ACrazyTown/flixel-waveform`
+    - For the latest development and possibly unstable version, install from git: `haxelib git flixel-waveform https://github.com/ACrazyTown/flixel-waveform dev`.
+        - The `dev` branch is where development on the next major/minor release is being done.
+        - The `main` branch is where patches and bugfixes for the current stable release are being done.
 
 2. Include the library in your Project.xml: `<haxelib name="flixel-waveform" />`
 
