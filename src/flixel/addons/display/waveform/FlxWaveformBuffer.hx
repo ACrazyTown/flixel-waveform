@@ -1,6 +1,6 @@
 package flixel.addons.display.waveform;
 
-import flixel.addons.display.waveform.data.WaveformSegment;
+import flixel.addons.display.waveform.data.FlxWaveformSegment;
 import flixel.sound.FlxSound;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.FlxDestroyUtil;
@@ -437,7 +437,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * 
      * @since 2.1.0
      */
-    public function getSegment(channel:Int, startIndex:Int, endIndex:Int, calculateRMS:Bool = false):WaveformSegment
+    public function getSegment(channel:Int, startIndex:Int, endIndex:Int, calculateRMS:Bool = false):FlxWaveformSegment
     {
         var data:Null<Float32Array> = getChannelData(channel);
 
@@ -465,7 +465,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
         if (calculateRMS)
             rms = Math.sqrt(sampleSquareSum / numSamples);
 
-        var segment:WaveformSegment = {
+        var segment:FlxWaveformSegment = {
             startIndex: startIndex,
             endIndex: endIndex,
             max: max, 
