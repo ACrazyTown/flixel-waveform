@@ -549,43 +549,6 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
-     * Internal function that builds the data neccessary to render the waveform.
-     * @param channel What channel to build the data for
-     * @param points The output array of draw points
-     * @param rms The output array of draw RMS points
-     * @param full Whether the data should be built for the entire waveform, or just the current segment.
-     * @param forceRefresh Whether the data should be updated even if there's a non-zero value in the array.
-     */
-    function buildDrawData(channel:Int, points:Array<FlxWaveformSegment>, full:Bool = true, forceRefresh:Bool = true):Void
-    {
-        var samplesGenerated:Int = 0;
-        var toGenerate:Int = full ? waveformBuffer.length : _durationSamples;
-
-        var step:Int = Math.round(_durationSamples / _effectiveSize);
-
-        // FIXME: This will either overshoot or undershoot due to decimals
-        while (samplesGenerated < toGenerate)
-        {
-            for (i in 0..._effectiveSize)
-            {
-                var index:Int = Math.round((full ? samplesGenerated : _timeSamples) / samplesPerPixel) + i;
-                if (index < 0)
-                    continue;
-
-                if (!forceRefresh && !points[index].silent)
-                    continue;
-
-                var startIndex:Int = (full ? samplesGenerated : _timeSamples) + i * step;
-                var endIndex:Int = Std.int(Math.min(startIndex + step, waveformBuffer.length));
-
-                points[index] = waveformBuffer.getSegment(channel, startIndex, endIndex, waveformDrawRMS);
-            }
-
-            samplesGenerated += _durationSamples;
-        }
-    }
-
-    /**
      * Returns an `openfl.geom.Rectangle` representing the rectangle
      * of a waveform segment.
      * 

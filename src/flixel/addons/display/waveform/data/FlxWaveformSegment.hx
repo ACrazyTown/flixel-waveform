@@ -34,6 +34,27 @@ abstract FlxWaveformSegment(FlxWaveformSegmentRaw) from FlxWaveformSegmentRaw to
     }
 
     /**
+     * Helper function that merges all `FlxWaveformSegment`s from an array.
+     * 
+     * @param array Array of waveform segments to be merged into one.
+     * @return Merged segment.
+     */
+    public static function mergeArray(array:Array<FlxWaveformSegment>):FlxWaveformSegment
+    {
+        var segment:FlxWaveformSegment = array[0];
+        for (i in 1...array.length)
+        {
+            var arraySegment:FlxWaveformSegment = array[i];
+            if (arraySegment == null)
+                continue;
+
+            segment = FlxWaveformSegment.merge(segment, arraySegment);
+        }
+
+        return segment;
+    }
+
+    /**
      * Whether this segment is silent (both min and max are equal to 0).
      */
     public var silent(get, never):Bool;

@@ -91,6 +91,25 @@ class PlayState extends FlxUIState
 
         if (FlxG.keys.justPressed.SPACE)
             playPause();
+
+        if (FlxG.keys.pressed.CONTROL)
+        {
+            if (FlxG.mouse.wheel != 0) 
+            {
+                var modifier = 500;
+                if (waveform.waveformDuration > 60000)
+                    modifier = 10000;
+                else if (waveform.waveformDuration > 10000)
+                    modifier = 5000;
+                else if (waveform.waveformDuration < 5000)
+                    modifier = 1000;
+                else if (waveform.waveformDuration < 1000)
+                    modifier = 500;
+
+                waveform.waveformDuration += modifier * FlxG.mouse.wheel;
+            }
+
+        }
     }
 
     // --- Beyond this point is UI code you should not care about --

@@ -33,13 +33,13 @@ class FlxWaveformData implements IFlxDestroyable
             clearLevels();
        }
 
-       var level:FlxWaveformLevel = generateLevel(activeLevel);
+       setLevel(activeLevel);
     }
 
     public function setLevel(samplesPerPixel:Int):Void
     {
-        trace('SETTING LEVEL TO $samplesPerPixel') ;
-        trace(levels);
+        // trace('SETTING LEVEL TO $samplesPerPixel') ;
+        // trace(levels);
 
         if (levels.exists(samplesPerPixel))
         {
@@ -68,14 +68,17 @@ class FlxWaveformData implements IFlxDestroyable
         
         var level:FlxWaveformLevel = new FlxWaveformLevel(this, samplesPerPixel);
 
-        // // subsample existing level
-        // if (baseLevelKey != -1)
-        // {
-        //     var baseLevel:FlxWaveformLevel = levels[baseLevelKey];
-        //     level.generateRangeFromLevel(baseLevel, 0, buffer.length);
-        // }
-        // // read from buffer
-        // else
+        // subsample existing level
+        if (baseLevelKey != -1)
+        {
+            var baseLevel:FlxWaveformLevel = levels[baseLevelKey];
+
+            trace('BUILDING $samplesPerPixel FROM ${baseLevel.samplesPerPixel}');
+
+            level.generateRangeFromLevel(baseLevel, 0, buffer.length);
+        }
+        // read from buffer
+        else
         {
             level.generateRange(0, buffer.length);
         }
