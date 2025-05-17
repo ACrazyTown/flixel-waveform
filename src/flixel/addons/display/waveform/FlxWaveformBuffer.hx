@@ -458,12 +458,12 @@ class FlxWaveformBuffer implements IFlxDestroyable
             if (sample < min)
                 min = sample;
 
-            if (calculateRMS)
+            if (calculateRMS && numSamples > 1)
                 sampleSquareSum += sample * sample;
         }
 
         if (calculateRMS)
-            rms = Math.sqrt(sampleSquareSum / numSamples);
+            rms = numSamples > 1 ? Math.sqrt(sampleSquareSum / numSamples) : 0;
 
         var segment:FlxWaveformSegment = {
             startIndex: startIndex,

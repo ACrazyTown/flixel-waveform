@@ -5,7 +5,7 @@ import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 @:allow(flixel.addons.display.waveform.data.FlxWaveformData)
 class FlxWaveformLevel implements IFlxDestroyable
 {
-    final SPP_LOOKUP_FROM_BUFFER_MAX:Int = 4;
+    final SPP_LOOKUP_FROM_BUFFER_MAX:Int = 15;
 
     public var samplesPerPixel(default, null):Int;
 
@@ -14,6 +14,7 @@ class FlxWaveformLevel implements IFlxDestroyable
     var dataLeft:Array<FlxWaveformSegment>;
     var dataRight:Array<FlxWaveformSegment>;
 
+    var holdsData:Bool;
     var parent:FlxWaveformData;
 
     function new(parent:FlxWaveformData, samplesPerPixel:Int)
@@ -21,8 +22,13 @@ class FlxWaveformLevel implements IFlxDestroyable
         this.parent = parent;
         this.samplesPerPixel = samplesPerPixel;
 
-        dataLeft = [];
-        dataRight = [];
+        holdsData = samplesPerPixel > SPP_LOOKUP_FROM_BUFFER_MAX;
+
+        if (holdsData)
+        {
+            dataLeft = [];
+            dataRight = [];
+        }
     }
 
     public function destroy():Void
@@ -33,10 +39,12 @@ class FlxWaveformLevel implements IFlxDestroyable
 
     public function getSegment(channel:Int, index:Int):FlxWaveformSegment
     {
+        // Fetch from cached segments
         if (samplesPerPixel > SPP_LOOKUP_FROM_BUFFER_MAX)
             return channel == 0 ? dataLeft[index] : dataRight[index];
-        
-        return null;
+
+        // Fetch from buffer
+        return parent.buffer.getSegment(channel, index * samplesPerPixel, index * samplesPerPixel + 1, true);
     }
 
     public function generateRangeFromLevel(level:FlxWaveformLevel, start:Int, end:Int):Void

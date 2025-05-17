@@ -68,19 +68,22 @@ class FlxWaveformData implements IFlxDestroyable
         
         var level:FlxWaveformLevel = new FlxWaveformLevel(this, samplesPerPixel);
 
-        // subsample existing level
-        if (baseLevelKey != -1)
+        if (level.holdsData)
         {
-            var baseLevel:FlxWaveformLevel = levels[baseLevelKey];
+            // subsample existing level
+            if (baseLevelKey != -1)
+            {
+                var baseLevel:FlxWaveformLevel = levels[baseLevelKey];
 
-            trace('BUILDING $samplesPerPixel FROM ${baseLevel.samplesPerPixel}');
+                trace('BUILDING $samplesPerPixel FROM ${baseLevel.samplesPerPixel}');
 
-            level.generateRangeFromLevel(baseLevel, 0, buffer.length);
-        }
-        // read from buffer
-        else
-        {
-            level.generateRange(0, buffer.length);
+                level.generateRangeFromLevel(baseLevel, 0, buffer.length);
+            }
+            // read from buffer
+            else
+            {
+                level.generateRange(0, buffer.length);
+            }
         }
 
         return level;
