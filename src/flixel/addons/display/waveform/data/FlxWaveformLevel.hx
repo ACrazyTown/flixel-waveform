@@ -1,16 +1,18 @@
 package flixel.addons.display.waveform.data;
 
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
-import lime.utils.Float32Array;
 
 @:allow(flixel.addons.display.waveform.data.FlxWaveformData)
 class FlxWaveformLevel implements IFlxDestroyable
 {
+    final SPP_LOOKUP_FROM_BUFFER_MAX:Int = 4;
+
     public var samplesPerPixel(default, null):Int;
 
     public var dataLength(get, never):Int;
-    public var dataLeft:Array<FlxWaveformSegment>;
-    public var dataRight:Array<FlxWaveformSegment>;
+
+    var dataLeft:Array<FlxWaveformSegment>;
+    var dataRight:Array<FlxWaveformSegment>;
 
     var parent:FlxWaveformData;
 
@@ -27,6 +29,14 @@ class FlxWaveformLevel implements IFlxDestroyable
     {
         dataLeft = null;
         dataRight = null;
+    }
+
+    public function getSegment(channel:Int, index:Int):FlxWaveformSegment
+    {
+        if (samplesPerPixel > SPP_LOOKUP_FROM_BUFFER_MAX)
+            return channel == 0 ? dataLeft[index] : dataRight[index];
+        
+        return null;
     }
 
     public function generateRangeFromLevel(level:FlxWaveformLevel, start:Int, end:Int):Void

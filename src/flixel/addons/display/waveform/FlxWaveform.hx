@@ -441,10 +441,10 @@ class FlxWaveform extends FlxSprite
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
-                    var segmentLeft:FlxWaveformSegment = waveformData.currentLevel.dataLeft[sampleIndex];
+                    var segmentLeft:FlxWaveformSegment = waveformData.currentLevel.getSegment(0, sampleIndex);
                     var segmentRight:FlxWaveformSegment = null;
                     if (_stereo)
-                        segmentRight = waveformData.currentLevel.dataRight[sampleIndex];
+                        segmentRight = waveformData.currentLevel.getSegment(1, sampleIndex);
 
                     if ((!_stereo && segmentLeft == null) || (_stereo && segmentLeft == null && segmentRight == null))
                         continue;
@@ -486,10 +486,10 @@ class FlxWaveform extends FlxSprite
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
 
-                    var segmentLeft:FlxWaveformSegment = waveformData.currentLevel.dataLeft[sampleIndex];
+                    var segmentLeft:FlxWaveformSegment = waveformData.currentLevel.getSegment(0, sampleIndex);
                     var segmentRight:FlxWaveformSegment = null;
                     if (_stereo)
-                        segmentRight = waveformData.currentLevel.dataRight[sampleIndex];
+                        segmentRight = waveformData.currentLevel.getSegment(1, sampleIndex);
                     
                     if ((!_stereo && segmentLeft == null) || (_stereo && segmentLeft == null && segmentRight == null))
                         continue;
@@ -529,8 +529,7 @@ class FlxWaveform extends FlxSprite
                 for (i in 0..._effectiveSize)
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
-
-                    var segment:FlxWaveformSegment = channel == 0 ? waveformData.currentLevel.dataLeft[sampleIndex] : waveformData.currentLevel.dataRight[sampleIndex];
+                    var segment:FlxWaveformSegment = waveformData.currentLevel.getSegment(channel, sampleIndex);
 
                     if (segment == null)
                         continue;
