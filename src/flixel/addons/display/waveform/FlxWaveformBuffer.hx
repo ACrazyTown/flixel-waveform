@@ -19,7 +19,7 @@ import lime.media.vorbis.VorbisInfo;
 
 
 /**
- * A `FlxWaveformBuffer` provides an universal audio buffer interface
+ * An `FlxWaveformBuffer` provides an universal audio buffer interface
  * for easier handling of audio data on different targets.
  * 
  * Since different platforms have different ways of storing audio data in different formats
@@ -73,9 +73,9 @@ class FlxWaveformBuffer implements IFlxDestroyable
     var _channels(default, null):Null<ChannelPair>;
 
     /**
-     * Creates a `FlxWaveformBuffer` from a `flixel.sound.FlxSound`.
+     * Creates an `FlxWaveformBuffer` from a `flixel.sound.FlxSound`.
      * @param sound The `flixel.sound.FlxSound` to be converted
-     * @return A `FlxWaveformBuffer` or `null` if the sound is invalid.
+     * @return An `FlxWaveformBuffer` or `null` if the sound is invalid.
      */
     public static function fromFlxSound(sound:FlxSound):Null<FlxWaveformBuffer>
     {
@@ -112,9 +112,9 @@ class FlxWaveformBuffer implements IFlxDestroyable
     }
 
     /**
-     * Creates a `FlxWaveformBuffer` from a `lime.media.AudioBuffer`.
+     * Creates an `FlxWaveformBuffer` from a `lime.media.AudioBuffer`.
      * @param buffer The `lime.media.AudioBuffer` to be converted
-     * @return A `FlxWaveformBuffer` or `null` if the Lime AudioBuffer is invalid.
+     * @return An `FlxWaveformBuffer` or `null` if the Lime AudioBuffer is invalid.
      */
     public static function fromLimeAudioBuffer(buffer:AudioBuffer):Null<FlxWaveformBuffer>
     {
@@ -149,10 +149,10 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
     #if js
     /**
-     * Creates a `FlxWaveformBuffer` from a `js.html.audio.AudioBuffer` instance.
+     * Creates an `FlxWaveformBuffer` from a `js.html.audio.AudioBuffer` instance.
      * 
      * @param buffer The `js.html.audio.AudioBuffer` instance
-     * @return A `FlxWaveformBuffer` or `null` if the buffer is invalid.
+     * @return An `FlxWaveformBuffer` or `null` if the buffer is invalid.
      */
     public static function fromJSAudioBuffer(buffer:js.html.audio.AudioBuffer):Null<FlxWaveformBuffer>
     {
@@ -165,13 +165,13 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
     #if lime_howlerjs
     /**
-     * Creates a `FlxWaveformBuffer` from a `Howl` instance.
+     * Creates an `FlxWaveformBuffer` from a `Howl` instance.
      * NOTE: The `Howl` sound has to have been played before
      * this function is called, otherwise it is not possible
      * to retrieve any data.
      * 
      * @param howl The `Howl` instance of the sound.
-     * @return A `FlxWaveformBuffer` or `null` if it wasn't 
+     * @return An `FlxWaveformBuffer` or `null` if it wasn't 
      * possible to get data from the `Howl` instance.
      */
     public static function fromHowl(howl:Howl):Null<FlxWaveformBuffer>
@@ -193,10 +193,10 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
     #if lime_vorbis
     /**
-     * Creates a `FlxWaveformBuffer` from a `VorbisFile` instance.
+     * Creates an `FlxWaveformBuffer` from a `VorbisFile` instance.
      * 
      * @param vorbisFile The `VorbisFile` to be converted.
-     * @return A `FlxWaveformBuffer` or `null` if it wasn't 
+     * @return An `FlxWaveformBuffer` or `null` if it wasn't 
      * possible to get data from the `VorbisFile` instance.
      */
     public static function fromVorbisFile(vorbisFile:VorbisFile):Null<FlxWaveformBuffer>
@@ -238,10 +238,10 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
     #if flash
     /**
-     * Creates a `FlxWaveformBuffer` from a `flash.media.Sound` instance.
+     * Creates an `FlxWaveformBuffer` from a `flash.media.Sound` instance.
      * 
      * @param sound The `flash.media.Sound` instance
-     * @return A `FlxWaveformBuffer` instance or `null` if the sound is invalid.
+     * @return An `FlxWaveformBuffer` instance or `null` if the sound is invalid.
      */
     public static function fromFlashSound(sound:flash.media.Sound):Null<FlxWaveformBuffer>
     {
@@ -433,7 +433,7 @@ class FlxWaveformBuffer implements IFlxDestroyable
      * @param channel The channel to get data from
      * @param startIndex The start index of the segment
      * @param endIndex The end index of the segment
-     * @return a `WaveformSegment` with the minimum and maximum sample value for this segment.
+     * @return An `FlxWaveformSegment` with the minimum and maximum sample value for this segment.
      * 
      * @since 2.1.0
      */

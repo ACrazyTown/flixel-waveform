@@ -35,12 +35,6 @@ class FlxWaveform extends FlxSprite
     public var samplesPerPixel(default, null):Int;
 
     /**
-     * TODO: Doc
-     */
-    @:deprecated
-    public var waveformData(default, null):FlxWaveformData;
-
-    /**
      * An enum representing how the waveform will look visually.
      * 
      * `COMBINED` will draw both audio channels (if in stereo) onto the 
@@ -166,11 +160,11 @@ class FlxWaveform extends FlxSprite
 	public var waveformDuration(default, set):Float;
     
     /**
-     * A reference to the `FlxWaveformBuffer` that holds the raw audio data
-     * and other information needed for further processing.
+     * A reference to this waveform's audio buffer that holds raw audio data and information about it.
      * 
-     * If the buffer's `autoDestroy` property is `false`, it will not be destroyed
-     * when this waveform gets destroyed. You have to destroy it manually.
+     * An `FlxWaveform` will automatically manage and destroy the audio buffer when required.
+     * To avoid this and manage the audio buffer's lifespan manually, set the `FlxWaveformBuffer.autoDestroy`
+     * propety to `false`. 
      * 
      * You cannot set this property directly, use the `FlxWaveform.loadDataFrom...()`
      * methods instead.
@@ -207,6 +201,14 @@ class FlxWaveform extends FlxSprite
      */
     public var waveformGainMultiplier(default, set):Float = 1;
 
+     /**
+     * A reference to the `FlxWaveformData` instance for this waveform,
+     * which holds and manages the processed data for varying zoom levels.
+     * 
+     * @since 2.2.0
+     */
+    public var waveformData(default, null):FlxWaveformData;
+
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -233,6 +235,7 @@ class FlxWaveform extends FlxSprite
     /**
      * Internal helper that decides whether the waveform draw data should be rebuilt.
      */
+    @:deprecated
     var _drawDataDirty:Bool = false;
 
     /**
@@ -246,7 +249,7 @@ class FlxWaveform extends FlxSprite
      * Creates a new `FlxWaveform` instance with the specified parameters.
      * 
      * The waveform is **NOT** ready to display anything yet.
-     * Use a `FlxWaveform.loadDataFrom...()` method to load audio data before adjusting any other options.
+     * Use an `FlxWaveform.loadDataFrom...()` method to load audio data before adjusting any other options.
      * 
      * @param x The initial X position of the waveform
      * @param y The initial Y position of the waveform
@@ -331,7 +334,7 @@ class FlxWaveform extends FlxSprite
 
    /**
      * Loads the audio buffer data neccessary for processing the 
-     * waveform from a `FlxWaveformBuffer`.
+     * waveform from an `FlxWaveformBuffer`.
      * 
      * @param buffer The `FlxWaveformBuffer` to get data from.
      * 
@@ -557,7 +560,7 @@ class FlxWaveform extends FlxSprite
      * @param y Y offset.
      * @param width The width of the peak rectangle.
      * @param height The height of the peak rectangle.
-     * @param segment A `FlxWaveformSegment` to visualize.
+     * @param segment An `FlxWaveformSegment` to visualize.
      * @return A `openfl.geom.Rectangle` instance.
      */
     function getPeakRect(x:Float, y:Float, width:Float, height:Float, segment:FlxWaveformSegment):Rectangle
@@ -585,7 +588,7 @@ class FlxWaveform extends FlxSprite
      * @param y Y offset.
      * @param width The width of the peak rectangle.
      * @param height The height of the peak rectangle.
-     * @param segment A `FlxWaveformSegment` with the RMS data.
+     * @param segment An `FlxWaveformSegment` with the RMS data.
      * @return A `openfl.geom.Rectangle` instance.
      */
     function getRMSRect(x:Float, y:Float, width:Float, height:Float, segment:FlxWaveformSegment):Rectangle
