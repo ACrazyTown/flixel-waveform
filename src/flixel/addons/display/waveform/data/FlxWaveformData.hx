@@ -63,7 +63,12 @@ class FlxWaveformData implements IFlxDestroyable
         for (levelSamplesPerPixel in levels.keys())
         {
             if (levelSamplesPerPixel < samplesPerPixel && levelSamplesPerPixel > baseLevelKey)
-                baseLevelKey = levelSamplesPerPixel;
+            {
+                if (levels[levelSamplesPerPixel].holdsData)
+                {
+                    baseLevelKey = levelSamplesPerPixel;
+                }
+            }
         }
         
         var level:FlxWaveformLevel = new FlxWaveformLevel(this, samplesPerPixel);
