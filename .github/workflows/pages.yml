@@ -1,0 +1,36 @@
+name: Deploy Playground sample to Github Pages
+
+on: [push, workflow_dispatch]
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: krdlab/setup-haxe@v1
+              with:
+                haxe-version: 4.3.6
+
+            - name: Install dependencies
+              run: |
+                haxelib install lime --quiet
+                haxelib install openfl --quiet
+                haxelib install flixel --quiet
+                haxelib install flixel-ui --quiet
+                curl --output ../hxcpp.zip --location https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.73/hxcpp-4.3.73.zip
+                haxelib install ../hxcpp.zip --quiet
+
+            - name: Build sample (playground)
+              run: |
+                cd samples/playground
+                haxelib run lime build html5
+                cd ../..
+
+            - name: Deploy sample
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                github_token: ${{secrets.GITHUB_TOKEN}}
+                publish_dir: ./export/html5/bin
+                force_orphan: true
+                if: github.ref == 'refs/heads/master'
