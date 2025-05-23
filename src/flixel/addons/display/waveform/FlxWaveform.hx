@@ -516,12 +516,14 @@ class FlxWaveform extends FlxSprite
                     var h2:Float = (waveformOrientation == HORIZONTAL ? halfHeight : halfWidth) - waveformChannelPadding * 2;
 
                     pixels.fillRect(getPeakRect(x, y1, w1, h1, segmentLeft), waveformColor);
-                    pixels.fillRect(getPeakRect(x, y2, w2, h2, segmentRight), waveformColor);
+                    if (segmentRight != null)
+                        pixels.fillRect(getPeakRect(x, y2, w2, h2, segmentRight), waveformColor);
 
                     if (waveformDrawRMS)
                     {
                         pixels.fillRect(getRMSRect(x, y1, w1, h1, segmentLeft), waveformRMSColor);
-                        pixels.fillRect(getRMSRect(x, y2, w2, h2, segmentRight), waveformRMSColor);
+                        if (segmentRight != null)
+                            pixels.fillRect(getRMSRect(x, y2, w2, h2, segmentRight), waveformRMSColor);
                     }
                 }
 
@@ -592,7 +594,8 @@ class FlxWaveform extends FlxSprite
         drawPoints.resize(arrayLength);
         resetDrawArray(drawPoints);
 
-        buildDrawData(channel, drawPoints, true, true);
+        if (channel < waveformBuffer.numChannels)
+            buildDrawData(channel, drawPoints, true, true);
     }
 
     /**
