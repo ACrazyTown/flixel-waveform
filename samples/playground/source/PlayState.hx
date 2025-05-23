@@ -90,7 +90,7 @@ class PlayState extends FlxUIState
         if (FlxG.sound.music.playing)
         {
             // Set our waveform's time to the music's time, keeping them in sync.
-            waveform.waveformTime = FlxG.sound.music.time;
+            waveform.waveformTime = FlxG.sound.music.time + getLatency();
             time.text = '${FlxStringUtil.formatTime(waveform.waveformTime / 1000, true)} - ${FlxStringUtil.formatTime((waveform.waveformTime + waveform.waveformDuration) / 1000, true)}';
         }
 
@@ -266,6 +266,24 @@ class PlayState extends FlxUIState
 
             waveform.loadDataFromAudioBuffer(buffer);
         }
+        #end
+    }
+
+    function getLatency():Float
+    {
+        #if js
+        var ctx = lime.media.AudioManager.context.web;
+		if (ctx != null)
+		{
+			var baseLatency:Float = untyped ctx.baseLatency != null ? untyped ctx.baseLatency : 0;
+			var outputLatency:Float = untyped ctx.outputLatency != null ? untyped ctx.outputLatency : 0;
+
+			return (baseLatency + outputLatency) * 1000;
+		}
+
+		return 0;
+        #else
+        return 0;
         #end
     }
 }
