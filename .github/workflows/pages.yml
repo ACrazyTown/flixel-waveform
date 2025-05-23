@@ -1,10 +1,16 @@
 name: Deploy Playground sample to Github Pages
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches:
+        - main
+  workflow_dispatch:
 
 jobs:
     deploy:
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
 
         steps:
             - uses: actions/checkout@v4
@@ -21,16 +27,15 @@ jobs:
                 curl --output ../hxcpp.zip --location https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.73/hxcpp-4.3.73.zip
                 haxelib install ../hxcpp.zip --quiet
 
-            - name: Build sample (playground)
+            - name: Build playground sample
               run: |
                 cd samples/playground
                 haxelib run lime build html5
                 cd ../..
 
-            - name: Deploy sample
-              uses: peaceiris/actions-gh-pages@v3
+            - name: Deploy playground sample
+              uses: peaceiris/actions-gh-pages@v4
+              if: github.ref == 'refs/heads/main'
               with:
-                github_token: ${{secrets.GITHUB_TOKEN}}
+                github_token: ${{ secrets.GITHUB_TOKEN }}
                 publish_dir: ./export/html5/bin
-                force_orphan: true
-                if: github.ref == 'refs/heads/master'
