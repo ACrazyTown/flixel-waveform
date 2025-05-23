@@ -156,7 +156,7 @@ class FlxWaveform extends FlxSprite
      * 
      * @since 2.0.0
      */
-	public var waveformDuration(default, set):Float;
+    public var waveformDuration(default, set):Float;
     
     /**
      * A reference to the `FlxWaveformBuffer` that holds the raw audio data
@@ -363,9 +363,9 @@ class FlxWaveform extends FlxSprite
         if (_stereo)
             _drawPointsRight = [];
 
-		// todo : this feels really jank.
-		if (waveformDuration <= 0)
-			waveformDuration = 5000;
+        // todo : this feels really jank.
+        if (waveformDuration <= 0)
+            waveformDuration = 5000;
 
         _drawDataDirty = true;
     }
