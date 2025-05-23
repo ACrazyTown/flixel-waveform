@@ -51,33 +51,32 @@ class PlayState extends FlxState
 
     function onDropFile(file:String):Void
     {
-        #if html5
-        // TODO: This is not possible to achieve on HTML5 at the moment because
-        // Lime forces sounds created from bytes/base64 to be loaded in HTML5
-        // audio mode which makes it impossible for us to get the audio data
+        #if (js && html5 && lime_howlerjs)
+        var fileList:js.html.FileList = cast file;
+        var fileReader = new js.html.FileReader();
+        fileReader.onload = () ->
+        {
+            // TODO: At the moment Lime forces audio buffers created from Base64/bytes
+            // to use HTML5 audio, which makes it impossible for us to get audio data to analyze. 
+            // Because of this, we need to make a Howl instance ourselves.
 
-        // var fileList:js.html.FileList = cast file;
-        // var fileReader = new js.html.FileReader();
-        // fileReader.onload = () ->
-        // {
-        //     var result:String = fileReader.result;
-        //     var data = result.split(",")[1];
+            var howl = new lime.media.howlerjs.Howl({
+                src: [fileReader.result],
+                preload: true
+            });
 
-        //     var buffer = lime.media.AudioBuffer.fromBase64(result);
+            var buffer = new lime.media.AudioBuffer();
+            buffer.src = howl;
 
-        //     @:privateAccess
-        //     var howl = buffer.__srcHowl;
+            howl.once("play", () ->
+            {
+                waveform.loadDataFromAudioBuffer(buffer);
+            });
 
-        //     @:privateAccess
-        //     buffer.__srcHowl.once("play", () ->
-        //     {
-        //         waveform.loadDataFromAudioBuffer(buffer);
-        //     });
-
-        //     FlxG.sound.music.stop();
-        //     FlxG.sound.playMusic(openfl.media.Sound.fromAudioBuffer(buffer), 1.0, true);
-        // };
-        // fileReader.readAsDataURL(fileList.item(0));
+            FlxG.sound.music.stop();
+            FlxG.sound.playMusic(openfl.media.Sound.fromAudioBuffer(buffer), 1.0, true);
+        };
+        fileReader.readAsDataURL(fileList.item(0));
         #else
         var buffer = lime.media.AudioBuffer.fromFile(file);
         if (buffer != null)
