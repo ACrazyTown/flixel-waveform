@@ -1,5 +1,6 @@
 package;
 
+import flixel.util.FlxTimer;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.addons.display.waveform.FlxWaveform;
@@ -76,6 +77,10 @@ class PlayState extends FlxUIState
 
         // Sets up the UI for the sample. You can ignore this.
         setupUI();
+
+        // Register a drag and drop callback so that we can change the audio
+        // by simply dragging a new audio file to the window
+        FlxG.stage.window.onDropFile.add(onDropFile);
     }
 
     override public function update(elapsed:Float):Void
@@ -91,6 +96,12 @@ class PlayState extends FlxUIState
 
         if (FlxG.keys.justPressed.SPACE)
             playPause();
+    }
+
+    override public function destroy():Void
+    {
+        super.destroy();
+        FlxG.stage.window.onDropFile.remove(onDropFile);
     }
 
     // --- Beyond this point is UI code you should not care about --
@@ -216,5 +227,46 @@ class PlayState extends FlxUIState
             else if (stepper.name == "s_channelPadding")
                 waveform.waveformChannelPadding = Std.int(stepper.value);
         }
+    }
+
+    function onDropFile(file:String):Void
+    {
+        #if html5
+        // TODO: This is not possible to achieve on HTML5 at the moment because
+        // Lime forces sounds created from bytes/base64 to be loaded in HTML5
+        // audio mode which makes it impossible for us to get the audio data
+
+        // var fileList:js.html.FileList = cast file;
+        // var fileReader = new js.html.FileReader();
+        // fileReader.onload = () ->
+        // {
+        //     var result:String = fileReader.result;
+        //     var data = result.split(",")[1];
+
+        //     var buffer = lime.media.AudioBuffer.fromBase64(result);
+
+        //     @:privateAccess
+        //     var howl = buffer.__srcHowl;
+
+        //     @:privateAccess
+        //     buffer.__srcHowl.once("play", () ->
+        //     {
+        //         waveform.loadDataFromAudioBuffer(buffer);
+        //     });
+
+        //     FlxG.sound.music.stop();
+        //     FlxG.sound.playMusic(openfl.media.Sound.fromAudioBuffer(buffer), 1.0, true);
+        // };
+        // fileReader.readAsDataURL(fileList.item(0));
+        #else
+        var buffer = lime.media.AudioBuffer.fromFile(file);
+        if (buffer != null)
+        {
+            FlxG.sound.music.stop();
+            FlxG.sound.playMusic(openfl.media.Sound.fromAudioBuffer(buffer), 1.0, true);
+
+            waveform.loadDataFromAudioBuffer(buffer);
+        }
+        #end
     }
 }

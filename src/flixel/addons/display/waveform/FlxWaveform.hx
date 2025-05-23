@@ -366,6 +366,8 @@ class FlxWaveform extends FlxSprite
 		// todo : this feels really jank.
 		if (waveformDuration <= 0)
 			waveformDuration = 5000;
+
+        _drawDataDirty = true;
     }
 
     /**
