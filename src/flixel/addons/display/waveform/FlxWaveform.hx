@@ -860,7 +860,7 @@ class FlxWaveform extends FlxSprite
         {
             if (value < 1)
             {
-                FlxG.log.error('[FlxWaveform] waveformBarSize cannot be less than 1!');
+                FlxG.log.error("[FlxWaveform] waveformBarSize cannot be less than 1!");
                 value = 1;
             }
 
@@ -884,7 +884,7 @@ class FlxWaveform extends FlxSprite
         {
             if (value < 0)
             {
-                FlxG.log.error('[FlxWaveform] waveformBarPadding cannot be less than 0!');
+                FlxG.log.error("[FlxWaveform] waveformBarPadding cannot be less than 0!");
                 value = 0;
             }
 
@@ -906,9 +906,12 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformTime != value)
         {
-            waveformTime = value;
             if (value < 0)
-                FlxG.log.error('[FlxWaveform] waveformTime cannot be less than 0!');
+            {
+                FlxG.log.error("[FlxWaveform] waveformTime cannot be less than 0!");
+                value = 0;
+            }
+            waveformTime = value;
 
             _timeSamples = Std.int((value / 1000) * waveformBuffer.sampleRate);
 
@@ -923,9 +926,13 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformDuration != value)
         {
-            waveformDuration = value;
             if (value < 0)
-                FlxG.log.error('[FlxWaveform] waveformDuration cannot be less than 0!');
+            {
+                FlxG.log.error("[FlxWaveform] waveformDuration cannot be less than 0!");
+                value = 0;
+            }
+
+            waveformDuration = value;
 
             _durationSamples = Std.int((value / 1000) * waveformBuffer.sampleRate);
 
@@ -966,6 +973,11 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformChannelPadding != value)
         {
+             if (value < 0)
+            {
+                FlxG.log.error("[FlxWaveform] waveformChannelPadding cannot be less than 0!");
+                value = 0;
+            }
             waveformChannelPadding = value;
 
             if (autoUpdateBitmap)
