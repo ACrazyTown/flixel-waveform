@@ -859,7 +859,10 @@ class FlxWaveform extends FlxSprite
         if (waveformBarSize != value)
         {
             if (value < 1)
+            {
                 FlxG.log.error('[FlxWaveform] waveformBarSize cannot be less than 1!');
+                value = 1;
+            }
 
             waveformBarSize = value;
 
@@ -879,9 +882,13 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformBarPadding != value)
         {
-            waveformBarPadding = value;
             if (value < 0)
+            {
                 FlxG.log.error('[FlxWaveform] waveformBarPadding cannot be less than 0!');
+                value = 0;
+            }
+
+            waveformBarPadding = value;
 
             calcEffectiveSize();
             calcSamplesPerPixel();
