@@ -911,6 +911,7 @@ class FlxWaveform extends FlxSprite
                 FlxG.log.error("[FlxWaveform] waveformTime cannot be less than 0!");
                 value = 0;
             }
+            
             waveformTime = value;
 
             _timeSamples = Std.int((value / 1000) * waveformBuffer.sampleRate);
@@ -978,6 +979,7 @@ class FlxWaveform extends FlxSprite
                 FlxG.log.error("[FlxWaveform] waveformChannelPadding cannot be less than 0!");
                 value = 0;
             }
+
             waveformChannelPadding = value;
 
             if (autoUpdateBitmap)

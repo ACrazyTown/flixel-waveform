@@ -217,15 +217,29 @@ class PlayState extends FlxUIState
 
         if (id == FlxUINumericStepper.CHANGE_EVENT && sender is FlxUINumericStepper)
         {
+            // Set the stepper's value back to the properties since
+            // they'll correct themselves if they exceed limits
             var stepper:FlxUINumericStepper = cast sender;
-            if (stepper.name == "s_padding") 
+            if (stepper.name == "s_padding")
+            {
                 waveform.waveformBarPadding = Std.int(stepper.value);
+                stepper.value = waveform.waveformBarPadding;
+            }
             else if (stepper.name == "s_size")
+            {
                 waveform.waveformBarSize = Std.int(stepper.value);
+                stepper.value = waveform.waveformBarSize;
+            }
             else if (stepper.name == "s_duration")
+            {
                 waveform.waveformDuration = stepper.value * 1000;
+                stepper.value = waveform.waveformDuration;
+            }
             else if (stepper.name == "s_channelPadding")
+            {
                 waveform.waveformChannelPadding = Std.int(stepper.value);
+                stepper.value = waveform.waveformChannelPadding;
+            }
         }
     }
 
