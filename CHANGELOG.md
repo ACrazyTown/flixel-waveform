@@ -6,6 +6,11 @@ Legend:
 - 🛠️ - Bugfix/Adjustment
 - ⚠️ - Breaking change
 
+## 2.1.1 (May 24, 2025)
+- 🛠️ **Fix** crashes when using single channel (mono) audio.
+- 🛠️ **Fix** waveform not rendering because some properties were outside of their intended range.
+- 🛠️ **Fix** waveform overflowing outside of its intended area.
+
 ## 2.1.0 (May 3, 2025)
 - ✨ **Added** support for making waveforms from streamed sounds.
     - No additional work on the user side needs to be done. If you pass a streamed sound to a `FlxWaveform.loadDataFrom...()` method, it will automatically detect and load it.
@@ -13,7 +18,6 @@ Legend:
 - ✨ **Added** the `FlxWaveform.waveformBuffer` property that exposes the waveform's audio buffer.
 - ✨ **Added** the `FlxWaveform.waveformOrientation` property that controls whether the waveform should be drawn horizontally (left to right) or vertically (top to bottom).
 - ✨ **Added** the `FlxWaveform.waveformChannelPadding` property that controls the padding between waveform channels when the `FlxWaveform.waveformDrawMode` is set to `SPLIT_CHANNELS`.
-- ✨ **Added** new features to the playground sample.
 - 🛠️ **Fixed** waveform appearance.
     - Previously the waveform would only store the peak value of an audio segment. This caused the waveform to always appear symmetrical. As part of the internal data rework, this has now been corrected and the waveform now keeps track of both the minimum and maximum values of a segment. As a side effect, this also makes the waveform accurate when visualizing very small durations.
 - 🛠️ **Fixed** waveform desync.
@@ -21,10 +25,8 @@ Legend:
 - 🛠️ **Adjusted** `FlxWaveform`'s constructor arguments.
     - `x` and `y` are now optional.
     - `width` and `height` are now mandatory.
-- 🛠️ **Updated** the example project to include new features from this release.
 - 🛠️ `FlxWaveform.waveformDuration` now defaults to 5 seconds (5000ms) instead of 0.
 - 🛠️ Various documentation adjustments.
-- 🛠️ **Fixed** weird crop on the showcase image.
 
 ## 2.0.0 (February 15, 2025)
 - ✨ **Added** `waveformTime` and `waveformDuration`.
