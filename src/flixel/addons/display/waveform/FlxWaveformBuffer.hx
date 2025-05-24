@@ -467,8 +467,8 @@ class FlxWaveformBuffer implements IFlxDestroyable
 
         var segment:WaveformSegment = {
             numSamples: numSamples,
-            max: max, 
-            min: min, 
+            max: Math.min(max, 1), 
+            min: Math.max(min, -1), 
             rms: rms
         };
         return segment;
