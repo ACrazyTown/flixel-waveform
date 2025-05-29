@@ -96,6 +96,16 @@ class PlayState extends FlxUIState
 
         if (FlxG.keys.justPressed.SPACE)
             playPause();
+
+        if (FlxG.keys.pressed.CONTROL)
+        {
+            if (FlxG.mouse.wheel != 0) 
+            {
+                waveform.waveformDuration += waveform.waveformDuration / 5 * FlxG.mouse.wheel;
+                time.text = '${FlxStringUtil.formatTime(waveform.waveformTime / 1000, true)} - ${FlxStringUtil.formatTime((waveform.waveformTime + waveform.waveformDuration) / 1000, true)}';
+                durationStepper.value = waveform.waveformDuration / 1000;
+            }
+        }
     }
 
     override public function destroy():Void
@@ -108,6 +118,7 @@ class PlayState extends FlxUIState
     var ui:FlxUI;
     var playPauseBtn:FlxButton;
     var time:FlxText;
+    var durationStepper:FlxUINumericStepper;
 
     function setupUI():Void
     {
@@ -182,7 +193,7 @@ class PlayState extends FlxUIState
         };
         ui.add(baselineCheckbox);
 
-        var durationStepper:FlxUINumericStepper = new FlxUINumericStepper(orientationCheckboxLabel.x + orientationCheckboxLabel.width + 5, 1, 0.5, 5, 0.1, Math.round(FlxG.sound.music.length / 1000), 1);
+        durationStepper = new FlxUINumericStepper(orientationCheckboxLabel.x + orientationCheckboxLabel.width + 5, 1, 0.5, 5, 0.1, Math.round(FlxG.sound.music.length / 1000), 1);
         durationStepper.y = 10;
         durationStepper.value = Std.int(waveform.waveformDuration / 1000);
         durationStepper.name = "s_duration";
