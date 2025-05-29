@@ -1,5 +1,6 @@
 package;
 
+import flixel.util.FlxTimer;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.addons.display.waveform.FlxWaveform;
@@ -76,6 +77,10 @@ class PlayState extends FlxUIState
 
         // Sets up the UI for the sample. You can ignore this.
         setupUI();
+
+        // Register a drag and drop callback so that we can change the audio
+        // by simply dragging a new audio file to the window
+        FlxG.stage.window.onDropFile.add(onDropFile);
     }
 
     override public function update(elapsed:Float):Void
@@ -85,7 +90,7 @@ class PlayState extends FlxUIState
         if (FlxG.sound.music.playing)
         {
             // Set our waveform's time to the music's time, keeping them in sync.
-            waveform.waveformTime = FlxG.sound.music.time;
+            waveform.waveformTime = FlxG.sound.music.time + getLatency();
             time.text = '${FlxStringUtil.formatTime(waveform.waveformTime / 1000, true)} - ${FlxStringUtil.formatTime((waveform.waveformTime + waveform.waveformDuration) / 1000, true)}';
         }
 
@@ -101,6 +106,12 @@ class PlayState extends FlxUIState
                 durationStepper.value = waveform.waveformDuration / 1000;
             }
         }
+    }
+
+    override public function destroy():Void
+    {
+        super.destroy();
+        FlxG.stage.window.onDropFile.remove(onDropFile);
     }
 
     // --- Beyond this point is UI code you should not care about --
@@ -217,15 +228,87 @@ class PlayState extends FlxUIState
 
         if (id == FlxUINumericStepper.CHANGE_EVENT && sender is FlxUINumericStepper)
         {
+            // Set the stepper's value back to the properties since
+            // they'll correct themselves if they exceed limits
             var stepper:FlxUINumericStepper = cast sender;
-            if (stepper.name == "s_padding") 
+            if (stepper.name == "s_padding")
+            {
                 waveform.waveformBarPadding = Std.int(stepper.value);
+                stepper.value = waveform.waveformBarPadding;
+            }
             else if (stepper.name == "s_size")
+            {
                 waveform.waveformBarSize = Std.int(stepper.value);
+                stepper.value = waveform.waveformBarSize;
+            }
             else if (stepper.name == "s_duration")
+            {
                 waveform.waveformDuration = stepper.value * 1000;
+                stepper.value = waveform.waveformDuration;
+            }
             else if (stepper.name == "s_channelPadding")
+            {
                 waveform.waveformChannelPadding = Std.int(stepper.value);
+                stepper.value = waveform.waveformChannelPadding;
+            }
         }
+    }
+
+    function onDropFile(file:String):Void
+    {
+        #if (js && html5 && lime_howlerjs)
+        var fileList:js.html.FileList = cast file;
+        var fileReader = new js.html.FileReader();
+        fileReader.onload = () ->
+        {
+            // TODO: At the moment Lime forces audio buffers created from Base64/bytes
+            // to use HTML5 audio, which makes it impossible for us to get audio data to analyze. 
+            // Because of this, we need to make a Howl instance ourselves.
+
+            var howl = new lime.media.howlerjs.Howl({
+                src: [fileReader.result],
+                preload: true
+            });
+
+            var buffer = new lime.media.AudioBuffer();
+            buffer.src = howl;
+
+            howl.once("play", () ->
+            {
+                waveform.loadDataFromAudioBuffer(buffer);
+            });
+
+            FlxG.sound.music.stop();
+            FlxG.sound.playMusic(openfl.media.Sound.fromAudioBuffer(buffer), 1.0, true);
+        };
+        fileReader.readAsDataURL(fileList.item(0));
+        #else
+        var buffer = lime.media.AudioBuffer.fromFile(file);
+        if (buffer != null)
+        {
+            FlxG.sound.music.stop();
+            FlxG.sound.playMusic(openfl.media.Sound.fromAudioBuffer(buffer), 1.0, true);
+
+            waveform.loadDataFromAudioBuffer(buffer);
+        }
+        #end
+    }
+
+    function getLatency():Float
+    {
+        #if js
+        var ctx = lime.media.AudioManager.context.web;
+		if (ctx != null)
+		{
+			var baseLatency:Float = untyped ctx.baseLatency != null ? untyped ctx.baseLatency : 0;
+			var outputLatency:Float = untyped ctx.outputLatency != null ? untyped ctx.outputLatency : 0;
+
+			return (baseLatency + outputLatency) * 1000;
+		}
+
+		return 0;
+        #else
+        return 0;
+        #end
     }
 }
