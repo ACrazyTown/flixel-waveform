@@ -233,7 +233,7 @@ class PlayState extends FlxUIState
             else if (stepper.name == "s_duration")
             {
                 waveform.waveformDuration = stepper.value * 1000;
-                stepper.value = waveform.waveformDuration;
+                stepper.value = waveform.waveformDuration / 1000;
             }
             else if (stepper.name == "s_channelPadding")
             {
