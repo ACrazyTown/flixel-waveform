@@ -3,6 +3,9 @@
     "url": "https://github.com/ACrazyTown/flixel-waveform",
     "description": "A simple yet powerful HaxeFlixel addon for drawing waveforms from sounds.",
     "tags": ["audio", "waveform", "haxe", "haxeflixel", "flixel"],
+    "dependencies": {
+        "flixel": ""
+    },
     "contributors": ["ACrazyTown"],
     "classPath": "src",
     "license": "MIT",
