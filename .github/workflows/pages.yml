@@ -3,7 +3,7 @@ name: Deploy Playground sample to Github Pages
 on:
   push:
     branches:
-        - main
+        - dev
   workflow_dispatch:
 
 jobs:
