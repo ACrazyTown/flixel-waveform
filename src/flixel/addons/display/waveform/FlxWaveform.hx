@@ -200,6 +200,19 @@ class FlxWaveform extends FlxSprite
      */
     public var waveformGainMultiplier(default, set):Float = 1;
 
+    /**
+     * An enum representing the waveform's vertical alignment.
+     * 
+     * This value also affects the position of the baseline.
+     * 
+     * Default value is `CENTER(false)` which centers the waveform
+     * vertically with parts of the waveform appearing asymmetrical.
+     * (This is normal because audio signals are not inherently symmetrical.)
+     * 
+     * @since 2.2.0
+     */
+    public var waveformAlignment(default, set):WaveformAlignment = CENTER(false);
+
     /* ----------- INTERNALS ----------- */
 
     /**
@@ -399,6 +412,10 @@ class FlxWaveform extends FlxSprite
         // clear previous draw
         // pixels.fillRect(new Rectangle(0, 0, waveformWidth, waveformHeight), waveformBg);
         pixels.fillRect(new Rectangle(0, 0, pixels.width, pixels.height), waveformBgColor);
+
+        if (waveformDrawBaseline)
+            drawBaseline();
+
         drawPeaks();
     }
 
@@ -445,15 +462,6 @@ class FlxWaveform extends FlxSprite
         switch (waveformDrawMode)
         {
             case COMBINED:
-                if (waveformDrawBaseline)
-                {
-                    var rect:Rectangle = new Rectangle(0, halfHeight, waveformWidth, 1);
-                    if (waveformOrientation == VERTICAL)
-                        rect.setTo(halfWidth, 0, 1, waveformHeight);
-
-                    pixels.fillRect(rect, waveformColor);
-                }
-
                 for (i in 0..._effectiveSize)
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
@@ -479,26 +487,6 @@ class FlxWaveform extends FlxSprite
                 }
 
             case SPLIT_CHANNELS:
-                var centerX:Float = waveformWidth / 4;
-                var centerY:Float = waveformHeight / 4;
-
-                if (waveformDrawBaseline) 
-                {
-                    var rect:Rectangle = new Rectangle(0, centerY, waveformWidth, 1);
-                    if (waveformOrientation == VERTICAL)
-                        rect.setTo(centerX, 0, 1, waveformHeight);
-
-                    pixels.fillRect(rect, waveformColor);
-
-                    // Reuse same rect for other line
-                    if (waveformOrientation == HORIZONTAL)
-                        rect.setTo(0, halfHeight + centerY, waveformWidth, 1);
-                    else
-                        rect.setTo(halfWidth + centerX, 0, 1, waveformHeight);
-
-                    pixels.fillRect(rect, waveformColor);
-                }
-
                 for (i in 0..._effectiveSize)
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
@@ -536,15 +524,6 @@ class FlxWaveform extends FlxSprite
                 }
 
             case SINGLE_CHANNEL(channel):
-                if (waveformDrawBaseline)
-                {
-                   var rect:Rectangle = new Rectangle(0, halfHeight, waveformWidth, 1);
-                    if (waveformOrientation == VERTICAL)
-                        rect.setTo(halfWidth, 0, 1, waveformHeight);
-
-                    pixels.fillRect(rect, waveformColor);
-                }
-
                 for (i in 0..._effectiveSize)
                 {
                     var sampleIndex:Int = Math.round(timeOffset + i);
@@ -564,6 +543,97 @@ class FlxWaveform extends FlxSprite
                         pixels.fillRect(getRMSRect(x, 0, waveformBarSize, waveformOrientation == HORIZONTAL ? waveformHeight : waveformWidth, segment), waveformRMSColor);
                     }
                 }
+        }
+    }
+
+    /**
+     * Helper function that draws the baseline, taking orientation and alignment in account.
+     */
+    function drawBaseline():Void
+    {
+        var rect:Rectangle = new Rectangle();
+
+        var halfWidth:Float = waveformWidth / 2;
+        var halfHeight:Float = waveformHeight / 2;
+
+        function drawSingleBaseline():Void
+        {
+            switch (waveformAlignment)
+            {
+                case TOP:
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(waveformWidth - 1, 0, 1, waveformHeight);
+                    else
+                        rect.setTo(0, 0, waveformWidth, 1);
+
+                case BOTTOM:
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(0, 0, 1, waveformHeight);
+                    else
+                        rect.setTo(0, waveformHeight - 1, waveformWidth, 1);
+
+                case CENTER(symmetrical):
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(halfWidth, 0, 1, waveformHeight);
+                    else
+                        rect.setTo(0, halfHeight, waveformWidth, 1);
+            }
+
+            pixels.fillRect(rect, waveformColor);
+        }
+
+        switch (waveformDrawMode)
+        {
+            case COMBINED: drawSingleBaseline();
+            case SINGLE_CHANNEL(channel): drawSingleBaseline();
+            case SPLIT_CHANNELS:
+                var rect2:Rectangle = new Rectangle();
+                var centerX:Float = waveformWidth / 4;
+                var centerY:Float = waveformHeight / 4;
+
+                switch (waveformAlignment)
+                {
+                    case TOP:
+                        if (waveformOrientation == VERTICAL)
+                        {
+                            rect.setTo(waveformWidth - 1 - waveformChannelPadding, 0, 1, waveformHeight);
+                            rect2.setTo(halfWidth - 1 - waveformChannelPadding, 0, 1, waveformHeight);
+                        }
+                        else
+                        {
+                            rect.setTo(0, waveformChannelPadding, waveformWidth, 1);
+                            rect2.setTo(0, halfHeight - 1 + waveformChannelPadding, waveformWidth, 1);
+                        }
+
+                    case BOTTOM:
+                        if (waveformOrientation == VERTICAL)
+                        {
+                            rect.setTo(waveformChannelPadding, 0, 1, waveformHeight);
+                            rect2.setTo(halfWidth + waveformChannelPadding, 0, 1, waveformHeight);
+                        }
+                        else
+                        {
+                            rect.setTo(0, waveformHeight - 1 - waveformChannelPadding, waveformWidth, 1);
+                            rect2.setTo(0, halfHeight - 1 - waveformChannelPadding, waveformWidth, 1);
+                        }
+
+                    case CENTER(symmetrical):
+                        if (waveformOrientation == VERTICAL)
+                        {
+                            rect.setTo(centerX, 0, 1, waveformHeight);
+                            rect2.setTo(halfWidth + centerX , 0, 1, waveformHeight);
+                           
+                        }
+                        else
+                        {
+                            rect.setTo(0, centerY - 1, waveformWidth, 1);
+                            rect2.setTo(0, halfHeight + centerY - 1, waveformWidth, 1);
+                        }
+                }
+
+                pixels.fillRect(rect, waveformColor);
+                pixels.fillRect(rect2, waveformColor);
+
         }
     }
 
@@ -647,7 +717,10 @@ class FlxWaveform extends FlxSprite
      * Returns an `openfl.geom.Rectangle` representing the rectangle
      * of a waveform segment.
      * 
-     * This function takes `waveformOrientation` in account.
+     * Input values are taken in as if they were representing a horizontal rectangle.
+     * 
+     * The function will take `waveformOrientation` and `waveformAlignment` in account and
+     * return a rectangle based on those modifiers.
      * 
      * @param x The rectangle's position on the X axis.
      * @param y Y offset.
@@ -658,17 +731,46 @@ class FlxWaveform extends FlxSprite
      */
     function getPeakRect(x:Float, y:Float, width:Float, height:Float, segment:WaveformSegment):Rectangle
     {
+        var rect:Rectangle = new Rectangle();
+
         var half:Float = height / 2;
 
         var top:Float = (segment.max * waveformGainMultiplier) * half;
         var bottom:Float = (segment.min * waveformGainMultiplier) * half;
         var segmentHeight:Float = Math.abs(top) + Math.abs(bottom);
 
-        if (waveformOrientation == VERTICAL)
-            return new Rectangle(y + (half - top), x, segmentHeight, width);
+        switch (waveformAlignment)
+        {
+            case TOP:
+                if (waveformOrientation == VERTICAL)
+                    rect.setTo(y + (height - segmentHeight), x, segmentHeight, width);
+                else
+                    rect.setTo(x, y, width, segmentHeight);
+                
+            case BOTTOM:
+                if (waveformOrientation == VERTICAL)
+                    rect.setTo(y, x, segmentHeight, width);
+                else
+                    rect.setTo(x, y + (height - segmentHeight), width, segmentHeight);
 
-        // horizontal
-        return new Rectangle(x, y + (half - top), width, segmentHeight);
+            case CENTER(symmetrical):
+                if (symmetrical)
+                {
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(y + (half - segmentHeight / 2), x, segmentHeight, width);
+                    else
+                        rect.setTo(x, y + (half - segmentHeight / 2), width, segmentHeight);
+                }
+                else
+                {
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(y + (half - top), x, segmentHeight, width);
+                    else
+                        rect.setTo(x, y + (half - top), width, segmentHeight);
+                }
+        }
+        
+        return rect;
     }
 
      /**
@@ -686,17 +788,38 @@ class FlxWaveform extends FlxSprite
      */
     function getRMSRect(x:Float, y:Float, width:Float, height:Float, segment:WaveformSegment):Rectangle
     {
+        var rect:Rectangle = new Rectangle();
         var half:Float = height / 2;
 
         var rms:Float = segment.rms * waveformGainMultiplier;
         var top:Float = segment.max > 0 ? rms * half : 0;
         var segmentHeight:Float = (segment.max > 0 && segment.min < 0) ? rms * height : rms * half;
 
-        if (waveformOrientation == VERTICAL)
-            return new Rectangle(y + (half - top), x, segmentHeight, width);
+        switch (waveformAlignment)
+        {
+            case TOP:
+                if (waveformOrientation == VERTICAL)
+                    rect.setTo(y + (height - segmentHeight), x, segmentHeight, width);
+                else
+                    rect.setTo(x, y, width, segmentHeight);
+                
+            case BOTTOM:
+                if (waveformOrientation == VERTICAL)
+                    rect.setTo(y, x, segmentHeight, width);
+                else
+                    rect.setTo(x, y + (height - segmentHeight), width, segmentHeight);
 
-        // horizontal
-        return new Rectangle(x, y + (half - top), width, segmentHeight);
+            case CENTER(symmetrical):
+                // RMS is always symmetrical so we don't have to
+                // take this in account
+                if (waveformOrientation == VERTICAL)
+                    rect.setTo(y + (half - top), x, segmentHeight, width);
+                else
+                    rect.setTo(x, y + (half - top), width, segmentHeight);
+        
+        }
+
+        return rect;
     }
 
     /**
@@ -1010,7 +1133,19 @@ class FlxWaveform extends FlxSprite
 
         return waveformGainMultiplier;
     }
-    
+
+    function set_waveformAlignment(value:WaveformAlignment):WaveformAlignment
+    {
+        if (waveformAlignment != value)
+        {
+            waveformAlignment = value;
+
+            if (autoUpdateBitmap)
+                _waveformDirty = true;
+        }
+
+        return waveformAlignment;
+    }
 }
 
 /**
@@ -1046,4 +1181,18 @@ enum WaveformOrientation
 {
     HORIZONTAL;
     VERTICAL;
+}
+
+/**
+ * An enum representing the waveform's alignment.
+ * 
+ * This value also affects the position of the basline.
+ * 
+ * @since 2.2.0
+ */
+enum WaveformAlignment
+{
+    TOP;
+    CENTER(symmetrical:Bool);
+    BOTTOM;
 }

@@ -132,7 +132,7 @@ class PlayState extends FlxUIState
         paddingStepper.value = waveform.waveformBarPadding;
         paddingStepper.name = "s_padding";
         ui.add(paddingStepper);
-        var paddingLabel:FlxText = new FlxText(0, 0, 0, "Bar Padding");
+        var paddingLabel:FlxText = new FlxText(0, 0, 0, "Bar pad. (px)");
         paddingLabel.x = paddingStepper.x + paddingStepper.width;
         paddingLabel.y = paddingStepper.y;
         ui.add(paddingLabel);
@@ -142,7 +142,7 @@ class PlayState extends FlxUIState
         sizeStepper.value = waveform.waveformBarSize;
         sizeStepper.name = "s_size";
         ui.add(sizeStepper);
-        var sizeLabel:FlxText = new FlxText(0, 0, 0, "Bar Size");
+        var sizeLabel:FlxText = new FlxText(0, 0, 0, "Bar size (px)");
         sizeLabel.x = sizeStepper.x + sizeStepper.width;
         sizeLabel.y = sizeStepper.y;
         ui.add(sizeLabel);
@@ -171,7 +171,7 @@ class PlayState extends FlxUIState
         };
         ui.add(orientationCheckbox);
 
-        var orientationCheckboxLabel:FlxText = new FlxText(orientationCheckbox.x + orientationCheckbox.width, orientationCheckbox.y, 0, "Vertical?");
+        var orientationCheckboxLabel:FlxText = new FlxText(orientationCheckbox.x + orientationCheckbox.width, orientationCheckbox.y, 0, "Vertical");
         ui.add(orientationCheckboxLabel);
 
         var baselineCheckbox:FlxUICheckBox = new FlxUICheckBox(orientationCheckbox.x, orientationCheckbox.y + orientationCheckbox.width + 5, null, null, "Baseline", 70);
@@ -196,10 +196,34 @@ class PlayState extends FlxUIState
         channelPaddingStepper.value = waveform.waveformChannelPadding;
         channelPaddingStepper.name = "s_channelPadding";
         ui.add(channelPaddingStepper);
-        var channelPaddingLabel:FlxText = new FlxText(0, 0, 0, "Channel padding (px)");
+        var channelPaddingLabel:FlxText = new FlxText(0, 0, 0, "Channel pad. (px)");
         channelPaddingLabel.x = channelPaddingStepper.x + channelPaddingStepper.width;
         channelPaddingLabel.y = channelPaddingStepper.y;
         ui.add(channelPaddingLabel);
+
+        var alignmentLabel:FlxText = new FlxText(channelPaddingLabel.x + 100, 5, 0, "Waveform Alignment");
+        ui.add(alignmentLabel);
+        var alignmentDropdown:FlxUIDropDownMenu = new FlxUIDropDownMenu(alignmentLabel.x, 20, FlxUIDropDownMenu.makeStrIdLabelArray(["Top", "Bottom", "Center (symmetrical)", "Center (asymmetrical)"]), (select) ->
+        {
+            switch (select)
+            {
+                case "Top": waveform.waveformAlignment = TOP;
+                case "Bottom": waveform.waveformAlignment = BOTTOM;
+                case "Center (symmetrical)": waveform.waveformAlignment = CENTER(true);
+                case "Center (asymmetrical)": waveform.waveformAlignment = CENTER(false);
+            }
+        });
+        alignmentDropdown.selectedLabel = "Center (asymmetrical)";
+        ui.add(alignmentDropdown);
+
+        var gainMultStepper:FlxUINumericStepper = new FlxUINumericStepper(alignmentDropdown.x + 130, 10, 0.1, 1, 0.1, 10, 1);
+        gainMultStepper.value = waveform.waveformGainMultiplier;
+        gainMultStepper.name = "s_gainMult";
+        ui.add(gainMultStepper);
+        var gainMultLabel:FlxText = new FlxText(0, 0, 0, "Gain");
+        gainMultLabel.x = gainMultStepper.x + gainMultStepper.width;
+        gainMultLabel.y = gainMultStepper.y;
+        ui.add(gainMultLabel);
 
         time = new FlxText(5, waveform.y, 0, "0");
         ui.add(time);
@@ -239,6 +263,11 @@ class PlayState extends FlxUIState
             {
                 waveform.waveformChannelPadding = Std.int(stepper.value);
                 stepper.value = waveform.waveformChannelPadding;
+            }
+            else if (stepper.name == "s_gainMult")
+            {
+                waveform.waveformGainMultiplier = stepper.value;
+                stepper.value = waveform.waveformGainMultiplier;
             }
         }
     }
