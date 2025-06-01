@@ -660,8 +660,8 @@ class FlxWaveform extends FlxSprite
     {
         var half:Float = height / 2;
 
-        var top:Float = (segment.max * waveformGainMultiplier) * half;
-        var bottom:Float = (segment.min * waveformGainMultiplier) * half;
+        var top:Float = Math.min(segment.max * waveformGainMultiplier, 1) * half;
+        var bottom:Float = Math.max(segment.min * waveformGainMultiplier, -1) * half;
         var segmentHeight:Float = Math.abs(top) + Math.abs(bottom);
 
         if (waveformOrientation == VERTICAL)
@@ -688,7 +688,7 @@ class FlxWaveform extends FlxSprite
     {
         var half:Float = height / 2;
 
-        var rms:Float = segment.rms * waveformGainMultiplier;
+        var rms:Float = Math.min(segment.rms * waveformGainMultiplier, 1);
         var top:Float = segment.max > 0 ? rms * half : 0;
         var segmentHeight:Float = (segment.max > 0 && segment.min < 0) ? rms * height : rms * half;
 
