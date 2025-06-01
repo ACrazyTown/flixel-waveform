@@ -196,6 +196,10 @@ class FlxWaveform extends FlxSprite
      * A multiplier that's applied on the sample value to make the waveform larger vertically 
      * (or horizontally, if the waveform's orientation is vertical.)
      * 
+     * Default value is `1.0`.
+     * 
+     * This value cannot be less than 0. If a number less than 0 is passed it will be clamped back to 0.
+     * 
      * @since 2.2.0
      */
     public var waveformGainMultiplier(default, set):Float = 1;
@@ -983,7 +987,7 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformChannelPadding != value)
         {
-             if (value < 0)
+            if (value < 0)
             {
                 FlxG.log.error("[FlxWaveform] waveformChannelPadding cannot be less than 0!");
                 value = 0;
@@ -1002,6 +1006,12 @@ class FlxWaveform extends FlxSprite
     {
         if (waveformGainMultiplier != value)
         {
+            if (value < 0)
+            {
+                FlxG.log.error("[FlxWaveform] waveformGainMultiplier cannot be less than 0!");
+                value = 0;
+            }
+
             waveformGainMultiplier = value;
 
             if (autoUpdateBitmap)
