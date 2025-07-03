@@ -793,11 +793,13 @@ class FlxWaveform extends FlxSprite
     function getRMSRect(x:Float, y:Float, width:Float, height:Float, segment:WaveformSegment):Rectangle
     {
         var rect:Rectangle = new Rectangle();
+
         var half:Float = height / 2;
 
         var rms:Float = Math.min(segment.rms * waveformGainMultiplier, 1);
-        var top:Float = segment.max > 0 ? rms * half : 0;
-        var segmentHeight:Float = (segment.max > 0 && segment.min < 0) ? rms * height : rms * half;
+		var top:Float = Math.min(rms, Math.min(segment.max * waveformGainMultiplier, 1)) * half;
+		var bottom:Float = Math.max(-rms, Math.max(segment.min * waveformGainMultiplier, -1)) * half;
+		var segmentHeight:Float = Math.abs(top) + Math.abs(bottom);
 
         switch (waveformAlignment)
         {
@@ -814,13 +816,17 @@ class FlxWaveform extends FlxSprite
                     rect.setTo(x, y + (height - segmentHeight), width, segmentHeight);
 
             case CENTER(symmetrical):
-                // RMS is always symmetrical so we don't have to
-                // take this in account
-                if (waveformOrientation == VERTICAL)
-                    rect.setTo(y + (half - top), x, segmentHeight, width);
-                else
-                    rect.setTo(x, y + (half - top), width, segmentHeight);
-        
+				if (symmetrical) {
+					if (waveformOrientation == VERTICAL)
+						rect.setTo(y + (half - segmentHeight / 2), x, segmentHeight, width);
+					else
+						rect.setTo(x, y + (half - segmentHeight / 2), width, segmentHeight);
+				} else {
+					if (waveformOrientation == VERTICAL)
+						rect.setTo(y + (half - top), x, segmentHeight, width);
+					else
+						rect.setTo(x, y + (half - top), width, segmentHeight);
+				}
         }
 
         return rect;
