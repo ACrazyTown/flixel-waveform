@@ -454,6 +454,19 @@ class FlxWaveform extends FlxSprite
     }
 
     /**
+     * Returns the `waveformDuration` value needed to visualize the number of samples provided.
+     * 
+     * @param samples The number of samples to visualize.
+     * @return Float `waveformDuration` value
+     * 
+     * @since 2.2.0
+     */
+    public function getDurationFromSamples(samples:Int):Float
+    {
+        return samples * _effectiveSize;
+    }
+
+    /**
      * Internal method which draws audio sample peaks as rectangles.
      * Used when `samplesPerPixel` is larger than 1
      */
