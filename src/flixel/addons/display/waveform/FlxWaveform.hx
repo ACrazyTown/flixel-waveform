@@ -797,9 +797,9 @@ class FlxWaveform extends FlxSprite
         var half:Float = height / 2;
 
         var rms:Float = Math.min(segment.rms * waveformGainMultiplier, 1);
-		var top:Float = Math.min(rms, Math.min(segment.max * waveformGainMultiplier, 1)) * half;
-		var bottom:Float = Math.max(-rms, Math.max(segment.min * waveformGainMultiplier, -1)) * half;
-		var segmentHeight:Float = Math.abs(top) + Math.abs(bottom);
+        var top:Float = Math.min(rms, Math.min(segment.max * waveformGainMultiplier, 1)) * half;
+        var bottom:Float = Math.max(-rms, Math.max(segment.min * waveformGainMultiplier, -1)) * half;
+        var segmentHeight:Float = Math.abs(top) + Math.abs(bottom);
 
         switch (waveformAlignment)
         {
@@ -816,17 +816,20 @@ class FlxWaveform extends FlxSprite
                     rect.setTo(x, y + (height - segmentHeight), width, segmentHeight);
 
             case CENTER(symmetrical):
-				if (symmetrical) {
-					if (waveformOrientation == VERTICAL)
-						rect.setTo(y + (half - segmentHeight / 2), x, segmentHeight, width);
-					else
-						rect.setTo(x, y + (half - segmentHeight / 2), width, segmentHeight);
-				} else {
-					if (waveformOrientation == VERTICAL)
-						rect.setTo(y + (half - top), x, segmentHeight, width);
-					else
-						rect.setTo(x, y + (half - top), width, segmentHeight);
-				}
+                if (symmetrical) 
+                {
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(y + (half - segmentHeight / 2), x, segmentHeight, width);
+                    else
+                        rect.setTo(x, y + (half - segmentHeight / 2), width, segmentHeight);
+                } 
+                else 
+                {
+                    if (waveformOrientation == VERTICAL)
+                        rect.setTo(y + (half - top), x, segmentHeight, width);
+                    else
+                        rect.setTo(x, y + (half - top), width, segmentHeight);
+                }
         }
 
         return rect;
