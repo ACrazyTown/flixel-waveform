@@ -15218,6 +15218,9 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 			this._waveformDirty = true;
 		}
 	}
+	,getDurationFromSamples: function(samples) {
+		return samples * this._effectiveSize;
+	}
 	,drawPeaks: function() {
 		var halfWidth = this.get_waveformWidth() / 2;
 		var halfHeight = this.get_waveformHeight() / 2;
@@ -15588,7 +15591,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 			if(_g._hx_index == 2) {
 				var channel = _g.channel;
 				if(channel != 0 && channel != 1) {
-					flixel_FlxG.log.advanced("[FlxWaveform] Invalid SINGLE_CHANNEL argument: " + channel + " (must be 0 or 1)",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 952, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformDrawMode"});
+					flixel_FlxG.log.advanced("[FlxWaveform] Invalid SINGLE_CHANNEL argument: " + channel + " (must be 0 or 1)",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 965, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformDrawMode"});
 				}
 			}
 			this._drawDataDirty = true;
@@ -15626,7 +15629,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 	,set_waveformBarSize: function(value) {
 		if(this.waveformBarSize != value) {
 			if(value < 1) {
-				flixel_FlxG.log.advanced("[FlxWaveform] waveformBarSize cannot be less than 1!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1008, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformBarSize"});
+				flixel_FlxG.log.advanced("[FlxWaveform] waveformBarSize cannot be less than 1!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1021, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformBarSize"});
 				value = 1;
 			}
 			this.waveformBarSize = value;
@@ -15642,7 +15645,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 	,set_waveformBarPadding: function(value) {
 		if(this.waveformBarPadding != value) {
 			if(value < 0) {
-				flixel_FlxG.log.advanced("[FlxWaveform] waveformBarPadding cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1032, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformBarPadding"});
+				flixel_FlxG.log.advanced("[FlxWaveform] waveformBarPadding cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1045, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformBarPadding"});
 				value = 0;
 			}
 			this.waveformBarPadding = value;
@@ -15658,7 +15661,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 	,set_waveformTime: function(value) {
 		if(this.waveformTime != value) {
 			if(value < 0) {
-				flixel_FlxG.log.advanced("[FlxWaveform] waveformTime cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1056, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformTime"});
+				flixel_FlxG.log.advanced("[FlxWaveform] waveformTime cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1069, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformTime"});
 				value = 0;
 			}
 			this.waveformTime = value;
@@ -15672,7 +15675,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 	,set_waveformDuration: function(value) {
 		if(this.waveformDuration != value) {
 			if(value < 0) {
-				flixel_FlxG.log.advanced("[FlxWaveform] waveformDuration cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1077, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformDuration"});
+				flixel_FlxG.log.advanced("[FlxWaveform] waveformDuration cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1090, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformDuration"});
 				value = 0;
 			}
 			this.waveformDuration = value;
@@ -15702,7 +15705,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 	,set_waveformChannelPadding: function(value) {
 		if(this.waveformChannelPadding != value) {
 			if(value < 0) {
-				flixel_FlxG.log.advanced("[FlxWaveform] waveformChannelPadding cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1124, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformChannelPadding"});
+				flixel_FlxG.log.advanced("[FlxWaveform] waveformChannelPadding cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1137, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformChannelPadding"});
 				value = 0;
 			}
 			this.waveformChannelPadding = value;
@@ -15715,7 +15718,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 	,set_waveformGainMultiplier: function(value) {
 		if(this.waveformGainMultiplier != value) {
 			if(value < 0) {
-				flixel_FlxG.log.advanced("[FlxWaveform] waveformGainMultiplier cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1143, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformGainMultiplier"});
+				flixel_FlxG.log.advanced("[FlxWaveform] waveformGainMultiplier cannot be less than 0!",flixel_system_debug_log_LogStyle.ERROR,true,{ fileName : "flixel/addons/display/waveform/FlxWaveform.hx", lineNumber : 1156, className : "flixel.addons.display.waveform.FlxWaveform", methodName : "set_waveformGainMultiplier"});
 				value = 0;
 			}
 			this.waveformGainMultiplier = value;
@@ -99589,7 +99592,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 529776;
+	this.version = 825940;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
