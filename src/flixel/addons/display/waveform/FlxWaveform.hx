@@ -461,7 +461,7 @@ class FlxWaveform extends FlxSprite
      * 
      * @since 2.2.0
      */
-    public function getDurationFromSamples(samples:Int):Float
+    inline public function getDurationFromSamples(samples:Int):Float
     {
         return samples * _effectiveSize;
     }
