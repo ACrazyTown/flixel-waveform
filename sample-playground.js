@@ -15148,7 +15148,7 @@ var flixel_addons_display_waveform_FlxWaveform = function(x,y,width,height,color
 	this.set_waveformBgColor(backgroundColor);
 	this.set_waveformColor(color);
 	this.set_waveformDrawMode(drawMode);
-	this.makeGraphic(width,height,this.waveformBgColor);
+	this.makeGraphic(width,height,this.waveformBgColor,true);
 	this._effectiveSize = Math.ceil((this.waveformOrientation == flixel_addons_display_waveform_WaveformOrientation.HORIZONTAL ? this.get_waveformWidth() : this.get_waveformHeight()) / (this.waveformBarSize + this.waveformBarPadding));
 };
 $hxClasses["flixel.addons.display.waveform.FlxWaveform"] = flixel_addons_display_waveform_FlxWaveform;
@@ -15210,7 +15210,7 @@ flixel_addons_display_waveform_FlxWaveform.prototype = $extend(flixel_FlxSprite.
 		this.drawPeaks();
 	}
 	,resize: function(width,height) {
-		this.makeGraphic(width,height,this.waveformBgColor);
+		this.makeGraphic(width,height,this.waveformBgColor,true);
 		this._effectiveSize = Math.ceil((this.waveformOrientation == flixel_addons_display_waveform_WaveformOrientation.HORIZONTAL ? this.get_waveformWidth() : this.get_waveformHeight()) / (this.waveformBarSize + this.waveformBarPadding));
 		this.samplesPerPixel = Math.max(Math.ceil(this._durationSamples / this._effectiveSize),1) | 0;
 		this._drawDataDirty = true;
@@ -99592,7 +99592,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 876346;
+	this.version = 584882;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
