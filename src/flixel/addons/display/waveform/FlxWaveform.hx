@@ -297,7 +297,7 @@ class FlxWaveform extends FlxSprite
         // _waveformWidth = width;
         // _waveformHeight = height;
         waveformDrawMode = drawMode;
-        makeGraphic(width, height, waveformBgColor);
+        makeGraphic(width, height, waveformBgColor, true);
         calcEffectiveSize();
     }
 
@@ -443,7 +443,7 @@ class FlxWaveform extends FlxSprite
         // waveformWidth = width;
         // waveformHeight = height;
 
-        makeGraphic(width, height, waveformBgColor);
+        makeGraphic(width, height, waveformBgColor, true);
         calcEffectiveSize();
         calcSamplesPerPixel();
 
