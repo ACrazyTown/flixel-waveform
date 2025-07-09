@@ -9,6 +9,6 @@
     "contributors": ["ACrazyTown"],
     "classPath": "src",
     "license": "MIT",
-    "version": "2.1.1",
-    "releasenote": "Bugfixes; See CHANGELOG.md"
+    "version": "2.1.2",
+    "releasenote": " Fix waveforms of the same size reusing the same graphic; See CHANGELOG.md"
 }
