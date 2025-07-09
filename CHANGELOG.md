@@ -6,6 +6,9 @@ Legend:
 - 🛠️ - Bugfix/Adjustment
 - ⚠️ - Breaking change
 
+## 2.1.2 (July 9th, 2025)
+- 🛠️ **Fix** waveforms of the same size reusing the same graphic.
+
 ## 2.1.1 (May 24, 2025)
 - 🛠️ **Fix** crashes when using single channel (mono) audio.
 - 🛠️ **Fix** waveform not rendering because some properties were outside of their intended range.
