@@ -90,7 +90,7 @@ class PlayState extends FlxUIState
         if (FlxG.sound.music.playing)
         {
             // Set our waveform's time to the music's time, keeping them in sync.
-            waveform.waveformTime = FlxG.sound.music.time + getLatency();
+            waveform.waveformTime = Math.max(0, FlxG.sound.music.time - getLatency());
             time.text = '${FlxStringUtil.formatTime(waveform.waveformTime / 1000, true)} - ${FlxStringUtil.formatTime((waveform.waveformTime + waveform.waveformDuration) / 1000, true)}';
         }
 
