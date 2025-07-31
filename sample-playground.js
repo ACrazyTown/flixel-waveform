@@ -5117,7 +5117,7 @@ PlayState.prototype = $extend(flixel_addons_ui_FlxUIState.prototype,{
 	,update: function(elapsed) {
 		flixel_addons_ui_FlxUIState.prototype.update.call(this,elapsed);
 		if(flixel_FlxG.sound.music._channel != null) {
-			this.waveform.set_waveformTime(Math.max(0,flixel_FlxG.sound.music._time + this.getLatency()));
+			this.waveform.set_waveformTime(Math.max(0,flixel_FlxG.sound.music._time - this.getLatency()));
 			this.time.set_text("" + flixel_util_FlxStringUtil.formatTime(this.waveform.waveformTime / 1000,true) + " - " + flixel_util_FlxStringUtil.formatTime((this.waveform.waveformTime + this.waveform.waveformDuration) / 1000,true));
 		}
 		var _this = flixel_FlxG.keys.justPressed;
@@ -99592,7 +99592,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 429661;
+	this.version = 893193;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
