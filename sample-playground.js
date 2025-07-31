@@ -4449,7 +4449,7 @@ InitState.prototype = $extend(flixel_FlxState.prototype,{
 					}
 				});
 			};
-			new flixel_util_FlxTimer().start(0.1,function(_) {
+			new flixel_util_FlxTimer().start(0.2,function(_) {
 				onComplete();
 			});
 		}
@@ -99592,7 +99592,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 825630;
+	this.version = 836630;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
