@@ -36,7 +36,7 @@ class InitState extends FlxState
             // Wait a small amount of time before switching to the state
             // to give time for the audio context to start and avoid a crash
             // See: https://github.com/ACrazyTown/flixel-waveform/issues/8#issuecomment-2585483164
-            FlxTimer.wait(0.1, () -> FlxG.switchState(PlayState.new));
+            FlxTimer.wait(0.2, () -> FlxG.switchState(PlayState.new));
         }
         #end
     }
