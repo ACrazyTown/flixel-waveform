@@ -53,6 +53,8 @@ class PlayState extends FlxState
     {
         #if (js && html5 && lime_howlerjs)
         var fileList:js.html.FileList = cast file;
+        var item = fileList.item(0);
+
         var fileReader = new js.html.FileReader();
         fileReader.onload = () ->
         {
@@ -62,6 +64,7 @@ class PlayState extends FlxState
 
             var howl = new lime.media.howlerjs.Howl({
                 src: [fileReader.result],
+                format: [haxe.io.Path.extension(item.name)],
                 preload: true
             });
 
@@ -76,7 +79,7 @@ class PlayState extends FlxState
             FlxG.sound.music.stop();
             FlxG.sound.playMusic(openfl.media.Sound.fromAudioBuffer(buffer), 1.0, true);
         };
-        fileReader.readAsDataURL(fileList.item(0));
+        fileReader.readAsDataURL(item);
         #else
         var buffer = lime.media.AudioBuffer.fromFile(file);
         if (buffer != null)
