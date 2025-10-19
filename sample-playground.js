@@ -1919,8 +1919,15 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 	}
 	,__cleanup: function() {
 		this.__cairo = null;
-		this.__canvas = null;
-		this.__context = null;
+		if(this.__canvas != null) {
+			this.__canvas.width = 0;
+			this.__canvas.height = 0;
+			this.__canvas = null;
+		}
+		if(this.__context != null) {
+			this.__context.clearRect(0,0,0,0);
+			this.__context = null;
+		}
 		if(this.__graphics != null) {
 			this.__graphics.__cleanup();
 		}
@@ -2260,10 +2267,11 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 		return this.__alpha;
 	}
 	,set_alpha: function(value) {
-		if(value > 1.0) {
+		if(value != value) {
+			value = 0.0;
+		} else if(value > 1.0) {
 			value = 1.0;
-		}
-		if(value < 0.0) {
+		} else if(value < 0.0) {
 			value = 0.0;
 		}
 		if(value != this.__alpha && !this.get_cacheAsBitmap()) {
@@ -2380,6 +2388,9 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 	,set_mask: function(value) {
 		if(value == this.__mask) {
 			return value;
+		}
+		if(value != null && value.__maskTarget != null) {
+			value.__maskTarget.set_mask(null);
 		}
 		if(value != this.__mask) {
 			this.__setTransformDirty();
@@ -2556,6 +2567,12 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 				this.__scrollRect = new openfl_geom_Rectangle();
 			}
 			this.__scrollRect.copyFrom(value);
+			if(this.__scrollRect.width < 0.0) {
+				this.__scrollRect.width = 0.0;
+			}
+			if(this.__scrollRect.height < 0.0) {
+				this.__scrollRect.height = 0.0;
+			}
 		} else {
 			this.__scrollRect = null;
 		}
@@ -2566,7 +2583,7 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 				this.__setParentRenderDirty();
 			}
 		}
-		return value;
+		return this.__scrollRect;
 	}
 	,get_shader: function() {
 		return this.__shader;
@@ -2593,7 +2610,12 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 			this.__objectTransform = new openfl_geom_Transform(this);
 		}
 		this.__setTransformDirty();
-		this.__objectTransform.set_matrix(value.get_matrix());
+		if(value.__hasMatrix) {
+			var other = value.__displayObject.__transform;
+			this.__objectTransform.__setTransform(other.a,other.b,other.c,other.d,other.tx,other.ty);
+		} else {
+			this.__objectTransform.__hasMatrix = false;
+		}
 		if(!this.__objectTransform.__colorTransform.__equals(value.__colorTransform,true) || !this.get_cacheAsBitmap() && this.__objectTransform.__colorTransform.alphaMultiplier != value.__colorTransform.alphaMultiplier) {
 			this.__objectTransform.__colorTransform.__copyFrom(value.get_colorTransform());
 			if(!this.__renderDirty) {
@@ -2640,6 +2662,9 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 		return this.__transform.tx;
 	}
 	,set_x: function(value) {
+		if(value != value) {
+			value = 0.0;
+		}
 		if(value != this.__transform.tx) {
 			this.__setTransformDirty();
 		}
@@ -2649,6 +2674,9 @@ openfl_display_DisplayObject.prototype = $extend(openfl_events_EventDispatcher.p
 		return this.__transform.ty;
 	}
 	,set_y: function(value) {
+		if(value != value) {
+			value = 0.0;
+		}
 		if(value != this.__transform.ty) {
 			this.__setTransformDirty();
 		}
@@ -4506,7 +4534,7 @@ ManifestResources.init = function(config) {
 	openfl_text_Font.registerFont(_$_$ASSET_$_$OPENFL_$_$flixel_$fonts_$nokiafc22_$ttf);
 	openfl_text_Font.registerFont(_$_$ASSET_$_$OPENFL_$_$flixel_$fonts_$monsterrat_$ttf);
 	var bundle;
-	var data = "{\"name\":null,\"assets\":\"aoy4:sizei1847922y4:typey5:MUSICy2:idy19:assets%2Fbeeper.oggy9:pathGroupaR4hy7:preloadtgoy4:pathy18:assets%2FREADME.mdR0i79R1y4:TEXTR3R8R6tgoR0i8220R1R2R3y26:flixel%2Fsounds%2Fbeep.mp3R5aR10y26:flixel%2Fsounds%2Fbeep.ogghR6tgoR0i39706R1R2R3y28:flixel%2Fsounds%2Fflixel.mp3R5aR12y28:flixel%2Fsounds%2Fflixel.ogghR6tgoR0i6840R1y5:SOUNDR3R11R5aR10R11hgoR0i33629R1R14R3R13R5aR12R13hgoR0i15744R1y4:FONTy9:classNamey35:__ASSET__flixel_fonts_nokiafc22_ttfR3y30:flixel%2Ffonts%2Fnokiafc22.ttfR6tgoR0i29724R1R15R16y36:__ASSET__flixel_fonts_monsterrat_ttfR3y31:flixel%2Ffonts%2Fmonsterrat.ttfR6tgoR7y33:flixel%2Fimages%2Fui%2Fbutton.pngR0i222R1y5:IMAGER3R21R6tgoR7y36:flixel%2Fimages%2Flogo%2Fdefault.pngR0i484R1R22R3R23R6tgoR7y42:flixel%2Fflixel-ui%2Fimg%2Fchrome_flat.pngR0i124R1R22R3R24R6tgoR7y42:flixel%2Fflixel-ui%2Fimg%2Fbutton_thin.pngR0i118R1R22R3R25R6tgoR7y43:flixel%2Fflixel-ui%2Fimg%2Fchrome_light.pngR0i118R1R22R3R26R6tgoR7y43:flixel%2Fflixel-ui%2Fimg%2Fchrome_inset.pngR0i102R1R22R3R27R6tgoR7y44:flixel%2Fflixel-ui%2Fimg%2Fdropdown_mark.pngR0i86R1R22R3R28R6tgoR7y40:flixel%2Fflixel-ui%2Fimg%2Fradio_dot.pngR0i81R1R22R3R29R6tgoR7y39:flixel%2Fflixel-ui%2Fimg%2Ftab_back.pngR0i111R1R22R3R30R6tgoR7y40:flixel%2Fflixel-ui%2Fimg%2Fcheck_box.pngR0i101R1R22R3R31R6tgoR7y36:flixel%2Fflixel-ui%2Fimg%2Fradio.pngR0i108R1R22R3R32R6tgoR7y34:flixel%2Fflixel-ui%2Fimg%2Ftab.pngR0i106R1R22R3R33R6tgoR7y46:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_up.pngR0i227R1R22R3R34R6tgoR7y37:flixel%2Fflixel-ui%2Fimg%2Fswatch.pngR0i94R1R22R3R35R6tgoR7y37:flixel%2Fflixel-ui%2Fimg%2Fbutton.pngR0i211R1R22R3R36R6tgoR7y34:flixel%2Fflixel-ui%2Fimg%2Fbox.pngR0i75R1R22R3R37R6tgoR7y44:flixel%2Fflixel-ui%2Fimg%2Fbutton_toggle.pngR0i254R1R22R3R38R6tgoR7y40:flixel%2Fflixel-ui%2Fimg%2Fplus_mark.pngR0i83R1R22R3R39R6tgoR7y38:flixel%2Fflixel-ui%2Fimg%2Fhilight.pngR0i74R1R22R3R40R6tgoR7y43:flixel%2Fflixel-ui%2Fimg%2Ffinger_small.pngR0i157R1R22R3R41R6tgoR7y37:flixel%2Fflixel-ui%2Fimg%2Fchrome.pngR0i135R1R22R3R42R6tgoR7y41:flixel%2Fflixel-ui%2Fimg%2Fminus_mark.pngR0i77R1R22R3R43R6tgoR7y44:flixel%2Fflixel-ui%2Fimg%2Ftooltip_arrow.pngR0i176R1R22R3R44R6tgoR7y48:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_left.pngR0i222R1R22R3R45R6tgoR7y41:flixel%2Fflixel-ui%2Fimg%2Fcheck_mark.pngR0i97R1R22R3R46R6tgoR7y41:flixel%2Fflixel-ui%2Fimg%2Ffinger_big.pngR0i1337R1R22R3R47R6tgoR7y49:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_right.pngR0i238R1R22R3R48R6tgoR7y36:flixel%2Fflixel-ui%2Fimg%2Finvis.pngR0i72R1R22R3R49R6tgoR7y48:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_down.pngR0i216R1R22R3R50R6tgoR7y53:flixel%2Fflixel-ui%2Fxml%2Fdefault_loading_screen.xmlR0i1953R1R9R3R51R6tgoR7y39:flixel%2Fflixel-ui%2Fxml%2Fdefaults.xmlR0i1263R1R9R3R52R6tgoR7y44:flixel%2Fflixel-ui%2Fxml%2Fdefault_popup.xmlR0i1848R1R9R3R53R6tgh\",\"rootPath\":null,\"version\":2,\"libraryArgs\":[],\"libraryType\":null}";
+	var data = "{\"name\":null,\"assets\":\"aoy4:pathy18:assets%2FREADME.mdy4:sizei79y4:typey4:TEXTy2:idR1y7:preloadtgoR2i1847922R3y5:MUSICR5y19:assets%2Fbeeper.oggy9:pathGroupaR8hR6tgoR2i39706R3R7R5y28:flixel%2Fsounds%2Fflixel.mp3R9aR10y28:flixel%2Fsounds%2Fflixel.ogghR6tgoR2i8220R3R7R5y26:flixel%2Fsounds%2Fbeep.mp3R9aR12y26:flixel%2Fsounds%2Fbeep.ogghR6tgoR2i6840R3y5:SOUNDR5R13R9aR12R13hgoR2i33629R3R14R5R11R9aR10R11hgoR2i15744R3y4:FONTy9:classNamey35:__ASSET__flixel_fonts_nokiafc22_ttfR5y30:flixel%2Ffonts%2Fnokiafc22.ttfR6tgoR2i29724R3R15R16y36:__ASSET__flixel_fonts_monsterrat_ttfR5y31:flixel%2Ffonts%2Fmonsterrat.ttfR6tgoR0y33:flixel%2Fimages%2Fui%2Fbutton.pngR2i222R3y5:IMAGER5R21R6tgoR0y36:flixel%2Fimages%2Flogo%2Fdefault.pngR2i484R3R22R5R23R6tgoR0y41:flixel%2Fflixel-ui%2Fimg%2Fcheck_mark.pngR2i97R3R22R5R24R6tgoR0y37:flixel%2Fflixel-ui%2Fimg%2Fswatch.pngR2i94R3R22R5R25R6tgoR0y43:flixel%2Fflixel-ui%2Fimg%2Ffinger_small.pngR2i157R3R22R5R26R6tgoR0y34:flixel%2Fflixel-ui%2Fimg%2Fbox.pngR2i75R3R22R5R27R6tgoR0y44:flixel%2Fflixel-ui%2Fimg%2Ftooltip_arrow.pngR2i176R3R22R5R28R6tgoR0y40:flixel%2Fflixel-ui%2Fimg%2Fplus_mark.pngR2i83R3R22R5R29R6tgoR0y37:flixel%2Fflixel-ui%2Fimg%2Fchrome.pngR2i135R3R22R5R30R6tgoR0y36:flixel%2Fflixel-ui%2Fimg%2Finvis.pngR2i72R3R22R5R31R6tgoR0y49:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_right.pngR2i238R3R22R5R32R6tgoR0y34:flixel%2Fflixel-ui%2Fimg%2Ftab.pngR2i106R3R22R5R33R6tgoR0y44:flixel%2Fflixel-ui%2Fimg%2Fdropdown_mark.pngR2i86R3R22R5R34R6tgoR0y43:flixel%2Fflixel-ui%2Fimg%2Fchrome_light.pngR2i118R3R22R5R35R6tgoR0y39:flixel%2Fflixel-ui%2Fimg%2Ftab_back.pngR2i111R3R22R5R36R6tgoR0y44:flixel%2Fflixel-ui%2Fimg%2Fbutton_toggle.pngR2i254R3R22R5R37R6tgoR0y42:flixel%2Fflixel-ui%2Fimg%2Fchrome_flat.pngR2i124R3R22R5R38R6tgoR0y40:flixel%2Fflixel-ui%2Fimg%2Fradio_dot.pngR2i81R3R22R5R39R6tgoR0y42:flixel%2Fflixel-ui%2Fimg%2Fbutton_thin.pngR2i118R3R22R5R40R6tgoR0y46:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_up.pngR2i227R3R22R5R41R6tgoR0y41:flixel%2Fflixel-ui%2Fimg%2Ffinger_big.pngR2i1337R3R22R5R42R6tgoR0y41:flixel%2Fflixel-ui%2Fimg%2Fminus_mark.pngR2i77R3R22R5R43R6tgoR0y43:flixel%2Fflixel-ui%2Fimg%2Fchrome_inset.pngR2i102R3R22R5R44R6tgoR0y36:flixel%2Fflixel-ui%2Fimg%2Fradio.pngR2i108R3R22R5R45R6tgoR0y48:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_down.pngR2i216R3R22R5R46R6tgoR0y48:flixel%2Fflixel-ui%2Fimg%2Fbutton_arrow_left.pngR2i222R3R22R5R47R6tgoR0y37:flixel%2Fflixel-ui%2Fimg%2Fbutton.pngR2i211R3R22R5R48R6tgoR0y38:flixel%2Fflixel-ui%2Fimg%2Fhilight.pngR2i74R3R22R5R49R6tgoR0y40:flixel%2Fflixel-ui%2Fimg%2Fcheck_box.pngR2i101R3R22R5R50R6tgoR0y53:flixel%2Fflixel-ui%2Fxml%2Fdefault_loading_screen.xmlR2i1953R3R4R5R51R6tgoR0y39:flixel%2Fflixel-ui%2Fxml%2Fdefaults.xmlR2i1263R3R4R5R52R6tgoR0y44:flixel%2Fflixel-ui%2Fxml%2Fdefault_popup.xmlR2i1848R3R4R5R53R6tgh\",\"rootPath\":null,\"version\":2,\"libraryArgs\":[],\"libraryType\":null}";
 	var manifest = lime_utils_AssetManifest.parse(data,ManifestResources.rootPath);
 	var library = lime_utils_AssetLibrary.fromManifest(manifest);
 	lime_utils_Assets.registerLibrary("default",library);
@@ -5287,9 +5315,10 @@ PlayState.prototype = $extend(flixel_addons_ui_FlxUIState.prototype,{
 	,onDropFile: function(file) {
 		var _gthis = this;
 		var fileList = file;
+		var item = fileList.item(0);
 		var fileReader = new FileReader();
 		fileReader.onload = function() {
-			var howl = new Howl({ src : [fileReader.result], preload : true});
+			var howl = new Howl({ src : [fileReader.result], format : [haxe_io_Path.extension(item.name)], preload : true});
 			var buffer = new lime_media_AudioBuffer();
 			buffer.set_src(howl);
 			howl.once("play",function() {
@@ -5299,7 +5328,7 @@ PlayState.prototype = $extend(flixel_addons_ui_FlxUIState.prototype,{
 			_this.cleanup(_this.autoDestroy,true);
 			flixel_FlxG.sound.playMusic(openfl_media_Sound.fromAudioBuffer(buffer),1.0,true);
 		};
-		fileReader.readAsDataURL(fileList.item(0));
+		fileReader.readAsDataURL(item);
 	}
 	,getLatency: function() {
 		var ctx = lime_media_AudioManager.context.web;
@@ -7968,8 +7997,7 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 			hasColorOffsets = false;
 		}
 		var itemToReturn = null;
-		var blendInt = flixel_graphics_tile_FlxDrawBaseItem.blendToInt(blend);
-		if(this._currentDrawItem != null && this._currentDrawItem.type == flixel_graphics_tile_FlxDrawItemType.TILES && this._headTiles.graphics == graphic && this._headTiles.colored == colored && this._headTiles.hasColorOffsets == hasColorOffsets && this._headTiles.blending == blendInt && this._headTiles.blend == blend && this._headTiles.antialiasing == smooth && this._headTiles.shader == shader) {
+		if(this._currentDrawItem != null && this._currentDrawItem.type == flixel_graphics_tile_FlxDrawItemType.TILES && this._headTiles.graphics == graphic && this._headTiles.colored == colored && this._headTiles.hasColorOffsets == hasColorOffsets && this._headTiles.blend == blend && this._headTiles.antialiasing == smooth && this._headTiles.shader == shader) {
 			return this._headTiles;
 		}
 		if(flixel_FlxCamera._storageTilesHead != null) {
@@ -7981,13 +8009,12 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 			itemToReturn = new flixel_graphics_tile_FlxDrawQuadsItem();
 		}
 		if(graphic.shader == null) {
-			throw haxe_Exception.thrown("Attempted to queue an invalid FlxDrawItem, did you destroy a cached sprite?");
+			throw haxe_Exception.thrown("Cannot queue " + graphic.key + ". This sprite was destroyed.");
 		}
 		itemToReturn.graphics = graphic;
 		itemToReturn.antialiasing = smooth;
 		itemToReturn.colored = colored;
 		itemToReturn.hasColorOffsets = hasColorOffsets;
-		itemToReturn.blending = blendInt;
 		itemToReturn.blend = blend;
 		itemToReturn.shader = shader;
 		itemToReturn.nextTyped = this._headTiles;
@@ -8008,8 +8035,7 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 		if(smoothing == null) {
 			smoothing = false;
 		}
-		var blendInt = flixel_graphics_tile_FlxDrawBaseItem.blendToInt(blend);
-		if(this._currentDrawItem != null && this._currentDrawItem.type == flixel_graphics_tile_FlxDrawItemType.TRIANGLES && this._headTriangles.graphics == graphic && this._headTriangles.antialiasing == smoothing && this._headTriangles.colored == isColored && this._headTriangles.blending == blendInt && this._headTriangles.blend == blend && this._headTriangles.hasColorOffsets == hasColorOffsets && this._headTriangles.shader == shader) {
+		if(this._currentDrawItem != null && this._currentDrawItem.type == flixel_graphics_tile_FlxDrawItemType.TRIANGLES && this._headTriangles.graphics == graphic && this._headTriangles.antialiasing == smoothing && this._headTriangles.colored == isColored && this._headTriangles.blend == blend && this._headTriangles.hasColorOffsets == hasColorOffsets && this._headTriangles.shader == shader) {
 			return this._headTriangles;
 		}
 		return this.getNewDrawTrianglesItem(graphic,smoothing,isColored,blend,hasColorOffsets,shader);
@@ -8022,7 +8048,6 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 			smoothing = false;
 		}
 		var itemToReturn = null;
-		var blendInt = flixel_graphics_tile_FlxDrawBaseItem.blendToInt(blend);
 		if(flixel_FlxCamera._storageTrianglesHead != null) {
 			itemToReturn = flixel_FlxCamera._storageTrianglesHead;
 			var newHead = flixel_FlxCamera._storageTrianglesHead.nextTyped;
@@ -8034,7 +8059,6 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 		itemToReturn.graphics = graphic;
 		itemToReturn.antialiasing = smoothing;
 		itemToReturn.colored = isColored;
-		itemToReturn.blending = blendInt;
 		itemToReturn.blend = blend;
 		itemToReturn.hasColorOffsets = hasColorOffsets;
 		itemToReturn.shader = shader;
@@ -8074,6 +8098,7 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 		this._headTriangles = null;
 	}
 	,render: function() {
+		this.flashSprite.set_filters(this.filtersEnabled ? this.filters : null);
 		var currItem = this._headOfDrawStack;
 		while(currItem != null) {
 			currItem.render(this);
@@ -8135,6 +8160,28 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 		if(repeat == null) {
 			repeat = false;
 		}
+		var _this = this._bounds;
+		var x = this.viewMarginX;
+		var y = this.viewMarginY;
+		var width = this.width - this.viewMarginX * 2;
+		var height = this.height - this.viewMarginY * 2;
+		if(height == null) {
+			height = 0.0;
+		}
+		if(width == null) {
+			width = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		_this.x = x;
+		_this.y = y;
+		_this.width = width;
+		_this.height = height;
+		var cameraBounds = _this;
 		if(flixel_FlxG.renderBlit) {
 			if(position == null) {
 				var this1 = flixel_FlxCamera.renderPoint;
@@ -8142,27 +8189,6 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 				this1.set_y(0);
 				position = this1;
 			}
-			var _this = this._bounds;
-			var x = 0;
-			var y = 0;
-			var width = this.width;
-			var height = this.height;
-			if(height == null) {
-				height = 0.0;
-			}
-			if(width == null) {
-				width = 0.0;
-			}
-			if(y == null) {
-				y = 0.0;
-			}
-			if(x == null) {
-				x = 0.0;
-			}
-			_this.x = x;
-			_this.y = y;
-			_this.width = width;
-			_this.height = height;
 			var verticesLength = vertices.get_length();
 			var currentVertexPosition = 0;
 			var tempX;
@@ -8233,8 +8259,7 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 			if(_this._weak) {
 				_this.put();
 			}
-			var _this = this._bounds;
-			var result = bounds.x + bounds.width > _this.x && bounds.x < _this.x + _this.width && bounds.y + bounds.height > _this.y && bounds.y < _this.y + _this.height;
+			var result = bounds.x + bounds.width > cameraBounds.x && bounds.x < cameraBounds.x + cameraBounds.width && bounds.y + bounds.height > cameraBounds.y && bounds.y < cameraBounds.y + cameraBounds.height;
 			if(bounds._weak) {
 				if(!bounds._inPool) {
 					bounds._inPool = true;
@@ -8272,32 +8297,11 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 				flixel_math_FlxRect._pool.putUnsafe(bounds);
 			}
 		} else {
-			var _this = this._bounds;
-			var x = 0;
-			var y = 0;
-			var width = this.width;
-			var height = this.height;
-			if(height == null) {
-				height = 0.0;
-			}
-			if(width == null) {
-				width = 0.0;
-			}
-			if(y == null) {
-				y = 0.0;
-			}
-			if(x == null) {
-				x = 0.0;
-			}
-			_this.x = x;
-			_this.y = y;
-			_this.width = width;
-			_this.height = height;
 			var isColored = colors != null && colors.get_length() != 0;
 			var hasColorOffsets = transform != null && flixel_util_FlxColorTransformUtil.hasRGBAOffsets(transform);
 			isColored = isColored || transform != null && flixel_util_FlxColorTransformUtil.hasRGBMultipliers(transform);
 			var drawItem = this.startTrianglesBatch(graphic,smoothing,isColored,blend,hasColorOffsets,shader);
-			drawItem.addTriangles(vertices,indices,uvtData,colors,position,this._bounds,transform);
+			drawItem.addTriangles(vertices,indices,uvtData,colors,position,cameraBounds,transform);
 		}
 	}
 	,transformRect: function(rect) {
@@ -8376,7 +8380,7 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 			this._helperMatrix = null;
 			this._helperPoint = null;
 		}
-		this._bounds = null;
+		this._bounds = flixel_util_FlxDestroyUtil.put(this._bounds);
 		this.scroll = flixel_util_FlxDestroyUtil.put(this.scroll);
 		this.targetOffset = flixel_util_FlxDestroyUtil.put(this.targetOffset);
 		this.deadzone = flixel_util_FlxDestroyUtil.put(this.deadzone);
@@ -8398,7 +8402,6 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 		this.updateScroll();
 		this.updateFlash(elapsed);
 		this.updateFade(elapsed);
-		this.flashSprite.set_filters(this.filtersEnabled ? this.filters : null);
 		this.updateFlashSpritePosition();
 		this.updateShake(elapsed);
 	}
@@ -9075,7 +9078,7 @@ flixel_FlxCamera.prototype = $extend(flixel_FlxBasic.prototype,{
 				color |= (Value1 > 255 ? 255 : Value1 < 0 ? 0 : Value1) << 24;
 				this.fill(color);
 			} else {
-				var alpha = (this.color >> 24 & 255) / 255 * this._fxFlashAlpha;
+				var alpha = (this._fxFlashColor >> 24 & 255) / 255 * this._fxFlashAlpha;
 				this.fill(this._fxFlashColor & 16777215,true,alpha,this.canvas.get_graphics());
 			}
 		}
@@ -10363,11 +10366,11 @@ flixel_system_frontEnds_DebuggerFrontEnd.prototype = {
 		this.drawDebug = Value;
 		return this.drawDebug;
 	}
-	,set_visible: function(Value) {
-		if(this.visible == Value) {
+	,set_visible: function(value) {
+		if(this.visible == value) {
 			return this.visible;
 		}
-		this.visible = Value;
+		this.visible = value;
 		return this.visible;
 	}
 	,__class__: flixel_system_frontEnds_DebuggerFrontEnd
@@ -11878,8 +11881,8 @@ flixel_FlxGame.prototype = $extend(openfl_display_Sprite.prototype,{
 			this.switchState();
 		}
 		this.updateElapsed();
-		flixel_FlxG.signals.preUpdate.dispatch();
 		this.updateInput();
+		flixel_FlxG.signals.preUpdate.dispatch();
 		flixel_FlxG.sound.update(flixel_FlxG.elapsed);
 		var elapsed = flixel_FlxG.elapsed;
 		var _g = 0;
@@ -16483,8 +16486,8 @@ var flixel_text_FlxText = function(X,Y,FieldWidth,Text1,Size,EmbeddedFont) {
 	this.textField.set_text(Text1);
 	this.set_fieldWidth(FieldWidth);
 	this.textField.set_embedFonts(EmbeddedFont);
-	this.textField.set_sharpness(100);
 	this.textField.set_height(Text1.length <= 0 ? 1 : 10);
+	this.set_antialiasing(this.antialiasing);
 	this.set_allowCollisions(0);
 	this.set_moves(false);
 	this.drawFrame();
@@ -16794,7 +16797,7 @@ flixel_text_FlxText.prototype = $extend(flixel_FlxSprite.prototype,{
 		return this._defaultFormat.size | 0;
 	}
 	,set_size: function(Size) {
-		this._defaultFormat.size = Size;
+		this._defaultFormat.set_size(Size);
 		this.textField.set_defaultTextFormat(this._defaultFormat);
 		this.textField.setTextFormat(this._defaultFormat);
 		this._regen = true;
@@ -16883,9 +16886,9 @@ flixel_text_FlxText.prototype = $extend(flixel_FlxSprite.prototype,{
 			if(flixel_FlxG.assets.exists(Font,"font")) {
 				newFontName = flixel_FlxG.assets.getAssetUnsafe(Font,"font",true).name;
 			}
-			this._defaultFormat.font = newFontName;
+			this._defaultFormat.set_font(newFontName);
 		} else {
-			this._defaultFormat.font = flixel_system_FlxAssets.FONT_DEFAULT;
+			this._defaultFormat.set_font(flixel_system_FlxAssets.FONT_DEFAULT);
 		}
 		this.textField.set_defaultTextFormat(this._defaultFormat);
 		this.textField.setTextFormat(this._defaultFormat);
@@ -16900,7 +16903,7 @@ flixel_text_FlxText.prototype = $extend(flixel_FlxSprite.prototype,{
 	}
 	,set_systemFont: function(Font) {
 		this.textField.set_embedFonts(false);
-		this._defaultFormat.font = Font;
+		this._defaultFormat.set_font(Font);
 		this.textField.set_defaultTextFormat(this._defaultFormat);
 		this.textField.setTextFormat(this._defaultFormat);
 		this._regen = true;
@@ -16911,7 +16914,7 @@ flixel_text_FlxText.prototype = $extend(flixel_FlxSprite.prototype,{
 	}
 	,set_bold: function(value) {
 		if(this._defaultFormat.bold != value) {
-			this._defaultFormat.bold = value;
+			this._defaultFormat.set_bold(value);
 			this.textField.set_defaultTextFormat(this._defaultFormat);
 			this.textField.setTextFormat(this._defaultFormat);
 			this._regen = true;
@@ -16923,7 +16926,7 @@ flixel_text_FlxText.prototype = $extend(flixel_FlxSprite.prototype,{
 	}
 	,set_italic: function(value) {
 		if(this._defaultFormat.italic != value) {
-			this._defaultFormat.italic = value;
+			this._defaultFormat.set_italic(value);
 			this.textField.set_defaultTextFormat(this._defaultFormat);
 			this.textField.setTextFormat(this._defaultFormat);
 			this._regen = true;
@@ -17450,11 +17453,11 @@ flixel_text_FlxText.prototype = $extend(flixel_FlxSprite.prototype,{
 		if(withAlign == null) {
 			withAlign = true;
 		}
-		to.font = from.font;
-		to.bold = from.bold;
-		to.italic = from.italic;
+		to.set_font(from.font);
+		to.set_bold(from.bold);
+		to.set_italic(from.italic);
 		to.underline = from.underline;
-		to.size = from.size;
+		to.set_size(from.size);
 		to.color = from.color;
 		to.leading = from.leading;
 		if(withAlign) {
@@ -17474,6 +17477,17 @@ flixel_text_FlxText.prototype = $extend(flixel_FlxSprite.prototype,{
 		flixel_FlxSprite.prototype.set_frames.call(this,Frames);
 		this._regen = false;
 		return Frames;
+	}
+	,set_antialiasing: function(value) {
+		if(value) {
+			this.textField.set_antiAliasType(1);
+			this.textField.set_sharpness(100);
+		} else {
+			this.textField.set_antiAliasType(0);
+			this.textField.set_sharpness(400);
+		}
+		this._regen = true;
+		return this.antialiasing = value;
 	}
 	,__class__: flixel_text_FlxText
 	,__properties__: $extend(flixel_FlxSprite.prototype.__properties__,{get_shadowOffset:"get_shadowOffset",set_autoSize:"set_autoSize",get_autoSize:"get_autoSize",set_fieldHeight:"set_fieldHeight",get_fieldHeight:"get_fieldHeight",set_fieldWidth:"set_fieldWidth",get_fieldWidth:"get_fieldWidth",set_borderQuality:"set_borderQuality",set_borderSize:"set_borderSize",set_borderColor:"set_borderColor",set_borderStyle:"set_borderStyle",set_alignment:"set_alignment",get_alignment:"get_alignment",set_wordWrap:"set_wordWrap",get_wordWrap:"get_wordWrap",set_underline:"set_underline",get_underline:"get_underline",set_italic:"set_italic",get_italic:"get_italic",set_bold:"set_bold",get_bold:"get_bold",set_systemFont:"set_systemFont",get_systemFont:"get_systemFont",get_embedded:"get_embedded",set_font:"set_font",get_font:"get_font",set_letterSpacing:"set_letterSpacing",get_letterSpacing:"get_letterSpacing",set_size:"set_size",get_size:"get_size",set_text:"set_text"})
@@ -24987,7 +25001,7 @@ flixel_addons_ui_FlxUI.prototype = $extend(flixel_addons_ui_FlxTypedUIGroup.prot
 	,_loadFontDef: function(data) {
 		var fd = flixel_addons_ui_FontDef.fromXML(data);
 		var fontSize = this._loadHeight(data,8,"size") | 0;
-		fd.format.size = flixel_addons_ui_FlxUI.fontSize(fd.file,fontSize);
+		fd.format.set_size(flixel_addons_ui_FlxUI.fontSize(fd.file,fontSize));
 		fd.set_size(fontSize);
 		return fd;
 	}
@@ -33834,7 +33848,7 @@ flixel_addons_ui_FlxUITooltip.fillFormatNulls = function(a,b) {
 		a.blockIndent = b.blockIndent;
 	}
 	if(a.bold == null) {
-		a.bold = b.bold;
+		a.set_bold(b.bold);
 	}
 	if(a.bullet == null) {
 		a.bullet = b.bullet;
@@ -33843,13 +33857,13 @@ flixel_addons_ui_FlxUITooltip.fillFormatNulls = function(a,b) {
 		a.color = b.color;
 	}
 	if(a.font == null) {
-		a.font = b.font;
+		a.set_font(b.font);
 	}
 	if(a.indent == null) {
 		a.indent = b.indent;
 	}
 	if(a.italic == null) {
-		a.italic = b.italic;
+		a.set_italic(b.italic);
 	}
 	if(a.kerning == null) {
 		a.kerning = b.kerning;
@@ -33867,7 +33881,7 @@ flixel_addons_ui_FlxUITooltip.fillFormatNulls = function(a,b) {
 		a.rightMargin = b.rightMargin;
 	}
 	if(a.size == null) {
-		a.size = b.size;
+		a.set_size(b.size);
 	}
 	if(a.tabStops == null) {
 		a.tabStops = b.tabStops;
@@ -34759,11 +34773,11 @@ flixel_addons_ui_FontDef.copyFromTextField = function(t) {
 	var dtf = t.get_defaultTextFormat();
 	var fd = new flixel_addons_ui_FontDef("");
 	fd.fromStr(dtf.font);
-	fd.format.font = dtf.font;
-	fd.format.size = dtf.size;
+	fd.format.set_font(dtf.font);
+	fd.format.set_size(dtf.size);
 	fd.format.color = dtf.color;
-	fd.format.bold = dtf.bold;
-	fd.format.italic = dtf.italic;
+	fd.format.set_bold(dtf.bold);
+	fd.format.set_italic(dtf.italic);
 	fd.format.underline = dtf.underline;
 	fd.format.url = dtf.url;
 	fd.format.letterSpacing = dtf.letterSpacing;
@@ -34811,7 +34825,7 @@ flixel_addons_ui_FontDef.fromXML = function(data) {
 	}
 	var fd = new flixel_addons_ui_FontDef(flixel_addons_ui_U.xml_str(data,"font"),".ttf",fontFile);
 	fd.format.color = fontColor;
-	fd.format.size = fontSize;
+	fd.format.set_size(fontSize);
 	fd.format.align = align;
 	fd.set_size(fontSize);
 	fd.setFontStyle(fontStyle);
@@ -34827,7 +34841,7 @@ flixel_addons_ui_FontDef.prototype = {
 	}
 	,set_size: function(i) {
 		if(this.format != null) {
-			this.format.size = i;
+			this.format.set_size(i);
 		}
 		this._size = i;
 		return this._size;
@@ -35005,20 +35019,20 @@ flixel_addons_ui_FontDef.prototype = {
 		str = str.toLowerCase();
 		switch(str) {
 		case "b":case "bold":
-			this.format.bold = true;
-			this.format.italic = false;
+			this.format.set_bold(true);
+			this.format.set_italic(false);
 			break;
 		case "all":case "bi":case "bold-italic":case "bolditalic":case "both":case "ib":case "italicbold":case "z":
-			this.format.bold = true;
-			this.format.italic = true;
+			this.format.set_bold(true);
+			this.format.set_italic(true);
 			break;
 		case "i":case "italic":
-			this.format.bold = false;
-			this.format.italic = true;
+			this.format.set_bold(false);
+			this.format.set_italic(true);
 			break;
 		default:
-			this.format.bold = false;
-			this.format.italic = false;
+			this.format.set_bold(false);
+			this.format.set_italic(false);
 		}
 		this.fixFontName();
 	}
@@ -43635,6 +43649,7 @@ flixel_graphics_frames_FlxFrame.prototype = {
 			}
 			this.cacheFrameMatrix();
 		}
+		this.updateUV();
 		if(!frameRect._inPool) {
 			frameRect._inPool = true;
 			frameRect._weak = false;
@@ -43745,33 +43760,40 @@ flixel_graphics_frames_FlxFrame.prototype = {
 		return flixel_util_FlxStringUtil.getDebugString([_this]);
 	}
 	,set_frame: function(value) {
-		if(value != null) {
-			if(this.uv == null) {
-				this.uv = flixel_graphics_frames_FlxUVRect.get();
-			}
-			var this1 = this.uv;
-			var x = value.x / this.parent.width;
-			var y = value.y / this.parent.height;
-			var width = (value.x + value.width) / this.parent.width;
-			var height = (value.y + value.height) / this.parent.height;
-			if(height == null) {
-				height = 0.0;
-			}
-			if(width == null) {
-				width = 0.0;
-			}
-			if(y == null) {
-				y = 0.0;
-			}
-			if(x == null) {
-				x = 0.0;
-			}
-			this1.x = x;
-			this1.y = y;
-			this1.width = width;
-			this1.height = height;
+		this.frame = value;
+		this.updateUV();
+		return value;
+	}
+	,updateUV: function() {
+		if(this.frame == null) {
+			return;
 		}
-		return this.frame = value;
+		if(this.uv == null) {
+			this.uv = flixel_graphics_frames_FlxUVRect.get();
+		}
+		var this1 = this.uv;
+		var frame = this.frame;
+		var parent = this.parent;
+		var x = frame.x / parent.width;
+		var y = frame.y / parent.height;
+		var width = (frame.x + frame.width) / parent.width;
+		var height = (frame.y + frame.height) / parent.height;
+		if(height == null) {
+			height = 0.0;
+		}
+		if(width == null) {
+			width = 0.0;
+		}
+		if(y == null) {
+			y = 0.0;
+		}
+		if(x == null) {
+			x = 0.0;
+		}
+		this1.x = x;
+		this1.y = y;
+		this1.width = width;
+		this1.height = height;
 	}
 	,__class__: flixel_graphics_frames_FlxFrame
 	,__properties__: {set_frame:"set_frame"}
@@ -43785,16 +43807,16 @@ flixel_graphics_frames_FlxUVRect.set_left = function(this1,value) {
 	return this1.x = value;
 };
 flixel_graphics_frames_FlxUVRect.get_right = function(this1) {
-	return this1.y;
-};
-flixel_graphics_frames_FlxUVRect.set_right = function(this1,value) {
-	return this1.y = value;
-};
-flixel_graphics_frames_FlxUVRect.get_top = function(this1) {
 	return this1.width;
 };
-flixel_graphics_frames_FlxUVRect.set_top = function(this1,value) {
+flixel_graphics_frames_FlxUVRect.set_right = function(this1,value) {
 	return this1.width = value;
+};
+flixel_graphics_frames_FlxUVRect.get_top = function(this1) {
+	return this1.y;
+};
+flixel_graphics_frames_FlxUVRect.set_top = function(this1,value) {
+	return this1.y = value;
 };
 flixel_graphics_frames_FlxUVRect.get_bottom = function(this1) {
 	return this1.height;
@@ -43824,10 +43846,32 @@ flixel_graphics_frames_FlxUVRect.set = function(this1,l,t,r,b) {
 	this1.width = width;
 	this1.height = height;
 };
+flixel_graphics_frames_FlxUVRect.setFromFrameRect = function(this1,frame,parent) {
+	var x = frame.x / parent.width;
+	var y = frame.y / parent.height;
+	var width = (frame.x + frame.width) / parent.width;
+	var height = (frame.y + frame.height) / parent.height;
+	if(height == null) {
+		height = 0.0;
+	}
+	if(width == null) {
+		width = 0.0;
+	}
+	if(y == null) {
+		y = 0.0;
+	}
+	if(x == null) {
+		x = 0.0;
+	}
+	this1.x = x;
+	this1.y = y;
+	this1.width = width;
+	this1.height = height;
+};
 flixel_graphics_frames_FlxUVRect.copyTo = function(this1,uv) {
 	var x = this1.x;
-	var y = this1.width;
-	var width = this1.y;
+	var y = this1.y;
+	var width = this1.width;
 	var height = this1.height;
 	if(height == null) {
 		height = 0.0;
@@ -43848,8 +43892,8 @@ flixel_graphics_frames_FlxUVRect.copyTo = function(this1,uv) {
 };
 flixel_graphics_frames_FlxUVRect.copyFrom = function(this1,uv) {
 	var x = uv.x;
-	var y = uv.width;
-	var width = uv.y;
+	var y = uv.y;
+	var width = uv.width;
 	var height = uv.height;
 	if(height == null) {
 		height = 0.0;
@@ -43867,6 +43911,25 @@ flixel_graphics_frames_FlxUVRect.copyFrom = function(this1,uv) {
 	this1.y = y;
 	this1.width = width;
 	this1.height = height;
+};
+flixel_graphics_frames_FlxUVRect.toString = function(this1) {
+	var value = this1.x;
+	var _this = flixel_util_LabelValuePair._pool.get();
+	_this.label = "l";
+	_this.value = value;
+	var value = this1.y;
+	var _this1 = flixel_util_LabelValuePair._pool.get();
+	_this1.label = "t";
+	_this1.value = value;
+	var value = this1.width;
+	var _this2 = flixel_util_LabelValuePair._pool.get();
+	_this2.label = "r";
+	_this2.value = value;
+	var value = this1.height;
+	var _this3 = flixel_util_LabelValuePair._pool.get();
+	_this3.label = "b";
+	_this3.value = value;
+	return flixel_util_FlxStringUtil.getDebugString([_this,_this1,_this2,_this3]);
 };
 flixel_graphics_frames_FlxUVRect.get = function(l,t,r,b) {
 	if(b == null) {
@@ -46834,6 +46897,7 @@ flixel_graphics_tile_FlxDrawQuadsItem.prototype = $extend(flixel_graphics_tile_F
 		camera.canvas.get_graphics().overrideBlendMode(this.blend);
 		camera.canvas.get_graphics().beginShaderFill(shader);
 		camera.canvas.get_graphics().drawQuads(this.rects,null,this.transforms);
+		camera.canvas.get_graphics().endFill();
 		flixel_graphics_tile_FlxDrawBaseItem.prototype.render.call(this,camera);
 	}
 	,setParameterValue: function(parameter,value) {
@@ -47185,7 +47249,7 @@ flixel_graphics_tile_FlxDrawTrianglesItem.prototype = $extend(flixel_graphics_ti
 		this.vertices.set(prevVerticesPos,point1.x);
 		this.vertices.set(prevVerticesPos + 1,point1.y);
 		this.uvtData.set(prevVerticesPos,frame.uv.x);
-		this.uvtData.set(prevVerticesPos + 1,frame.uv.width);
+		this.uvtData.set(prevVerticesPos + 1,frame.uv.y);
 		var x = frame.frame.width;
 		var y = 0;
 		if(y == null) {
@@ -47210,8 +47274,8 @@ flixel_graphics_tile_FlxDrawTrianglesItem.prototype = $extend(flixel_graphics_ti
 		point1.set_y(y);
 		this.vertices.set(prevVerticesPos + 2,point1.x);
 		this.vertices.set(prevVerticesPos + 3,point1.y);
-		this.uvtData.set(prevVerticesPos + 2,frame.uv.y);
-		this.uvtData.set(prevVerticesPos + 3,frame.uv.width);
+		this.uvtData.set(prevVerticesPos + 2,frame.uv.width);
+		this.uvtData.set(prevVerticesPos + 3,frame.uv.y);
 		var x = frame.frame.width;
 		var y = frame.frame.height;
 		if(y == null) {
@@ -47236,7 +47300,7 @@ flixel_graphics_tile_FlxDrawTrianglesItem.prototype = $extend(flixel_graphics_ti
 		point1.set_y(y);
 		this.vertices.set(prevVerticesPos + 4,point1.x);
 		this.vertices.set(prevVerticesPos + 5,point1.y);
-		this.uvtData.set(prevVerticesPos + 4,frame.uv.y);
+		this.uvtData.set(prevVerticesPos + 4,frame.uv.width);
 		this.uvtData.set(prevVerticesPos + 5,frame.uv.height);
 		var x = 0;
 		var y = frame.frame.height;
@@ -48988,23 +49052,23 @@ flixel_input_gamepad_FlxGamepad.prototype = {
 			return new flixel_input_gamepad_mappings_LogitechMapping(this.attachment);
 		case 1:
 			return new flixel_input_gamepad_mappings_OUYAMapping(this.attachment);
-		case 2:
+		case 2:case 3:
 			return new flixel_input_gamepad_mappings_PS4Mapping(this.attachment);
-		case 3:
-			return new flixel_input_gamepad_mappings_PSVitaMapping(this.attachment);
 		case 4:
-			return new flixel_input_gamepad_mappings_XInputMapping(this.attachment);
+			return new flixel_input_gamepad_mappings_PSVitaMapping(this.attachment);
 		case 5:
-			return new flixel_input_gamepad_mappings_MayflashWiiRemoteMapping(this.attachment);
+			return new flixel_input_gamepad_mappings_XInputMapping(this.attachment);
 		case 6:
-			return new flixel_input_gamepad_mappings_WiiRemoteMapping(this.attachment);
+			return new flixel_input_gamepad_mappings_MayflashWiiRemoteMapping(this.attachment);
 		case 7:
-			return new flixel_input_gamepad_mappings_MFiMapping(this.attachment);
+			return new flixel_input_gamepad_mappings_WiiRemoteMapping(this.attachment);
 		case 8:
-			return new flixel_input_gamepad_mappings_SwitchProMapping(this.attachment);
+			return new flixel_input_gamepad_mappings_MFiMapping(this.attachment);
 		case 9:
-			return new flixel_input_gamepad_mappings_SwitchJoyconLeftMapping(this.attachment);
+			return new flixel_input_gamepad_mappings_SwitchProMapping(this.attachment);
 		case 10:
+			return new flixel_input_gamepad_mappings_SwitchJoyconLeftMapping(this.attachment);
+		case 11:
 			return new flixel_input_gamepad_mappings_SwitchJoyconRightMapping(this.attachment);
 		default:
 			return new flixel_input_gamepad_mappings_XInputMapping(this.attachment);
@@ -49069,17 +49133,18 @@ var flixel_input_gamepad_FlxGamepadModel = $hxEnums["flixel.input.gamepad.FlxGam
 	,LOGITECH: {_hx_name:"LOGITECH",_hx_index:0,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
 	,OUYA: {_hx_name:"OUYA",_hx_index:1,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
 	,PS4: {_hx_name:"PS4",_hx_index:2,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,PSVITA: {_hx_name:"PSVITA",_hx_index:3,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,XINPUT: {_hx_name:"XINPUT",_hx_index:4,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,MAYFLASH_WII_REMOTE: {_hx_name:"MAYFLASH_WII_REMOTE",_hx_index:5,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,WII_REMOTE: {_hx_name:"WII_REMOTE",_hx_index:6,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,MFI: {_hx_name:"MFI",_hx_index:7,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,SWITCH_PRO: {_hx_name:"SWITCH_PRO",_hx_index:8,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,SWITCH_JOYCON_LEFT: {_hx_name:"SWITCH_JOYCON_LEFT",_hx_index:9,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,SWITCH_JOYCON_RIGHT: {_hx_name:"SWITCH_JOYCON_RIGHT",_hx_index:10,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
-	,UNKNOWN: {_hx_name:"UNKNOWN",_hx_index:11,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,PS5: {_hx_name:"PS5",_hx_index:3,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,PSVITA: {_hx_name:"PSVITA",_hx_index:4,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,XINPUT: {_hx_name:"XINPUT",_hx_index:5,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,MAYFLASH_WII_REMOTE: {_hx_name:"MAYFLASH_WII_REMOTE",_hx_index:6,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,WII_REMOTE: {_hx_name:"WII_REMOTE",_hx_index:7,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,MFI: {_hx_name:"MFI",_hx_index:8,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,SWITCH_PRO: {_hx_name:"SWITCH_PRO",_hx_index:9,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,SWITCH_JOYCON_LEFT: {_hx_name:"SWITCH_JOYCON_LEFT",_hx_index:10,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,SWITCH_JOYCON_RIGHT: {_hx_name:"SWITCH_JOYCON_RIGHT",_hx_index:11,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
+	,UNKNOWN: {_hx_name:"UNKNOWN",_hx_index:12,__enum__:"flixel.input.gamepad.FlxGamepadModel",toString:$estr}
 };
-flixel_input_gamepad_FlxGamepadModel.__constructs__ = [flixel_input_gamepad_FlxGamepadModel.LOGITECH,flixel_input_gamepad_FlxGamepadModel.OUYA,flixel_input_gamepad_FlxGamepadModel.PS4,flixel_input_gamepad_FlxGamepadModel.PSVITA,flixel_input_gamepad_FlxGamepadModel.XINPUT,flixel_input_gamepad_FlxGamepadModel.MAYFLASH_WII_REMOTE,flixel_input_gamepad_FlxGamepadModel.WII_REMOTE,flixel_input_gamepad_FlxGamepadModel.MFI,flixel_input_gamepad_FlxGamepadModel.SWITCH_PRO,flixel_input_gamepad_FlxGamepadModel.SWITCH_JOYCON_LEFT,flixel_input_gamepad_FlxGamepadModel.SWITCH_JOYCON_RIGHT,flixel_input_gamepad_FlxGamepadModel.UNKNOWN];
+flixel_input_gamepad_FlxGamepadModel.__constructs__ = [flixel_input_gamepad_FlxGamepadModel.LOGITECH,flixel_input_gamepad_FlxGamepadModel.OUYA,flixel_input_gamepad_FlxGamepadModel.PS4,flixel_input_gamepad_FlxGamepadModel.PS5,flixel_input_gamepad_FlxGamepadModel.PSVITA,flixel_input_gamepad_FlxGamepadModel.XINPUT,flixel_input_gamepad_FlxGamepadModel.MAYFLASH_WII_REMOTE,flixel_input_gamepad_FlxGamepadModel.WII_REMOTE,flixel_input_gamepad_FlxGamepadModel.MFI,flixel_input_gamepad_FlxGamepadModel.SWITCH_PRO,flixel_input_gamepad_FlxGamepadModel.SWITCH_JOYCON_LEFT,flixel_input_gamepad_FlxGamepadModel.SWITCH_JOYCON_RIGHT,flixel_input_gamepad_FlxGamepadModel.UNKNOWN];
 var flixel_input_gamepad_FlxGamepadAttachment = $hxEnums["flixel.input.gamepad.FlxGamepadAttachment"] = { __ename__:"flixel.input.gamepad.FlxGamepadAttachment",__constructs__:null
 	,WII_NUNCHUCK: {_hx_name:"WII_NUNCHUCK",_hx_index:0,__enum__:"flixel.input.gamepad.FlxGamepadAttachment",toString:$estr}
 	,WII_CLASSIC_CONTROLLER: {_hx_name:"WII_CLASSIC_CONTROLLER",_hx_index:1,__enum__:"flixel.input.gamepad.FlxGamepadAttachment",toString:$estr}
@@ -49721,8 +49786,10 @@ flixel_input_gamepad_FlxGamepadManager.prototype = {
 		name = StringTools.replace(StringTools.replace(name.toLowerCase(),"-",""),"_","");
 		if(name.indexOf("ouya") != -1) {
 			return flixel_input_gamepad_FlxGamepadModel.OUYA;
-		} else if(name.indexOf("wireless controller") != -1 || name.indexOf("ps4") != -1) {
+		} else if(name.indexOf("wireless controller") != -1 || name.indexOf("ps4") != -1 || name.indexOf("dualshock 4") != -1) {
 			return flixel_input_gamepad_FlxGamepadModel.PS4;
+		} else if(name.indexOf("ps5") != -1 || name.indexOf("dualsense") != -1) {
+			return flixel_input_gamepad_FlxGamepadModel.PS5;
 		} else if(name.indexOf("logitech") != -1) {
 			return flixel_input_gamepad_FlxGamepadModel.LOGITECH;
 		} else if(name.indexOf("xbox") != -1 && name.indexOf("360") != -1 || name.indexOf("xinput") != -1) {
@@ -53912,6 +53979,7 @@ var openfl_display_BitmapData = function(width,height,transparent,fillColor) {
 	this.__worldTransform = new openfl_geom_Matrix();
 	this.__worldColorTransform = new openfl_geom_ColorTransform();
 	this.__renderable = true;
+	this.__asset = false;
 };
 $hxClasses["openfl.display.BitmapData"] = openfl_display_BitmapData;
 openfl_display_BitmapData.__name__ = "openfl.display.BitmapData";
@@ -54186,6 +54254,19 @@ openfl_display_BitmapData.prototype = {
 		this.image.copyPixels(sourceBitmapData.image,sourceRect.__toLimeRectangle(),destPoint.__toLimeVector2(),alphaBitmapData != null ? alphaBitmapData.image : null,alphaPoint != null ? openfl_display_BitmapData.__tempVector : null,mergeAlpha);
 	}
 	,dispose: function() {
+		if(this.image != null && this.image.type == lime_graphics_ImageType.CANVAS && !this.__asset) {
+			var canvas = this.image.buffer.__srcCanvas;
+			var context = this.image.buffer.__srcContext;
+			if(canvas != null) {
+				canvas.width = 0;
+				canvas.height = 0;
+				canvas = null;
+			}
+			if(context != null) {
+				context.clearRect(0,0,0,0);
+				context = null;
+			}
+		}
 		this.image = null;
 		this.width = 0;
 		this.height = 0;
@@ -56042,9 +56123,9 @@ flixel_input_touch_FlxTouch.prototype = $extend(flixel_input_FlxPointer.prototyp
 	,__properties__: $extend(flixel_input_FlxPointer.prototype.__properties__,{get_justPressed:"get_justPressed",get_pressed:"get_pressed",get_released:"get_released",get_justReleased:"get_justReleased",get_touchPointID:"get_touchPointID"})
 });
 var flixel_input_touch_FlxTouchManager = function() {
-	this.list = [];
-	this._inactiveTouches = [];
 	this._touchesCache = new haxe_ds_IntMap();
+	this._inactiveTouches = [];
+	this.list = [];
 	flixel_input_touch_FlxTouchManager.maxTouchPoints = openfl_ui_Multitouch.maxTouchPoints;
 	openfl_ui_Multitouch.inputMode = 2;
 	openfl_Lib.get_current().stage.addEventListener("touchBegin",$bind(this,this.handleTouchBegin));
@@ -56059,30 +56140,12 @@ flixel_input_touch_FlxTouchManager.prototype = {
 		return this._touchesCache.h[TouchPointID];
 	}
 	,getFirst: function() {
-		if(this.list[0] != null) {
-			return this.list[0];
-		} else {
-			return null;
-		}
+		return this.list[0];
 	}
 	,destroy: function() {
-		var _g = 0;
-		var _g1 = this.list;
-		while(_g < _g1.length) {
-			var touch = _g1[_g];
-			++_g;
-			touch.destroy();
-		}
-		this.list = null;
-		var _g = 0;
-		var _g1 = this._inactiveTouches;
-		while(_g < _g1.length) {
-			var touch = _g1[_g];
-			++_g;
-			touch.destroy();
-		}
-		this._inactiveTouches = null;
-		this._touchesCache = null;
+		this._touchesCache.h = { };
+		flixel_util_FlxDestroyUtil.destroyArray(this.list);
+		flixel_util_FlxDestroyUtil.destroyArray(this._inactiveTouches);
 	}
 	,justStarted: function(TouchArray) {
 		if(TouchArray == null) {
@@ -56090,7 +56153,7 @@ flixel_input_touch_FlxTouchManager.prototype = {
 		}
 		var touchLen = TouchArray.length;
 		if(touchLen > 0) {
-			TouchArray.splice(0,touchLen);
+			TouchArray.length = 0;
 		}
 		var _g = 0;
 		var _g1 = this.list;
@@ -56109,7 +56172,7 @@ flixel_input_touch_FlxTouchManager.prototype = {
 		}
 		var touchLen = TouchArray.length;
 		if(touchLen > 0) {
-			TouchArray.splice(0,touchLen);
+			TouchArray.length = 0;
 		}
 		var _g = 0;
 		var _g1 = this.list;
@@ -56123,11 +56186,7 @@ flixel_input_touch_FlxTouchManager.prototype = {
 		return TouchArray;
 	}
 	,reset: function() {
-		var key = this._touchesCache.keys();
-		while(key.hasNext()) {
-			var key1 = key.next();
-			this._touchesCache.remove(key1);
-		}
+		this._touchesCache.h = { };
 		var _g = 0;
 		var _g1 = this.list;
 		while(_g < _g1.length) {
@@ -56136,7 +56195,7 @@ flixel_input_touch_FlxTouchManager.prototype = {
 			touch.input.reset();
 			this._inactiveTouches.push(touch);
 		}
-		this.list.splice(0,this.list.length);
+		this.list.length = 0;
 	}
 	,handleTouchBegin: function(FlashEvent) {
 		var touch = this._touchesCache.h[FlashEvent.touchPointID];
@@ -60709,7 +60768,7 @@ var flixel_path_FlxPathSimplifier = $hxEnums["flixel.path.FlxPathSimplifier"] = 
 };
 flixel_path_FlxPathSimplifier.__constructs__ = [flixel_path_FlxPathSimplifier.NONE,flixel_path_FlxPathSimplifier.LINE,flixel_path_FlxPathSimplifier.RAY,flixel_path_FlxPathSimplifier.RAY_STEP,flixel_path_FlxPathSimplifier.RAY_BOX,flixel_path_FlxPathSimplifier.CUSTOM];
 var flixel_sound_FlxSound = function() {
-	this._alreadyPaused = false;
+	this._resumeOnFocus = false;
 	this._volumeAdjust = 1.0;
 	this._pitch = 1.0;
 	this._length = 0;
@@ -61086,12 +61145,13 @@ flixel_sound_FlxSound.prototype = $extend(flixel_FlxBasic.prototype,{
 		this._sound.removeEventListener("id3",$bind(this,this.gotID3));
 	}
 	,onFocus: function() {
-		if(!this._alreadyPaused) {
+		if(this._resumeOnFocus) {
+			this._resumeOnFocus = false;
 			this.resume();
 		}
 	}
 	,onFocusLost: function() {
-		this._alreadyPaused = this._paused;
+		this._resumeOnFocus = !this._paused;
 		this.pause();
 	}
 	,set_group: function(value) {
@@ -64948,13 +65008,9 @@ lime__$internal_graphics_ImageCanvasUtil.createCanvas = function(image,width,hei
 		buffer.__srcCanvas.width = width;
 		buffer.__srcCanvas.height = height;
 		if(!image.get_transparent()) {
-			if(!image.get_transparent()) {
-				buffer.__srcCanvas.setAttribute("moz-opaque","true");
-			}
-			buffer.__srcContext = buffer.__srcCanvas.getContext ("2d", { alpha: false });
-		} else {
-			buffer.__srcContext = buffer.__srcCanvas.getContext("2d");
+			buffer.__srcCanvas.setAttribute("moz-opaque","true");
 		}
+		buffer.__srcContext = buffer.__srcCanvas.getContext("2d",{ alpha : image.get_transparent()});
 	}
 };
 lime__$internal_graphics_ImageCanvasUtil.createImageData = function(image) {
@@ -65933,8 +65989,10 @@ flixel_system_debug_interaction_Interaction.prototype = $extend(flixel_system_de
 	handleDebuggerVisibilityChanged: function() {
 		if(flixel_FlxG.debugger.visible) {
 			this.saveSystemCursorInfo();
+			this.resetActiveTool();
 		} else {
 			this.restoreSystemCursor();
+			flixel_FlxG.mouse.enabled = true;
 		}
 	}
 	,updateMouse: function(event) {
@@ -66242,6 +66300,9 @@ flixel_system_debug_interaction_Interaction.prototype = $extend(flixel_system_de
 			value = null;
 		}
 		this.activeTool = value;
+		this.resetActiveTool();
+	}
+	,resetActiveTool: function() {
 		if(this.activeTool != null) {
 			this.setToolsCursorVisibility(true);
 			this.activeTool.button.set_toggled(false);
@@ -67763,19 +67824,19 @@ openfl_text_TextField.prototype = $extend(openfl_display_InteractiveObject.proto
 					format = group1.format.clone();
 				} else {
 					if(group1.format.font != format.font) {
-						format.font = null;
+						format.set_font(null);
 					}
 					if(group1.format.size != format.size) {
-						format.size = null;
+						format.set_size(null);
 					}
 					if(group1.format.color != format.color) {
 						format.color = null;
 					}
 					if(group1.format.bold != format.bold) {
-						format.bold = null;
+						format.set_bold(null);
 					}
 					if(group1.format.italic != format.italic) {
-						format.italic = null;
+						format.set_italic(null);
 					}
 					if(group1.format.underline != format.underline) {
 						format.underline = null;
@@ -67923,7 +67984,7 @@ openfl_text_TextField.prototype = $extend(openfl_display_InteractiveObject.proto
 					index += 2;
 				} else {
 					++index;
-					lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/TextField.hx", lineNumber : 1610, className : "openfl.text.TextField", methodName : "setTextFormat"});
+					lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/TextField.hx", lineNumber : 1609, className : "openfl.text.TextField", methodName : "setTextFormat"});
 				}
 			}
 		}
@@ -68021,10 +68082,10 @@ openfl_text_TextField.prototype = $extend(openfl_display_InteractiveObject.proto
 	}
 	,__enableInput: function() {
 		if(this.stage != null) {
+			this.stage.window.__backend.setTextInputEnabled(true);
 			var bounds = this.getBounds(this.stage);
 			var limeRect = new lime_math_Rectangle(bounds.x,bounds.y,bounds.width,bounds.height);
 			this.stage.window.setTextInputRect(limeRect);
-			this.stage.window.__backend.setTextInputEnabled(true);
 			if(!this.__inputEnabled) {
 				this.stage.window.__backend.setTextInputEnabled(true);
 				if(!this.stage.window.onTextInput.has($bind(this,this.window_onTextInput))) {
@@ -68194,7 +68255,7 @@ openfl_text_TextField.prototype = $extend(openfl_display_InteractiveObject.proto
 	}
 	,__getPositionByIdentifier: function(x,y,line) {
 		var position = this.__getPosition(x,y);
-		var delimiters = line ? "\n" : " .,;:!?()[]{}<>/\\|-=+*&^%$#@~`'\"";
+		var delimiters = line ? "\n" : " .,;:!?()[]{}<>/\\|-=+*&^%$#@~`'\"\n";
 		var char = this.__text.charAt(position);
 		if(this.__specialSelectionInitialIndex <= position) {
 			while(delimiters.indexOf(char) == -1 && position < this.__text.length) {
@@ -68215,13 +68276,16 @@ openfl_text_TextField.prototype = $extend(openfl_display_InteractiveObject.proto
 	}
 	,__getOppositeIdentifierBound: function(charIndex,line) {
 		var position = charIndex;
-		var delimiters = line ? "\n" : " .,;:!?()[]{}<>/\\|-=+*&^%$#@~`'\"";
+		var delimiters = line ? "\n" : " .,;:!?()[]{}<>/\\|-=+*&^%$#@~`'\"\n";
 		var char = this.__text.charAt(position);
 		if(position <= this.__caretIndex) {
-			while(delimiters.indexOf(char) == -1 && position > 0) {
+			if(position == 0) {
+				return position;
+			}
+			do {
 				--position;
 				char = this.__text.charAt(position);
-			}
+			} while(delimiters.indexOf(char) == -1 && position > 0);
 			if(position == 0) {
 				return position;
 			}
@@ -68327,7 +68391,7 @@ openfl_text_TextField.prototype = $extend(openfl_display_InteractiveObject.proto
 			if(beginIndex == endIndex) {
 				if(range.start == range.end) {
 					if(range.start != 0) {
-						lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/TextField.hx", lineNumber : 2184, className : "openfl.text.TextField", methodName : "__replaceText"});
+						lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/TextField.hx", lineNumber : 2190, className : "openfl.text.TextField", methodName : "__replaceText"});
 					} else {
 						range.end += offset;
 					}
@@ -69153,12 +69217,12 @@ openfl_text_TextField.prototype = $extend(openfl_display_InteractiveObject.proto
 		this.__wordSelection = event.clickCount == 2;
 		if(this.__lineSelection) {
 			var prevCaretIndex = this.__caretIndex;
-			this.__caretIndex = this.__getPositionByIdentifier(event.stageX + this.get_scrollH(),event.stageY,true);
+			this.__caretIndex = this.__getPositionByIdentifier(this.get_mouseX() + this.get_scrollH(),this.get_mouseY(),true);
 			this.__selectionIndex = this.__getOppositeIdentifierBound(prevCaretIndex,true);
 			this.setSelection(this.__caretIndex,this.__selectionIndex);
 		} else if(this.__wordSelection) {
 			var prevCaretIndex = this.__caretIndex;
-			this.__caretIndex = this.__getPositionByIdentifier(event.stageX + this.get_scrollH(),event.stageY,false);
+			this.__caretIndex = this.__getPositionByIdentifier(this.get_mouseX() + this.get_scrollH(),this.get_mouseY(),false);
 			this.__selectionIndex = this.__getOppositeIdentifierBound(prevCaretIndex,false);
 			this.__specialSelectionInitialIndex = prevCaretIndex;
 			this.setSelection(this.__caretIndex,this.__selectionIndex);
@@ -80269,20 +80333,22 @@ flixel_util__$FlxSignal_FlxSignal0.prototype = $extend(flixel_util__$FlxSignal_F
 			}
 		}
 		this.processingListeners = false;
-		var _g = 0;
-		var _g1 = this.pendingRemove;
-		while(_g < _g1.length) {
-			var handler = _g1[_g];
-			++_g;
-			if(this.processingListeners) {
-				this.pendingRemove.push(handler);
-			} else {
-				HxOverrides.remove(this.handlers,handler);
-				handler.destroy();
+		if(this.pendingRemove != null) {
+			var _g = 0;
+			var _g1 = this.pendingRemove;
+			while(_g < _g1.length) {
+				var handler = _g1[_g];
+				++_g;
+				if(this.processingListeners) {
+					this.pendingRemove.push(handler);
+				} else {
+					HxOverrides.remove(this.handlers,handler);
+					handler.destroy();
+				}
 			}
-		}
-		if(this.pendingRemove.length > 0) {
-			this.pendingRemove = [];
+			if(this.pendingRemove.length > 0) {
+				this.pendingRemove = [];
+			}
 		}
 	}
 	,__class__: flixel_util__$FlxSignal_FlxSignal0
@@ -80313,20 +80379,22 @@ flixel_util__$FlxSignal_FlxSignal1.prototype = $extend(flixel_util__$FlxSignal_F
 			}
 		}
 		this.processingListeners = false;
-		var _g = 0;
-		var _g1 = this.pendingRemove;
-		while(_g < _g1.length) {
-			var handler = _g1[_g];
-			++_g;
-			if(this.processingListeners) {
-				this.pendingRemove.push(handler);
-			} else {
-				HxOverrides.remove(this.handlers,handler);
-				handler.destroy();
+		if(this.pendingRemove != null) {
+			var _g = 0;
+			var _g1 = this.pendingRemove;
+			while(_g < _g1.length) {
+				var handler = _g1[_g];
+				++_g;
+				if(this.processingListeners) {
+					this.pendingRemove.push(handler);
+				} else {
+					HxOverrides.remove(this.handlers,handler);
+					handler.destroy();
+				}
 			}
-		}
-		if(this.pendingRemove.length > 0) {
-			this.pendingRemove = [];
+			if(this.pendingRemove.length > 0) {
+				this.pendingRemove = [];
+			}
 		}
 	}
 	,__class__: flixel_util__$FlxSignal_FlxSignal1
@@ -80357,20 +80425,22 @@ flixel_util__$FlxSignal_FlxSignal2.prototype = $extend(flixel_util__$FlxSignal_F
 			}
 		}
 		this.processingListeners = false;
-		var _g = 0;
-		var _g1 = this.pendingRemove;
-		while(_g < _g1.length) {
-			var handler = _g1[_g];
-			++_g;
-			if(this.processingListeners) {
-				this.pendingRemove.push(handler);
-			} else {
-				HxOverrides.remove(this.handlers,handler);
-				handler.destroy();
+		if(this.pendingRemove != null) {
+			var _g = 0;
+			var _g1 = this.pendingRemove;
+			while(_g < _g1.length) {
+				var handler = _g1[_g];
+				++_g;
+				if(this.processingListeners) {
+					this.pendingRemove.push(handler);
+				} else {
+					HxOverrides.remove(this.handlers,handler);
+					handler.destroy();
+				}
 			}
-		}
-		if(this.pendingRemove.length > 0) {
-			this.pendingRemove = [];
+			if(this.pendingRemove.length > 0) {
+				this.pendingRemove = [];
+			}
 		}
 	}
 	,__class__: flixel_util__$FlxSignal_FlxSignal2
@@ -80401,20 +80471,22 @@ flixel_util__$FlxSignal_FlxSignal3.prototype = $extend(flixel_util__$FlxSignal_F
 			}
 		}
 		this.processingListeners = false;
-		var _g = 0;
-		var _g1 = this.pendingRemove;
-		while(_g < _g1.length) {
-			var handler = _g1[_g];
-			++_g;
-			if(this.processingListeners) {
-				this.pendingRemove.push(handler);
-			} else {
-				HxOverrides.remove(this.handlers,handler);
-				handler.destroy();
+		if(this.pendingRemove != null) {
+			var _g = 0;
+			var _g1 = this.pendingRemove;
+			while(_g < _g1.length) {
+				var handler = _g1[_g];
+				++_g;
+				if(this.processingListeners) {
+					this.pendingRemove.push(handler);
+				} else {
+					HxOverrides.remove(this.handlers,handler);
+					handler.destroy();
+				}
 			}
-		}
-		if(this.pendingRemove.length > 0) {
-			this.pendingRemove = [];
+			if(this.pendingRemove.length > 0) {
+				this.pendingRemove = [];
+			}
 		}
 	}
 	,__class__: flixel_util__$FlxSignal_FlxSignal3
@@ -80445,20 +80517,22 @@ flixel_util__$FlxSignal_FlxSignal4.prototype = $extend(flixel_util__$FlxSignal_F
 			}
 		}
 		this.processingListeners = false;
-		var _g = 0;
-		var _g1 = this.pendingRemove;
-		while(_g < _g1.length) {
-			var handler = _g1[_g];
-			++_g;
-			if(this.processingListeners) {
-				this.pendingRemove.push(handler);
-			} else {
-				HxOverrides.remove(this.handlers,handler);
-				handler.destroy();
+		if(this.pendingRemove != null) {
+			var _g = 0;
+			var _g1 = this.pendingRemove;
+			while(_g < _g1.length) {
+				var handler = _g1[_g];
+				++_g;
+				if(this.processingListeners) {
+					this.pendingRemove.push(handler);
+				} else {
+					HxOverrides.remove(this.handlers,handler);
+					handler.destroy();
+				}
 			}
-		}
-		if(this.pendingRemove.length > 0) {
-			this.pendingRemove = [];
+			if(this.pendingRemove.length > 0) {
+				this.pendingRemove = [];
+			}
 		}
 	}
 	,__class__: flixel_util__$FlxSignal_FlxSignal4
@@ -84173,6 +84247,13 @@ haxe_io_Path.directory = function(path) {
 	}
 	return s.dir;
 };
+haxe_io_Path.extension = function(path) {
+	var s = new haxe_io_Path(path);
+	if(s.ext == null) {
+		return "";
+	}
+	return s.ext;
+};
 haxe_io_Path.prototype = {
 	__class__: haxe_io_Path
 };
@@ -85857,7 +85938,9 @@ lime__$internal_backend_html5_HTML5HTTPRequest.prototype = {
 	,load: function(uri,progress,readyStateChange) {
 		this.request = new XMLHttpRequest();
 		if(this.parent.method == "POST") {
-			this.request.upload.addEventListener("progress",progress,false);
+			if(this.request.upload != null) {
+				this.request.upload.addEventListener("progress",progress,false);
+			}
 		} else {
 			this.request.addEventListener("progress",progress,false);
 		}
@@ -96114,9 +96197,11 @@ lime_media_AudioManager.init = function(context) {
 			if(context.type == "openal") {
 				var alc = context.openal;
 				var device = alc.openDevice();
-				var ctx = alc.createContext(device);
-				alc.makeContextCurrent(ctx);
-				alc.processContext(ctx);
+				if(device != null) {
+					var ctx = alc.createContext(device);
+					alc.makeContextCurrent(ctx);
+					alc.processContext(ctx);
+				}
 			}
 		}
 		lime_media_AudioManager.context = context;
@@ -99592,7 +99677,7 @@ var lime_utils_AssetCache = function() {
 	this.audio = new haxe_ds_StringMap();
 	this.font = new haxe_ds_StringMap();
 	this.image = new haxe_ds_StringMap();
-	this.version = 836630;
+	this.version = 435223;
 };
 $hxClasses["lime.utils.AssetCache"] = lime_utils_AssetCache;
 lime_utils_AssetCache.__name__ = "lime.utils.AssetCache";
@@ -100610,10 +100695,10 @@ lime_utils_Assets.getPath = function(id) {
 		if(symbol_library.exists(symbol_symbolName,null)) {
 			return symbol_library.getPath(symbol_symbolName);
 		} else {
-			lime_utils_Log.error("There is no asset with an ID of \"" + id + "\"",{ fileName : "lime/utils/Assets.hx", lineNumber : 224, className : "lime.utils.Assets", methodName : "getPath"});
+			lime_utils_Log.error("There is no asset with an ID of \"" + id + "\"",{ fileName : "lime/utils/Assets.hx", lineNumber : 240, className : "lime.utils.Assets", methodName : "getPath"});
 		}
 	} else {
-		lime_utils_Log.error(lime_utils_Assets.__libraryNotFound(symbol_libraryName),{ fileName : "lime/utils/Assets.hx", lineNumber : 229, className : "lime.utils.Assets", methodName : "getPath"});
+		lime_utils_Log.error(lime_utils_Assets.__libraryNotFound(symbol_libraryName),{ fileName : "lime/utils/Assets.hx", lineNumber : 245, className : "lime.utils.Assets", methodName : "getPath"});
 	}
 	return null;
 };
@@ -103354,6 +103439,7 @@ var openfl_display_DisplayObjectRenderer = function() {
 	this.__pixelRatio = 1;
 	this.__tempColorTransform = new openfl_geom_ColorTransform();
 	this.__worldAlpha = 1;
+	this.__blendMode = 10;
 };
 $hxClasses["openfl.display.DisplayObjectRenderer"] = openfl_display_DisplayObjectRenderer;
 openfl_display_DisplayObjectRenderer.__name__ = "openfl.display.DisplayObjectRenderer";
@@ -103553,12 +103639,25 @@ openfl_display_DisplayObjectRenderer.prototype = $extend(openfl_events_EventDisp
 				return false;
 			}
 			if(hasFilters && !needRender) {
+				var affineChanged;
+				if(updateTransform) {
+					var a = displayObject.__cacheBitmap.__worldTransform;
+					var b = displayObject.__worldTransform;
+					affineChanged = Math.abs(a.a - b.a) > 1e-4 || Math.abs(a.b - b.b) > 1e-4 || Math.abs(a.c - b.c) > 1e-4 || Math.abs(a.d - b.d) > 1e-4;
+				} else {
+					affineChanged = false;
+				}
 				var _g = 0;
 				var _g1 = displayObject.__filters;
 				while(_g < _g1.length) {
 					var filter = _g1[_g];
 					++_g;
 					if(filter.__renderDirty) {
+						needRender = true;
+						break;
+					}
+					if(affineChanged && ((filter) instanceof openfl_filters_ShaderFilter)) {
+						displayObject.__cacheBitmapData = null;
 						needRender = true;
 						break;
 					}
@@ -103916,6 +104015,19 @@ openfl_display_DisplayObjectRenderer.prototype = $extend(openfl_events_EventDisp
 			}
 		}
 		return updated;
+	}
+	,__affineChanged: function(a,b,eps) {
+		if(eps == null) {
+			eps = 1e-4;
+		}
+		if(!(Math.abs(a.a - b.a) > eps || Math.abs(a.b - b.b) > eps || Math.abs(a.c - b.c) > eps)) {
+			return Math.abs(a.d - b.d) > eps;
+		} else {
+			return true;
+		}
+	}
+	,__isShaderFilter: function(f) {
+		return ((f) instanceof openfl_filters_ShaderFilter);
 	}
 	,__class__: openfl_display_DisplayObjectRenderer
 });
@@ -105298,8 +105410,15 @@ openfl_display_Graphics.prototype = {
 			this.__transformDirty = true;
 		}
 		this.__bitmap = null;
-		this.__canvas = null;
-		this.__context = null;
+		if(this.__canvas != null) {
+			this.__canvas.width = 0;
+			this.__canvas.height = 0;
+			this.__canvas = null;
+		}
+		if(this.__context != null) {
+			this.__context.clearRect(0,0,0,0);
+			this.__context = null;
+		}
 	}
 	,__getBounds: function(rect,matrix) {
 		if(this.__bounds == null) {
@@ -105572,7 +105691,7 @@ openfl_display_Graphics.prototype = {
 				}
 				data.prev = openfl_display__$internal_DrawCommandType.BEGIN_FILL;
 				var c1 = data;
-				graphicsData.push(new openfl_display_GraphicsSolidFill(c1.buffer.i[c1.iPos],1));
+				graphicsData.push(new openfl_display_GraphicsSolidFill(c1.buffer.i[c1.iPos],c1.buffer.f[c1.fPos]));
 				break;
 			case 2:
 				switch(data.prev._hx_index) {
@@ -106730,6 +106849,11 @@ openfl_display_Graphics.prototype = {
 	}
 	,__update: function(displayMatrix,pixelRatio) {
 		if(this.__bounds == null || this.__bounds.width <= 0 || this.__bounds.height <= 0) {
+			if(this.__width >= 1 || this.__height >= 1) {
+				this.set___dirty(true);
+			}
+			this.__width = 0;
+			this.__height = 0;
 			return;
 		}
 		var parentTransform = this.__owner.__renderTransform;
@@ -109386,6 +109510,9 @@ openfl_display_SimpleButton.prototype = $extend(openfl_display_InteractiveObject
 		} else {
 			openfl_display_InteractiveObject.prototype.__getBounds.call(this,rect,matrix);
 		}
+		if(this.__currentState == null) {
+			return;
+		}
 		var childWorldTransform = openfl_geom_Matrix.__pool.get();
 		var local = this.__currentState.__transform;
 		childWorldTransform.a = local.a * matrix.a + local.b * matrix.c;
@@ -109479,7 +109606,7 @@ openfl_display_SimpleButton.prototype = $extend(openfl_display_InteractiveObject
 	}
 	,set_downState: function(downState) {
 		if(this.__downState != null && this.__currentState == this.__downState) {
-			this.set___currentState(this.__downState);
+			this.set___currentState(downState);
 		}
 		return this.__downState = downState;
 	}
@@ -109943,8 +110070,8 @@ openfl_display_Stage.prototype = $extend(openfl_display_DisplayObjectContainer.p
 		this.__dispatchPendingMouseEvent();
 		openfl_events_MouseEvent.__altKey = lime_ui_KeyModifier.get_altKey(modifier);
 		openfl_events_MouseEvent.__commandKey = lime_ui_KeyModifier.get_metaKey(modifier);
-		openfl_events_MouseEvent.__controlKey = lime_ui_KeyModifier.get_ctrlKey(modifier) && !lime_ui_KeyModifier.get_metaKey(modifier);
-		openfl_events_MouseEvent.__ctrlKey = lime_ui_KeyModifier.get_ctrlKey(modifier);
+		openfl_events_MouseEvent.__controlKey = lime_ui_KeyModifier.get_ctrlKey(modifier);
+		openfl_events_MouseEvent.__ctrlKey = this.__macKeyboard ? lime_ui_KeyModifier.get_ctrlKey(modifier) || lime_ui_KeyModifier.get_metaKey(modifier) : lime_ui_KeyModifier.get_ctrlKey(modifier);
 		openfl_events_MouseEvent.__shiftKey = lime_ui_KeyModifier.get_shiftKey(modifier);
 		var stack = [];
 		if(this.__focus == null) {
@@ -110347,7 +110474,7 @@ openfl_display_Stage.prototype = $extend(openfl_display_DisplayObjectContainer.p
 			default:
 				keyCode1 = keyCode;
 			}
-			var charCode = openfl_ui_Keyboard.__getCharCode(keyCode1,lime_ui_KeyModifier.get_shiftKey(modifier));
+			var charCode = openfl_ui_Keyboard.__getCharCode(keyCode1,lime_ui_KeyModifier.get_shiftKey(modifier),lime_ui_KeyModifier.get_capsLock(modifier));
 			if(type == "keyUp" && (keyCode1 == 32 || keyCode1 == 13) && ((this.__focus) instanceof openfl_display_Sprite)) {
 				var sprite = js_Boot.__cast(this.__focus , openfl_display_Sprite);
 				if(sprite.get_buttonMode() && sprite.focusRect == true) {
@@ -111935,8 +112062,9 @@ openfl_display_Stage3D.prototype = $extend(openfl_events_EventDispatcher.prototy
 				this.__canvas.height = height;
 			}
 			this.__projectionTransform.copyRawDataFrom(openfl_Vector.toFloatVector(null,null,null,[2.0 / (width > 0 ? width : 1),0.0,0.0,0.0,0.0,-2.0 / (height > 0 ? height : 1),0.0,0.0,0.0,0.0,-0.001,0.0,-1.0,1.0,0.0,1.0]));
+			var pixelRatio = this.__stage.window.__scale;
 			this.__renderTransform.identity();
-			this.__renderTransform.appendTranslation(this.__x,this.__y,0);
+			this.__renderTransform.appendTranslation(this.__x * pixelRatio,this.__y * pixelRatio,0);
 			this.__renderTransform.append(this.__projectionTransform);
 			this.__width = width;
 			this.__height = height;
@@ -111954,8 +112082,9 @@ openfl_display_Stage3D.prototype = $extend(openfl_events_EventDispatcher.prototy
 			return value;
 		}
 		this.__x = value;
+		var pixelRatio = this.__stage.window.__scale;
 		this.__renderTransform.identity();
-		this.__renderTransform.appendTranslation(this.__x,this.__y,0);
+		this.__renderTransform.appendTranslation(this.__x * pixelRatio,this.__y * pixelRatio,0);
 		this.__renderTransform.append(this.__projectionTransform);
 		return value;
 	}
@@ -111967,8 +112096,9 @@ openfl_display_Stage3D.prototype = $extend(openfl_events_EventDispatcher.prototy
 			return value;
 		}
 		this.__y = value;
+		var pixelRatio = this.__stage.window.__scale;
 		this.__renderTransform.identity();
-		this.__renderTransform.appendTranslation(this.__x,this.__y,0);
+		this.__renderTransform.appendTranslation(this.__x * pixelRatio,this.__y * pixelRatio,0);
 		this.__renderTransform.append(this.__projectionTransform);
 		return value;
 	}
@@ -121011,7 +121141,6 @@ openfl_display__$internal_CanvasGraphics.render = function(graphics,renderer) {
 					openfl_display__$internal_CanvasGraphics.endFill();
 					openfl_display__$internal_CanvasGraphics.endStroke();
 					openfl_display__$internal_CanvasGraphics.hasFill = false;
-					hasLineStyle = false;
 					openfl_display__$internal_CanvasGraphics.bitmapFill = null;
 					initStrokeX = 0;
 					initStrokeY = 0;
@@ -127693,7 +127822,9 @@ openfl_display__$internal_Context3DTilemap.renderTileContainer = function(tilema
 					continue;
 				}
 			}
-			if(shader != openfl_display__$internal_Context3DTilemap.currentShader || bitmapData != openfl_display__$internal_Context3DTilemap.currentBitmapData && openfl_display__$internal_Context3DTilemap.currentBitmapData != null || openfl_display__$internal_Context3DTilemap.currentBlendMode != blendMode) {
+			var numBuffer = openfl_display__$internal_Context3DTilemap.bufferPosition - openfl_display__$internal_Context3DTilemap.lastFlushedPosition;
+			var forceFlush = numBuffer >= 16383;
+			if(forceFlush || shader != openfl_display__$internal_Context3DTilemap.currentShader || bitmapData != openfl_display__$internal_Context3DTilemap.currentBitmapData && openfl_display__$internal_Context3DTilemap.currentBitmapData != null || openfl_display__$internal_Context3DTilemap.currentBlendMode != blendMode) {
 				openfl_display__$internal_Context3DTilemap.flush(tilemap,renderer,openfl_display__$internal_Context3DTilemap.currentBlendMode);
 			}
 			openfl_display__$internal_Context3DTilemap.currentBitmapData = bitmapData;
@@ -136969,6 +137100,7 @@ openfl_events_GameInputEvent.prototype = $extend(openfl_events_Event.prototype,{
 	}
 	,__init: function() {
 		openfl_events_Event.prototype.__init.call(this);
+		this.bubbles = true;
 		this.device = null;
 	}
 	,__class__: openfl_events_GameInputEvent
@@ -137197,10 +137329,10 @@ openfl_events_MouseEvent.prototype = $extend(openfl_events_Event.prototype,{
 	}
 	,__init: function() {
 		openfl_events_Event.prototype.__init.call(this);
+		this.bubbles = true;
 		this.shiftKey = false;
 		this.altKey = false;
 		this.ctrlKey = false;
-		this.bubbles = false;
 		this.relatedObject = null;
 		this.delta = 0;
 		this.localX = 0;
@@ -137509,6 +137641,7 @@ openfl_events_TouchEvent.prototype = $extend(openfl_events_Event.prototype,{
 	}
 	,__init: function() {
 		openfl_events_Event.prototype.__init.call(this);
+		this.bubbles = true;
 		this.touchPointID = 0;
 		this.isPrimaryTouchPoint = false;
 		this.localX = 0;
@@ -137554,6 +137687,8 @@ openfl_events_UncaughtErrorEvent.prototype = $extend(openfl_events_ErrorEvent.pr
 	}
 	,__init: function() {
 		openfl_events_ErrorEvent.prototype.__init.call(this);
+		this.bubbles = true;
+		this.cancelable = true;
 		this.error = null;
 	}
 	,__class__: openfl_events_UncaughtErrorEvent
@@ -137617,6 +137752,63 @@ openfl_filters_BitmapFilter.prototype = {
 	}
 	,__class__: openfl_filters_BitmapFilter
 };
+var openfl_filters_ShaderFilter = function(shader) {
+	this.blendMode = 10;
+	openfl_filters_BitmapFilter.call(this);
+	this.shader = shader;
+	this.__numShaderPasses = 1;
+};
+$hxClasses["openfl.filters.ShaderFilter"] = openfl_filters_ShaderFilter;
+openfl_filters_ShaderFilter.__name__ = "openfl.filters.ShaderFilter";
+openfl_filters_ShaderFilter.__super__ = openfl_filters_BitmapFilter;
+openfl_filters_ShaderFilter.prototype = $extend(openfl_filters_BitmapFilter.prototype,{
+	clone: function() {
+		var filter = new openfl_filters_ShaderFilter(this.shader);
+		filter.set_bottomExtension(this.get_bottomExtension());
+		filter.set_leftExtension(this.get_leftExtension());
+		filter.set_rightExtension(this.get_rightExtension());
+		filter.set_topExtension(this.get_topExtension());
+		filter.blendMode = this.blendMode;
+		return filter;
+	}
+	,invalidate: function() {
+		this.__renderDirty = true;
+	}
+	,get_topExtension: function() {
+		return this.__topExtension;
+	}
+	,set_topExtension: function(value) {
+		this.__topExtension = value;
+		return this.__topExtension;
+	}
+	,get_bottomExtension: function() {
+		return this.__bottomExtension;
+	}
+	,set_bottomExtension: function(value) {
+		this.__bottomExtension = value;
+		return this.__bottomExtension;
+	}
+	,get_leftExtension: function() {
+		return this.__leftExtension;
+	}
+	,set_leftExtension: function(value) {
+		this.__leftExtension = value;
+		return this.__leftExtension;
+	}
+	,get_rightExtension: function() {
+		return this.__rightExtension;
+	}
+	,set_rightExtension: function(value) {
+		this.__rightExtension = value;
+		return this.__rightExtension;
+	}
+	,__initShader: function(renderer,pass,sourceBitmapData) {
+		this.__shaderBlendMode = this.blendMode;
+		return this.shader;
+	}
+	,__class__: openfl_filters_ShaderFilter
+	,__properties__: {set_topExtension:"set_topExtension",get_topExtension:"get_topExtension",set_rightExtension:"set_rightExtension",get_rightExtension:"get_rightExtension",set_leftExtension:"set_leftExtension",get_leftExtension:"get_leftExtension",set_bottomExtension:"set_bottomExtension",get_bottomExtension:"get_bottomExtension"}
+});
 var openfl_geom_Matrix3D = function(v) {
 	if(v != null && v.get_length() == 16) {
 		this.rawData = v.concat(null);
@@ -140358,7 +140550,7 @@ openfl_text_StyleSheet.prototype = $extend(openfl_events_EventDispatcher.prototy
 			var this1 = styleObject;
 			if(this1 != null && Object.prototype.hasOwnProperty.call(this1,"fontFamily")) {
 				var this1 = openfl_utils_Object.__get(styleObject,"fontFamily");
-				textFormat.font = this.__parseFont(this1 == null ? null : Std.string(this1));
+				textFormat.set_font(this.__parseFont(this1 == null ? null : Std.string(this1)));
 			}
 			var tmp;
 			var this1 = styleObject;
@@ -140369,16 +140561,16 @@ openfl_text_StyleSheet.prototype = $extend(openfl_events_EventDispatcher.prototy
 				tmp = false;
 			}
 			if(tmp) {
-				textFormat.size = Std.parseInt(numeric.matched(0));
+				textFormat.set_size(Std.parseInt(numeric.matched(0)));
 			}
 			var this1 = styleObject;
 			if(this1 != null && Object.prototype.hasOwnProperty.call(this1,"fontStyle")) {
 				switch(openfl_utils_Object.__get(styleObject,"fontStyle")) {
 				case "italic":
-					textFormat.italic = true;
+					textFormat.set_italic(true);
 					break;
 				case "normal":
-					textFormat.italic = false;
+					textFormat.set_italic(false);
 					break;
 				default:
 				}
@@ -140387,10 +140579,10 @@ openfl_text_StyleSheet.prototype = $extend(openfl_events_EventDispatcher.prototy
 			if(this1 != null && Object.prototype.hasOwnProperty.call(this1,"fontWeight")) {
 				switch(openfl_utils_Object.__get(styleObject,"fontWeight")) {
 				case "bold":
-					textFormat.bold = true;
+					textFormat.set_bold(true);
 					break;
 				case "normal":
-					textFormat.bold = false;
+					textFormat.set_bold(false);
 					break;
 				default:
 				}
@@ -140570,11 +140762,11 @@ openfl_text_TextFieldType.toString = function(this1) {
 	}
 };
 var openfl_text_TextFormat = function(font,size,color,bold,italic,underline,url,target,align,leftMargin,rightMargin,indent,leading) {
-	this.font = font;
-	this.size = size;
+	this.set_font(font);
+	this.set_size(size);
 	this.color = color;
-	this.bold = bold;
-	this.italic = italic;
+	this.set_bold(bold);
+	this.set_italic(italic);
 	this.underline = underline;
 	this.url = url;
 	this.target = target;
@@ -140606,19 +140798,19 @@ openfl_text_TextFormat.prototype = {
 	}
 	,__merge: function(format) {
 		if(format.font != null) {
-			this.font = format.font;
+			this.set_font(format.font);
 		}
 		if(format.size != null) {
-			this.size = format.size;
+			this.set_size(format.size);
 		}
 		if(format.color != null) {
 			this.color = format.color;
 		}
 		if(format.bold != null) {
-			this.bold = format.bold;
+			this.set_bold(format.bold);
 		}
 		if(format.italic != null) {
-			this.italic = format.italic;
+			this.set_italic(format.italic);
 		}
 		if(format.underline != null) {
 			this.underline = format.underline;
@@ -140670,7 +140862,36 @@ openfl_text_TextFormat.prototype = {
 	,__toCacheKey: function() {
 		return this.__cacheKey = "" + this.font + this.size + Std.string(this.bold) + Std.string(this.italic);
 	}
+	,set_font: function(value) {
+		if(this.font != value) {
+			this.font = value;
+			this.__toCacheKey();
+		}
+		return this.font;
+	}
+	,set_size: function(value) {
+		if(this.size != value) {
+			this.size = value;
+			this.__toCacheKey();
+		}
+		return this.size;
+	}
+	,set_bold: function(value) {
+		if(this.bold != value) {
+			this.bold = value;
+			this.__toCacheKey();
+		}
+		return this.bold;
+	}
+	,set_italic: function(value) {
+		if(this.italic != value) {
+			this.italic = value;
+			this.__toCacheKey();
+		}
+		return this.italic;
+	}
 	,__class__: openfl_text_TextFormat
+	,__properties__: {set_size:"set_size",set_italic:"set_italic",set_font:"set_font",set_bold:"set_bold"}
 };
 var openfl_text_TextFormatAlign = {};
 openfl_text_TextFormatAlign.fromString = function(value) {
@@ -141271,14 +141492,14 @@ openfl_text__$internal_HTMLParser.parse = function(value,multiline,styleSheet,te
 						}
 						break;
 					case "b":
-						format.bold = true;
+						format.set_bold(true);
 						break;
 					case "em":case "i":
-						format.italic = true;
+						format.set_italic(true);
 						break;
 					case "font":
 						if(openfl_text__$internal_HTMLParser.__regexFace.match(segment)) {
-							format.font = openfl_text__$internal_HTMLParser.__getAttributeMatch(openfl_text__$internal_HTMLParser.__regexFace);
+							format.set_font(openfl_text__$internal_HTMLParser.__getAttributeMatch(openfl_text__$internal_HTMLParser.__regexFace));
 						}
 						if(openfl_text__$internal_HTMLParser.__regexColor.match(segment)) {
 							format.color = Std.parseInt("0x" + openfl_text__$internal_HTMLParser.__getAttributeMatch(openfl_text__$internal_HTMLParser.__regexColor));
@@ -141288,9 +141509,9 @@ openfl_text__$internal_HTMLParser.parse = function(value,multiline,styleSheet,te
 							var firstChar = HxOverrides.cca(sizeAttr,0);
 							if(firstChar == 43 || firstChar == 45) {
 								var parentFormat = formatStack.length >= 2 ? formatStack[formatStack.length - 2] : textFormat;
-								format.size = parentFormat.size + Std.parseInt(sizeAttr);
+								format.set_size(parentFormat.size + Std.parseInt(sizeAttr));
 							} else {
-								format.size = Std.parseInt(sizeAttr);
+								format.set_size(Std.parseInt(sizeAttr));
 							}
 						}
 						break;
@@ -141970,7 +142191,7 @@ openfl_text__$internal_TextEngine.prototype = {
 					}
 					if(tempRangeEnd != endIndex) {
 						if(!nextFormatRange()) {
-							lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/_internal/TextEngine.hx", lineNumber : 1121, className : "openfl.text._internal.TextEngine", methodName : "getLayoutGroups"});
+							lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/_internal/TextEngine.hx", lineNumber : 1186, className : "openfl.text._internal.TextEngine", methodName : "getLayoutGroups"});
 							break;
 						}
 						tempIndex = tempRangeEnd;
@@ -142035,7 +142256,7 @@ openfl_text__$internal_TextEngine.prototype = {
 						break;
 					}
 					if(!nextFormatRange()) {
-						lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/_internal/TextEngine.hx", lineNumber : 1209, className : "openfl.text._internal.TextEngine", methodName : "getLayoutGroups"});
+						lime_utils_Log.warn("You found a bug in OpenFL's text code! Please save a copy of your project and create an issue on GitHub so we can fix this.",{ fileName : "openfl/text/_internal/TextEngine.hx", lineNumber : 1274, className : "openfl.text._internal.TextEngine", methodName : "getLayoutGroups"});
 						break;
 					}
 					setLineMetrics();
@@ -143070,11 +143291,18 @@ openfl_ui_Keyboard.__convertKeyCode = function(key) {
 		return key;
 	}
 };
-openfl_ui_Keyboard.__getCharCode = function(key,shift) {
+openfl_ui_Keyboard.__getCharCode = function(key,shift,capsLock) {
+	if(capsLock == null) {
+		capsLock = false;
+	}
 	if(shift == null) {
 		shift = false;
 	}
-	if(!shift) {
+	var effectiveShift = shift;
+	if(key >= 65 && key <= 90) {
+		effectiveShift = shift != capsLock;
+	}
+	if(!effectiveShift) {
 		switch(key) {
 		case 8:
 			return 8;
@@ -144401,6 +144629,7 @@ openfl_utils_Assets.getBitmapData = function(id,useCache) {
 	var image = lime_utils_Assets.getImage(id,false);
 	if(image != null) {
 		var bitmapData = openfl_display_BitmapData.fromImage(image);
+		bitmapData.__asset = true;
 		if(useCache && openfl_utils_Assets.cache.get_enabled()) {
 			openfl_utils_Assets.cache.setBitmapData(id,bitmapData);
 		}
@@ -144443,14 +144672,14 @@ openfl_utils_Assets.getMovieClip = function(id) {
 				if(library.isLocal(symbolName,"MOVIE_CLIP")) {
 					return library.getMovieClip(symbolName);
 				} else {
-					lime_utils_Log.error("MovieClip asset \"" + id + "\" exists, but only asynchronously",{ fileName : "openfl/utils/Assets.hx", lineNumber : 242, className : "openfl.utils.Assets", methodName : "getMovieClip"});
+					lime_utils_Log.error("MovieClip asset \"" + id + "\" exists, but only asynchronously",{ fileName : "openfl/utils/Assets.hx", lineNumber : 261, className : "openfl.utils.Assets", methodName : "getMovieClip"});
 					return null;
 				}
 			}
 		}
-		lime_utils_Log.error("There is no MovieClip asset with an ID of \"" + id + "\"",{ fileName : "openfl/utils/Assets.hx", lineNumber : 248, className : "openfl.utils.Assets", methodName : "getMovieClip"});
+		lime_utils_Log.error("There is no MovieClip asset with an ID of \"" + id + "\"",{ fileName : "openfl/utils/Assets.hx", lineNumber : 267, className : "openfl.utils.Assets", methodName : "getMovieClip"});
 	} else {
-		lime_utils_Log.error("There is no asset library named \"" + libraryName + "\"",{ fileName : "openfl/utils/Assets.hx", lineNumber : 252, className : "openfl.utils.Assets", methodName : "getMovieClip"});
+		lime_utils_Log.error("There is no asset library named \"" + libraryName + "\"",{ fileName : "openfl/utils/Assets.hx", lineNumber : 271, className : "openfl.utils.Assets", methodName : "getMovieClip"});
 	}
 	return null;
 };
@@ -144504,7 +144733,7 @@ openfl_utils_Assets.initBinding = function(className,instance) {
 			instance.__bind(library,className);
 		}
 	} else {
-		lime_utils_Log.warn("No asset is registered as \"" + className + "\"",{ fileName : "openfl/utils/Assets.hx", lineNumber : 408, className : "openfl.utils.Assets", methodName : "initBinding"});
+		lime_utils_Log.warn("No asset is registered as \"" + className + "\"",{ fileName : "openfl/utils/Assets.hx", lineNumber : 427, className : "openfl.utils.Assets", methodName : "initBinding"});
 	}
 };
 openfl_utils_Assets.isLocal = function(id,type,useCache) {
@@ -144563,6 +144792,7 @@ openfl_utils_Assets.loadBitmapData = function(id,useCache) {
 	lime_utils_Assets.loadImage(id,false).onComplete(function(image) {
 		if(image != null) {
 			var bitmapData = openfl_display_BitmapData.fromImage(image);
+			bitmapData.__asset = true;
 			if(useCache && openfl_utils_Assets.cache.get_enabled()) {
 				openfl_utils_Assets.cache.setBitmapData(id,bitmapData);
 			}
@@ -147453,7 +147683,7 @@ flixel_FlxG.fixedTimestep = true;
 flixel_FlxG.timeScale = 1.0;
 flixel_FlxG.animationTimeScale = 1.0;
 flixel_FlxG.worldDivisions = 6;
-flixel_FlxG.VERSION = new flixel_system_FlxVersion(6,1,0);
+flixel_FlxG.VERSION = new flixel_system_FlxVersion(6,1,1);
 flixel_FlxG.elapsed = 0;
 flixel_FlxG.maxElapsed = 0.1;
 flixel_FlxG.scaleMode = new flixel_system_scaleModes_RatioScaleMode();
@@ -149823,6 +150053,7 @@ lime_media_openal_AL.EFFECT_VOCAL_MORPHER = 7;
 lime_media_openal_AL.EFFECT_PITCH_SHIFTER = 8;
 lime_media_openal_AL.EFFECT_RING_MODULATOR = 9;
 lime_media_openal_AL.FFECT_AUTOWAH = 10;
+lime_media_openal_AL.EFFECT_AUTOWAH = 10;
 lime_media_openal_AL.EFFECT_COMPRESSOR = 11;
 lime_media_openal_AL.EFFECT_EQUALIZER = 12;
 lime_media_openal_AL.EFFECTSLOT_EFFECT = 1;
@@ -150770,6 +151001,7 @@ openfl_events_TouchEvent.TOUCH_ROLL_OUT = "touchRollOut";
 openfl_events_TouchEvent.TOUCH_ROLL_OVER = "touchRollOver";
 openfl_events_TouchEvent.TOUCH_TAP = "touchTap";
 openfl_events_UncaughtErrorEvent.UNCAUGHT_ERROR = "uncaughtError";
+openfl_filters_ShaderFilter.__meta__ = { fields : { blendMode : { SuppressWarnings : ["checkstyle:FieldDocComment"]}}};
 openfl_geom_Matrix3D.__meta__ = { statics : { create2D : { SuppressWarnings : ["checkstyle:FieldDocComment"]}, createABCD : { SuppressWarnings : ["checkstyle:FieldDocComment"]}, createOrtho : { SuppressWarnings : ["checkstyle:FieldDocComment"]}}};
 openfl_geom_Orientation3D.AXIS_ANGLE = 0;
 openfl_geom_Orientation3D.EULER_ANGLES = 1;
