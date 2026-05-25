@@ -368,7 +368,7 @@ class FlxWaveform extends FlxSprite
 	 * 
 	 * @since 2.2.0
 	 */
-	public var onDataLoad:FlxSignal = new FlxSignal();
+	public var onWaveformBufferSet:FlxSignal = new FlxSignal();
 
    /**
      * Loads the audio buffer data neccessary for processing the 
@@ -404,15 +404,15 @@ class FlxWaveform extends FlxSprite
         _drawDataDirty = true;
 
         if (waveformBuffer != null)
-            if (onDataLoad == null)
+			if (onWaveformBufferSet == null)
             {
-                onDataLoad = new FlxSignal();
+				onWaveformBufferSet = new FlxSignal();
                 FlxG.log.add('[FlxWaveform] Re-initalized `onDataLoad`');
             }
             else
             {
-                onDataLoad.dispatch();
-                onDataLoad.removeAll();
+				onWaveformBufferSet.dispatch();
+				onWaveformBufferSet.removeAll();
             }
     }
 
