@@ -403,16 +403,17 @@ class FlxWaveform extends FlxSprite
 
         _drawDataDirty = true;
 
-		if (onDataLoad == null)
-        {
-			onDataLoad = new FlxSignal();
-			FlxG.log.add('[FlxWaveform] Re-initalized `onDataLoad`');
-		}
-        else
-        {
-			onDataLoad.dispatch();
-			onDataLoad.removeAll();
-		}
+        if (waveformBuffer != null)
+            if (onDataLoad == null)
+            {
+                onDataLoad = new FlxSignal();
+                FlxG.log.add('[FlxWaveform] Re-initalized `onDataLoad`');
+            }
+            else
+            {
+                onDataLoad.dispatch();
+                onDataLoad.removeAll();
+            }
     }
 
     /**
