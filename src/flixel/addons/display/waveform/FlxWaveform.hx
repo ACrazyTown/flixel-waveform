@@ -363,12 +363,22 @@ class FlxWaveform extends FlxSprite
     }
 
 	/**
-	 * Dispatches when data on loaded
-     * and removes all signals as soon as that happens
+	 * Dispatches when `waveformBuffer` is set and is not null.
+	 * 
+	 * Removes all added functions when dispatched
 	 * 
 	 * @since 2.2.0
 	 */
 	public var onWaveformBufferSet:FlxSignal = new FlxSignal();
+
+	/**
+	 * Dispatches when `waveformBuffer` is set and is null.
+	 * 
+	 * Removes all added functions when dispatched
+	 * 
+	 * @since 2.2.0
+	 */
+	public var onWaveformBufferSetNull:FlxSignal = new FlxSignal();
 
    /**
      * Loads the audio buffer data neccessary for processing the 
@@ -407,12 +417,23 @@ class FlxWaveform extends FlxSprite
 			if (onWaveformBufferSet == null)
             {
 				onWaveformBufferSet = new FlxSignal();
-                FlxG.log.add('[FlxWaveform] Re-initalized `onDataLoad`');
+                FlxG.log.add('[FlxWaveform] Re-initalized `onWaveformBufferSet`');
             }
             else
             {
 				onWaveformBufferSet.dispatch();
 				onWaveformBufferSet.removeAll();
+            }
+        else
+			if (onWaveformBufferSetNull == null)
+            {
+				onWaveformBufferSetNull = new FlxSignal();
+                FlxG.log.add('[FlxWaveform] Re-initalized `onWaveformBufferSetNull`');
+            }
+            else
+            {
+				onWaveformBufferSetNull.dispatch();
+				onWaveformBufferSetNull.removeAll();
             }
     }
 
