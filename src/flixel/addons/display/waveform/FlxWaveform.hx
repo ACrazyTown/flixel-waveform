@@ -1087,6 +1087,9 @@ class FlxWaveform extends FlxSprite
     
     @:noCompletion function set_waveformDuration(value:Float):Float
     {
+		if (waveformBuffer == null)
+			return waveformDuration;
+
         if (waveformDuration != value)
         {
             if (value < 0)
