@@ -8,6 +8,7 @@ import flixel.addons.display.waveform.data.WaveformSegment;
 import flixel.sound.FlxSound;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
+import flixel.util.FlxSignal;
 import lime.media.AudioBuffer;
 import lime.utils.Float32Array;
 import openfl.geom.Rectangle;
@@ -361,6 +362,14 @@ class FlxWaveform extends FlxSprite
         loadDataFromFlxWaveformBuffer(FlxWaveformBuffer.fromLimeAudioBuffer(buffer));
     }
 
+	/**
+	 * Dispatches when data on loaded
+     * and removes all signals as soon as that happens
+	 * 
+	 * @since 2.2.0
+	 */
+	public var onDataLoad:FlxSignal = new FlxSignal();
+
    /**
      * Loads the audio buffer data neccessary for processing the 
      * waveform from a `FlxWaveformBuffer`.
@@ -393,6 +402,17 @@ class FlxWaveform extends FlxSprite
             waveformDuration = 5000;
 
         _drawDataDirty = true;
+
+		if (onDataLoad == null)
+        {
+			onDataLoad = new FlxSignal();
+			FlxG.log.add('[FlxWaveform] Re-initalized `onDataLoad`');
+		}
+        else
+        {
+			onDataLoad.dispatch();
+			onDataLoad.removeAll();
+		}
     }
 
     /**
